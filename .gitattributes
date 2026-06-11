@@ -1,0 +1,8 @@
+# Shell scripts and git hooks must be LF — CRLF breaks them on macOS/Linux
+*.sh text eol=lf
+.husky/pre-commit text eol=lf
+.husky/pre-push text eol=lf
+scripts/hooks/* text eol=lf
+
+# Everything else: normalise to LF in the repo, native in the working tree
+* text=auto
