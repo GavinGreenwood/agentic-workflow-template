@@ -1,0 +1,128 @@
+#!/usr/bin/env bash
+# Pre-push hook — the boundary between "my machine" and "the team".
+# Catches structural issues before code propagates into CI and shared environments.
+# Target: <40 seconds for full path. Early exits minimise wasted time.
+
+[ -z "${BASH_VERSION:-}" ] && exec bash "$0" "$@"
+
+echo "=== Pre-push checks ==="
+
+# PROGRESS.md must be deleted before a direct push to main. This hook only fires
+# on `git push`, and the check below is scoped to refs whose target is
+# refs/heads/main — so it blocks direct pushes / fast-forwards to main, not the
+# normal feature-branch pushes that create or update a PR. Feature-branch pushes
+# keep PROGRESS.md as the cross-session recovery point; the /pr command removes it
+# before a PR is raised. See CLAUDE.md § PROGRESS.md for the rationale.
+while read -r local_ref local_sha remote_ref remote_sha; do
+  if [[ "$remote_ref" == "refs/heads/main" ]] && [ -f "PROGRESS.md" ]; then
+    echo "BLOCKED: PROGRESS.md exists. Delete it before pushing to main (see CLAUDE.md)."
+    exit 1
+  fi
+done
+
+# Determine what files have changed vs origin
+CHANGED_FILES=$(git diff --name-only HEAD @{upstream} 2>/dev/null || git diff --name-only HEAD~1)
+
+# Lightweight path: if only docs or scripts changed, just check formatting
+DOCS_ONLY=true
+for file in $CHANGED_FILES; do
+  if [[ ! "$file" =~ ^(docs/|scripts/|.*\.md$) ]]; then
+    DOCS_ONLY=false
+    break
+  fi
+done
+
+if [ "$DOCS_ONLY" = true ]; then
+  echo "Docs/scripts only — running lightweight checks..."
+  npm run format:check 2>/dev/null || npm run lint
+  echo "=== Lightweight checks passed ==="
+  exit 0
+fi
+
+# Full validation pipeline — early exit on each failure
+
+echo "[1/4] Format check..."
+npm run format:check 2>/dev/null || {
+  echo "FAILED: Format check. Run 'npm run format' to fix."
+  exit 1
+}
+
+echo "[2/4] Lint..."
+npm run lint || {
+  echo "FAILED: Lint errors found."
+  exit 1
+}
+
+echo "[3/4] TypeScript typecheck..."
+npm run typecheck || {
+  echo "FAILED: Type errors found."
+  exit 1
+}
+
+echo "[4/4] Unit tests..."
+npm run test || {
+  echo "FAILED: Unit tests failed."
+  exit 1
+}
+
+# --- Conditional checks (only if relevant files changed) ---
+
+# Mutation testing — incremental, scoped to changed source files.
+# Warn-only: surviving mutants never block the push; the full suite runs nightly
+# in CI as the authoritative gate. Requires Stryker configured in the project.
+SRC_CHANGED=false
+for file in $CHANGED_FILES; do
+  if [[ "$file" =~ ^(apps|packages|src)/.*\.ts$ && ! "$file" =~ \.(spec|test)\.ts$ ]]; then
+    SRC_CHANGED=true
+    break
+  fi
+done
+
+if [ "$SRC_CHANGED" = true ] && [ -f "stryker.config.mjs" ]; then
+  echo "[Conditional] Source changed — running incremental mutation tests (warn-only)..."
+  npx stryker run --incremental --reporters clear-text || {
+    echo "[Mutation] Surviving mutants detected — review the report above."
+    echo "[Mutation] This is a warning only. Push continues."
+  }
+fi
+
+# Migration changes — validate migration files exist alongside schema changes.
+# Adjust the schema/migration path patterns to your migration tool (Prisma shown).
+SCHEMA_CHANGED=false
+MIGRATION_CHANGED=false
+for file in $CHANGED_FILES; do
+  if [[ "$file" =~ schema\.(sql|ts)$ ]]; then
+    SCHEMA_CHANGED=true
+  fi
+  if [[ "$file" =~ schema\.prisma$ ]]; then
+    # Only flag as a schema change if model/datasource/enum lines were added or removed.
+    # Generator-block changes (binaryTargets, previewFeatures, output) are excluded.
+    if git diff HEAD @{upstream} 2>/dev/null -- "$file" | grep -E '^[+-][^+-]' | grep -qE '(^[+-]\s*(model |datasource |enum )|@@|@id[^e]|@unique|@index|@map|@db\.)'; then
+      SCHEMA_CHANGED=true
+    fi
+  fi
+  if [[ "$file" =~ migrations/ ]]; then
+    MIGRATION_CHANGED=true
+  fi
+done
+
+if [ "$SCHEMA_CHANGED" = true ] && [ "$MIGRATION_CHANGED" = false ]; then
+  echo "BLOCKED: Schema changed without a migration file. Create a migration first."
+  exit 1
+fi
+
+# i18n changes — warn if locale files are out of sync
+I18N_CHANGED=false
+for file in $CHANGED_FILES; do
+  if [[ "$file" =~ (messages/|locales/|i18n/|translations/) ]]; then
+    I18N_CHANGED=true
+    break
+  fi
+done
+
+if [ "$I18N_CHANGED" = true ]; then
+  echo "[Conditional] i18n files changed — verify all supported languages are updated."
+fi
+
+echo ""
+echo "=== All pre-push checks passed ==="

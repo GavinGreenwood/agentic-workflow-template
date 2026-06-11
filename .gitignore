@@ -1,0 +1,17 @@
+node_modules/
+dist/
+build/
+.next/
+.turbo/
+coverage/
+reports/
+*.log
+
+# Environment — never commit credentials
+.env
+.env.*
+!.env.example
+
+# OS noise
+.DS_Store
+Thumbs.db

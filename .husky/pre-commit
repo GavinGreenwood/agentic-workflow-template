@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+# Pre-commit hook — deterministic quality gates before anything reaches git history.
+# Target: ~10 seconds. Fast enough to not break flow, thorough enough to catch common errors.
+
+[ -z "${BASH_VERSION:-}" ] && exec bash "$0" "$@"
+
+echo "=== Pre-commit checks ==="
+
+# 1. Branch protection — no direct commits to main/master/staging/production
+BRANCH=$(git rev-parse --abbrev-ref HEAD)
+PROTECTED_BRANCHES="^(main|master|staging|production)$"
+if [[ "$BRANCH" =~ $PROTECTED_BRANCHES ]]; then
+  echo "BLOCKED: Direct commits to '$BRANCH' are not allowed. Use a feature branch."
+  exit 1
+fi
+
+# 2. i18n key-parity — all locale files must have the same keys (skipped if the
+#    project has no lint:i18n script; add one if your project is localised)
+if npm run --silent lint:i18n --if-present 2>/dev/null; then
+  :
+fi
+
+# 3. Formatting, linting, and secret detection via lint-staged
+# (include secretlint in your lint-staged config to scan all staged files)
+echo "Running lint-staged..."
+npx lint-staged
