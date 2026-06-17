@@ -71,10 +71,10 @@ Run the full ship workflow: verify, commit, push, and open a PR.
 
    ```bash
    gh api repos/{owner}/{repo}/pulls/<number>/reviews --paginate \
-     --jq '[.[] | select(.user.type != "Bot") | select(.user.login | ascii_downcase | contains("copilot") | not)] | length'
+     --jq '[.[] | select((.user.login | ascii_downcase | contains("copilot")) or (.user.type != "Bot"))] | length'
    ```
 
-   A non-zero count means at least one human has submitted a formal review.
+   A non-zero count means Copilot or a human has submitted a formal review. (Copilot's review has `user.type == "Bot"`, so it must be admitted explicitly — the one-shot rule below is what prevents the re-review loop, not a Copilot exclusion.)
 
    **Source 2 — issue comments** (`/issues/{pr}/comments`):
 
