@@ -44,6 +44,7 @@ CONTRIBUTING.md           Branch, commit, and PR conventions
   agents/morlock.md       Internal adversarial security agent
 scripts/
   verify.sh               Full verification suite — same checks as CI
+  set-project-status.sh   Moves an issue/PR card across the Project board
   hooks/                  The guardrail hook scripts
 .husky/                   pre-commit and pre-push quality gates
 .github/
@@ -78,14 +79,17 @@ docs/
 
 The `commands/jira/` folder holds the original Jira-flavoured variants (`pickup`, `refine`, `capture`, `qa-review-action`, plus `log-time` for Tempo time tracking) for teams on Atlassian.
 
+Several of these commands keep a **GitHub Project board** in sync as tickets move: `/capture` files into **Backlog**, `/pickup` moves to **In progress**, `/pr` to **In review**, and `/pr-action-review` to **Done** on merge. Configure the board once in `.env` (`GH_PROJECT_OWNER`, `GH_PROJECT_NUMBER`) — see CONTRIBUTING.md § Project board.
+
 ## Quickstart
 
 1. **Use this template** (GitHub → "Use this template") or copy `.claude/`, `scripts/`, `.husky/`, `CLAUDE.md` into your existing repo.
-2. Install the GitHub CLI (`gh auth login`) — the commands drive GitHub Issues and PRs through it.
+2. **Authenticate the GitHub CLI** — run `gh auth login`, then grant the Projects scope once with `gh auth refresh -s project`. The commands drive GitHub Issues, PRs, and the Project board through it. This is one-time and per developer: `gh` stores the token in your OS keychain — never in the repo, never in `.env`.
 3. Edit `CLAUDE.md`: fill in your project overview, repo map, and stack-specific rules. Delete what doesn't apply — the contract only works if it's true.
 4. Wire your package scripts: the gates expect `npm run lint`, `typecheck`, `test`, `build` (and optionally `format:check`, `test:integration`). Adjust `scripts/verify.sh` and `.husky/*` to match your stack.
-5. Create a well-written GitHub issue (acceptance criteria included — the agent implements exactly what the ticket says).
-6. Open Claude Code and type `/pickup 1`.
+5. **Configure the board** — copy `.env.example` to `.env` and set `GH_PROJECT_OWNER` and `GH_PROJECT_NUMBER` (both read off the project URL `…/projects/<number>`). These are config, not secrets, so `.env.example` documents them and your real `.env` stays uncommitted.
+6. Create a well-written GitHub issue (acceptance criteria included — the agent implements exactly what the ticket says).
+7. Open Claude Code and type `/pickup 1`.
 
 ## Adapting it
 

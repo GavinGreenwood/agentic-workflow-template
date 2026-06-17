@@ -20,6 +20,11 @@ Run the full ship workflow: verify, commit, push, and open a PR.
    - Never raise stacked PRs as drafts — raise them ready for review immediately so the team can review and approve in parallel.
 
 7. Output the PR URL. Then:
+   - Move the linked issue's card to **In review** on the project board. Derive the issue number from the branch name (`<issue-number>-...`) or the `Closes #N` line in the PR body:
+     ```bash
+     scripts/set-project-status.sh <issue-number> "In review"
+     ```
+     Chore branches (`chore/...`) have no linked issue and no card — skip this step for them.
    - Open the PR in the browser with `gh pr view <number> --web`.
 8. Perform a thorough self-review of the PR diff:
    - Fetch the full diff: `gh pr diff`

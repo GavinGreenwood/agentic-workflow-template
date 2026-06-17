@@ -19,13 +19,16 @@ Extract: title, full body (description + acceptance criteria), assignees, labels
 - If assigned to **me** (compare against `gh api user --jq .login`) → proceed.
 - If assigned to **someone else** → STOP. Output: "Issue #$ARGUMENTS is assigned to [login] — are you sure you want to pick this up?" Do not proceed until the user confirms.
 
-## Step 3 — Assign the issue to me and mark it in progress
+## Step 3 — Assign the issue to me and move it to In progress
 
 ```bash
 gh issue edit $ARGUMENTS --add-assignee "@me"
+scripts/set-project-status.sh $ARGUMENTS "In progress"
 ```
 
-If the repo uses a status label convention (e.g. `status: in progress`) or a GitHub Project with a Status field, set it now. Otherwise the assignment itself signals the pickup.
+The second command moves the issue's card to **In progress** on the project
+board (adding it to the board first if needed). Board config comes from `.env`
+(see CONTRIBUTING.md § Project board).
 
 ## Step 4 — Fetch linked context
 

@@ -36,6 +36,8 @@ Proposal -> Plan -> Issues -> Branch -> Code -> Gates -> Deploy -> Monitor -> Tr
 - CI pipeline and repo hooks act as deterministic guardrails.
 - Claude should browse, test, and verify the running app as part of the build experience (e.g. via the Playwright MCP server), not just write code blindly.
 
+The GitHub Project board mirrors this loop, and keeping it in sync is **required, not optional**. Tickets move forward through four statuses — **Backlog** (`/capture`) → **In progress** (`/pickup`) → **In review** (`/pr`) → **Done** (`/pr-action-review` on merge) — driven by `scripts/set-project-status.sh`. See CONTRIBUTING.md § Project board for setup and the full mapping.
+
 ## Required Context — Read Before Every Task
 
 Before starting any task, read the relevant context files. Do not code from memory or assumptions.
