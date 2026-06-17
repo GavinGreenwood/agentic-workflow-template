@@ -1,7 +1,7 @@
 FROM node:24-alpine AS builder
 WORKDIR /app
 
-COPY package*.json turbo.json ./
+COPY package*.json package-lock.json turbo.json ./
 COPY apps/web/package*.json apps/web/
 COPY packages/ packages/
 
@@ -14,6 +14,7 @@ ARG APP_VERSION=0.0.0
 ENV NEXT_PUBLIC_APP_VERSION=$APP_VERSION
 ENV NEXT_TELEMETRY_DISABLED=1
 
+RUN npm run build --workspace=packages/shared
 RUN npm run build --workspace=apps/web
 
 # ── Production image ──────────────────────────────────────────────────────────
