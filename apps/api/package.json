@@ -24,7 +24,7 @@
   "devDependencies": {
     "@nestjs/cli": "^10.4.0",
     "@nestjs/schematics": "^10.2.0",
-    "@nestjs/testing": "^10.4.0",
+    "@nestjs/testing": "^11.1.27",
     "@template/eslint-config": "*",
     "@template/jest-config": "*",
     "@template/tsconfig": "*",
