@@ -9,13 +9,13 @@ If the PR does not exist, tell the user and stop.
 
 **Ownership check — do this before anything else:**
 
-Compare the PR author's login against the authenticated GitHub CLI user (`gh pr view <pr-number> --jq .author.login` vs `gh api user --jq .login`).
+Compare the PR author's login against the authenticated GitHub CLI user. Use `gh pr view <pr-number> --jq .author.login` for the PR author and `gh api user --jq .login` for the current user — both return GitHub logins, ensuring a reliable comparison.
 
 - If the PR author is **not** the current user, stop immediately and ask:
 
   > "⚠️ PR #<number> was opened by **@<author>**, not you. Actioning this will make commits, push to their branch, and post GitHub comments on their behalf. Are you sure you want to proceed? (yes / no)"
 
-  Wait for an explicit **yes** before continuing.
+  Wait for an explicit **yes** before continuing. If the user says no, stop.
 
 - If the PR author **is** the current user, continue without prompting.
 
@@ -24,22 +24,52 @@ Once the ownership check passes, check out the branch:
 1. Run `git branch --show-current` to get the current branch.
 2. If already on the PR branch — no action needed.
 3. If on `main` — run `git checkout <headRefName>` automatically.
-4. Otherwise — warn the user and wait for confirmation before switching.
+4. Otherwise — warn the user:
+   > "You're currently on `<current-branch>`, not on `main` or the PR branch `<headRefName>`. Switch to `<headRefName>`? (yes / no)"
+   > Wait for confirmation before switching. If the user says no, stop.
 
-## Step 2 — Sync with base branch
+## Step 2 — Check CI state, sync only if it helps
 
-1. Run `gh pr view <pr-number> --json baseRefName` to get the base branch.
-2. Fetch and merge the latest base branch into the PR branch:
+**Do not merge the base branch in by default.** Syncing the base into the PR branch triggers a fresh CI run and makes you wait — pointless when the branch already merges cleanly and CI is green. A clean, green branch should not be disturbed. Sync **only** when there's a problem that a sync would actually clear (a conflict, or a failure already fixed on the base branch).
+
+1. Fetch the PR's merge and check state:
    ```bash
-   git fetch origin <baseRefName>
-   git merge origin/<baseRefName>
+   gh pr view <pr-number> --json baseRefName,mergeable,mergeStateStatus,statusCheckRollup
    ```
-3. If the merge is **clean**, push immediately.
-4. If the merge produces **conflicts**:
-   - Attempt to auto-resolve where safe (formatting-only conflicts, import ordering, lock-file changes).
+2. Decide based on that state:
+   - **Mergeable and no failing checks** — `mergeable` is `MERGEABLE` and nothing in `statusCheckRollup` is `FAILURE` → **do not sync.** Leave the branch untouched and go to Step 3.
+   - **Conflicts** — `mergeable` is `CONFLICTING` (or `mergeStateStatus` is `DIRTY`) → you must sync to resolve them. Go to step 5 (merge + conflict resolution).
+   - **Failing checks** → first diagnose whether the failure is this PR's fault before touching anything (steps 3–4).
+
+3. **Diagnose the failing check — is it related to this PR's changes?**
+   - Read the failing job(s) from `statusCheckRollup`. For deeper logs, fetch them via your CI provider's CLI or API.
+   - Treat it as **unrelated** when, for example: the same job is green on the latest `<baseRefName>`; the failure is in code this PR never touched (compare against `gh pr diff <pr-number> --name-only`); or it's an infra / dependency / lockfile / audit failure that has since been fixed on `<baseRefName>`.
+   - Treat it as **related** when the failure is in code this PR changed, or in a test for behaviour this PR introduced.
+
+4. **Act on the diagnosis:**
+   - **Unrelated and already fixed on `<baseRefName>`** → this is exactly the case a sync resolves. Merge the base in to pick up the landed fix, push, and **re-analyse after the new run** — don't assume it's gone:
+     ```bash
+     git fetch origin <baseRefName>
+     git merge origin/<baseRefName>
+     # resolve any conflicts per step 5, then:
+     git push origin <headRefName>
+     ```
+     **Do not open a new issue, and do not try to fix an unrelated-already-fixed-on-main failure inside this PR.** The only correct action is to merge the existing fix in. If the failure **persists** after the sync, it was not actually fixed on the base branch (or it is related after all) — surface it to the user rather than guessing.
+   - **Unrelated but NOT yet fixed on `<baseRefName>`** (genuinely broken everywhere, or flaky) → a sync won't help, so don't sync. Note it for the user in the summary (Step 7) and carry on with the review.
+   - **Related to this PR** → do not paper over it with a sync. Treat it as a review finding: fix it in the auto-fix pass (Step 5 — Apply AUTO-FIX) or surface it to the user (Step 6 — Present NEEDS DISCUSSION items).
+
+5. **Conflict resolution** (applies whenever you do merge, in step 2 or step 4):
+   - Attempt to auto-resolve where safe (e.g. formatting-only conflicts, import ordering, lock-file changes).
    - For conflicts requiring semantic judgement, favour the PR branch's intent — this branch is the source of truth for the feature being reviewed.
-   - If any conflict cannot be safely auto-resolved, show the raw conflict to the user and wait for instruction.
-   - Once all conflicts are resolved, commit and push.
+   - If any conflict cannot be safely auto-resolved, show the raw conflict to the user:
+     > "There's a conflict in `<file>` I can't safely resolve automatically. Here's the conflict: `<show conflict markers>`. How would you like to resolve it?"
+     > Wait for the user's instruction before continuing.
+   - Once all conflicts are resolved, commit and push:
+     ```bash
+     git add .
+     git commit -m "<issue-number>: merge <baseRefName> into <headRefName>"
+     git push origin <headRefName>
+     ```
 
 ## Step 3 — Fetch all comments
 
@@ -95,7 +125,7 @@ For each auto-fix:
 3. If verify fails, fix the failures before continuing.
 4. Commit with the issue number and a message referencing the review (e.g. `fix(#8): address PR review comments`).
 5. Push the branch.
-6. Reply to each resolved comment via `gh api` — one sentence describing what was done.
+6. Reply to each resolved comment via `gh api`. Keep replies concise — one sentence describing what was done. Example: `"Fixed — renamed to \`providerKey\` for consistency."`.
 7. Resolve each fixed thread via the GraphQL API:
 
 ```bash
@@ -148,7 +178,28 @@ After listing all of them, ask the user: "For each item, tell me: accept / rejec
 - **Reject**: Post the pushback reply via `gh api`. Do not resolve the thread — leave it open for the reviewer to close if satisfied.
 - **Skip**: Do nothing, no reply posted, thread left open.
 
-After all decisions are actioned, run `scripts/verify.sh` once more, push, output a summary, then re-request review — but **only from reviewers who have not yet approved**.
+After all decisions are actioned, run `scripts/verify.sh` once more, push, then output a summary in this format:
+
+```
+## Review response summary
+
+✅ Auto-fixed (N comments):
+- [list]
+
+✅ Accepted and fixed (N comments):
+- [list]
+
+↩️ Pushed back (N comments):
+- [list]
+
+ℹ️ Informational — replied and resolved (N comments):
+- [list]
+
+⏭️ Skipped (N comments):
+- [list]
+```
+
+Then re-request review — but **only from reviewers who have not yet approved**.
 
 For each reviewer in the **currently requested reviewers** list (`gh pr view --json reviewRequests`), compute their **effective state**:
 

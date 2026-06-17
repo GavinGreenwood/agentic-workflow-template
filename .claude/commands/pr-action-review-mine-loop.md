@@ -43,12 +43,20 @@ Run `git branch --show-current` to get the current branch.
    git fetch origin <baseRefName>
    git merge origin/<baseRefName>
    ```
-3. If clean — push immediately.
+3. If clean — push immediately:
+   ```bash
+   git push origin <headRefName>
+   ```
 4. If there are conflicts:
    - Auto-resolve where safe (formatting, import ordering, lock-file changes).
    - For semantic conflicts, favour the PR branch's intent.
    - If a conflict cannot be safely auto-resolved, show it to the user and wait for instruction before continuing.
-   - Once resolved, commit and push.
+   - Once resolved, commit and push:
+     ```bash
+     git add .
+     git commit -m "<issue-number>: merge <baseRefName> into <headRefName>"
+     git push origin <headRefName>
+     ```
 
 ---
 
@@ -56,7 +64,7 @@ Run `git branch --show-current` to get the current branch.
 
 - **Review comments** (line-level): `gh api repos/{owner}/{repo}/pulls/{pr}/comments --paginate`
 - **Issue comments** (top-level): `gh api repos/{owner}/{repo}/issues/{pr}/comments --paginate`
-- **Reviews** (approval state): `gh api repos/{owner}/{repo}/pulls/{pr}/reviews --paginate`
+- **Reviews** (resolved state): `gh api repos/{owner}/{repo}/pulls/{pr}/reviews --paginate`
 
 Also fetch unresolved review thread node IDs via GraphQL (needed for resolving later):
 
@@ -177,7 +185,9 @@ For each reviewer, compute their **effective state**:
 - Effective state = most recent non-`COMMENTED` review (`APPROVED`, `CHANGES_REQUESTED`, or `DISMISSED`).
 - No non-`COMMENTED` reviews = has not yet reviewed.
 
-**Who counts as a human reviewer:** any reviewer whose login does NOT contain `bot` or `copilot`. A human pressing approve with AI assistance is still a human approval.
+**Who counts as a human reviewer:** any reviewer whose login does NOT contain `bot` or `copilot`.
+
+> **AI-assisted reviews count as human approvals.** Some reviewers use AI tooling that generates the review body text (e.g. "auto-approved by…" or "Actioned by…"). If the reviewer login is not a bot account (does not contain `bot` or `copilot`), their `APPROVED` review counts as a valid human approval — regardless of how the review body was authored.
 
 ---
 

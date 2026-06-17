@@ -67,24 +67,10 @@ npm run test || {
 
 # --- Conditional checks (only if relevant files changed) ---
 
-# Mutation testing — incremental, scoped to changed source files.
-# Warn-only: surviving mutants never block the push; the full suite runs nightly
-# in CI as the authoritative gate. Requires Stryker configured in the project.
-SRC_CHANGED=false
-for file in $CHANGED_FILES; do
-  if [[ "$file" =~ ^(apps|packages|src)/.*\.ts$ && ! "$file" =~ \.(spec|test)\.ts$ ]]; then
-    SRC_CHANGED=true
-    break
-  fi
-done
-
-if [ "$SRC_CHANGED" = true ] && [ -f "stryker.config.mjs" ]; then
-  echo "[Conditional] Source changed — running incremental mutation tests (warn-only)..."
-  npx stryker run --incremental --reporters clear-text || {
-    echo "[Mutation] Surviving mutants detected — review the report above."
-    echo "[Mutation] This is a warning only. Push continues."
-  }
-fi
+# Mutation testing is intentionally excluded from pre-push.
+# The full suite runs nightly in CI (nightly-mutation workflow) as the authoritative gate.
+# Running it on push was warn-only and had no quality-gate value, but was expensive enough
+# to cause resource contention when multiple branches are pushed concurrently.
 
 # Migration changes — validate migration files exist alongside schema changes.
 # Adjust the schema/migration path patterns to your migration tool (Prisma shown).
