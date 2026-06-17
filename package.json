@@ -1,0 +1,36 @@
+{
+  "name": "@template/monorepo",
+  "version": "0.0.1",
+  "private": true,
+  "packageManager": "npm@11.12.1",
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "start": "turbo start",
+    "lint": "turbo lint",
+    "typecheck": "turbo typecheck",
+    "test": "turbo test",
+    "test:integration": "turbo test:integration --continue",
+    "test:e2e": "playwright test",
+    "clean": "turbo clean",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.50.0",
+    "@secretlint/secretlint-rule-preset-recommend": "^9.3.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.5.0",
+    "prettier": "^3.4.2",
+    "secretlint": "^9.3.0",
+    "turbo": "^2.3.0",
+    "typescript": "^5.8.0"
+  }
+}
