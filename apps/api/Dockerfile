@@ -24,7 +24,12 @@ ARG APP_VERSION=0.0.0
 ENV npm_package_version=$APP_VERSION
 ENV NODE_ENV=production
 
+# Root node_modules (production-only after prune above)
 COPY --from=builder /app/node_modules ./node_modules
+# Copy shared package so node_modules/@template/shared symlink resolves at runtime
+COPY --from=builder /app/packages/shared/dist ./packages/shared/dist
+COPY --from=builder /app/packages/shared/package.json ./packages/shared/package.json
+
 COPY --from=builder /app/apps/api/dist ./dist
 COPY --from=builder /app/apps/api/package.json ./package.json
 
