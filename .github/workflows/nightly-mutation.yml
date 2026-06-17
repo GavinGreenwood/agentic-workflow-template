@@ -28,7 +28,7 @@ jobs:
           - 5432:5432
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - uses: ./.github/actions/setup
 
@@ -39,7 +39,7 @@ jobs:
         continue-on-error: true
 
       - name: Upload mutation report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: stryker-report
