@@ -90,6 +90,8 @@ describe("KeyResultsService", () => {
   });
 
   it("remove throws NotFoundException for unknown id", () => {
-    expect(() => service.remove("nope")).toThrow(NotFoundException);
+    expect(() => {
+      service.remove("nope");
+    }).toThrow(NotFoundException);
   });
 });

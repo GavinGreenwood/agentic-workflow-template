@@ -68,7 +68,9 @@ describe("ObjectivesController", () => {
       ownerId: "u",
       cycleId: "q",
     });
-    expect(() => controller.remove(obj.id)).not.toThrow();
+    expect(() => {
+      controller.remove(obj.id);
+    }).not.toThrow();
     expect(() => objectivesService.findOne(obj.id)).toThrow(NotFoundException);
   });
 

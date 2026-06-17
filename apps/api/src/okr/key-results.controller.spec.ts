@@ -75,7 +75,9 @@ describe("KeyResultsController", () => {
       startValue: 0,
       targetValue: 10,
     });
-    expect(() => controller.remove(kr.id)).not.toThrow();
+    expect(() => {
+      controller.remove(kr.id);
+    }).not.toThrow();
   });
 
   it("throws ZodError for invalid create body", () => {

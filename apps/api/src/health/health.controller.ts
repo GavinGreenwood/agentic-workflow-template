@@ -14,6 +14,6 @@ export class HealthController {
 
   @Get("version")
   version(): { version: string } {
-    return { version: process.env["npm_package_version"] ?? "0.0.0" };
+    return { version: process.env.npm_package_version ?? "0.0.0" };
   }
 }
