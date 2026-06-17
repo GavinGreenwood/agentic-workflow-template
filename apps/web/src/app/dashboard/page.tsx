@@ -25,31 +25,28 @@ export default async function DashboardPage() {
         </p>
       ) : (
         <ul>
-          {progressList.map((summary) => {
-            if (!summary) return null;
-            return (
-              <li key={summary.objectiveId}>
-                <Link href={`/objectives/${summary.objectiveId}`}>
-                  <strong>{summary.title}</strong>
-                </Link>
-                <span> — {summary.status}</span>
-                <div>
-                  <progress value={summary.progressPercent} max={100} />
-                  <span> {summary.progressPercent}%</span>
-                </div>
-                {summary.keyResults.length > 0 && (
-                  <ul>
-                    {summary.keyResults.map((kr) => (
-                      <li key={kr.id}>
-                        {kr.title}: {kr.currentValue}/{kr.targetValue} {kr.unit}{" "}
-                        ({kr.progressPercent}%)
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </li>
-            );
-          })}
+          {progressList.map((summary) => (
+            <li key={summary.objectiveId}>
+              <Link href={`/objectives/${summary.objectiveId}`}>
+                <strong>{summary.title}</strong>
+              </Link>
+              <span> — {summary.status}</span>
+              <div>
+                <progress value={summary.progressPercent} max={100} />
+                <span> {summary.progressPercent}%</span>
+              </div>
+              {summary.keyResults.length > 0 && (
+                <ul>
+                  {summary.keyResults.map((kr) => (
+                    <li key={kr.id}>
+                      {kr.title}: {kr.currentValue}/{kr.targetValue} {kr.unit} (
+                      {kr.progressPercent}%)
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </li>
+          ))}
         </ul>
       )}
     </main>
