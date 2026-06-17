@@ -1,0 +1,13 @@
+{
+  "name": "@template/test-utils",
+  "version": "0.0.1",
+  "private": true,
+  "license": "MIT",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "devDependencies": {
+    "@template/tsconfig": "*",
+    "typescript": "^5.8.0"
+  }
+}

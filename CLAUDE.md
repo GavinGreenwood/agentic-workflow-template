@@ -7,20 +7,21 @@
 
 ## Project Overview
 
-<!-- TEMPLATE: Describe your project here in 3–6 sentences: what it is, the stack,
-     where it deploys, how auth works, where the architecture docs live.
-     The agent reads this first — make it true and keep it current. -->
+This is a Turborepo monorepo template with a **Next.js** frontend (`apps/web`, port 3000) and a **NestJS** backend (`apps/api`, port 3001). Shared configuration is centralised in `packages/` — TypeScript compiler options, ESLint rules, Jest presets, and a stub shared library. The entire stack is TypeScript strict-mode. When adopting this template, rename the `@template` namespace to your own project scope throughout all `package.json` files. Architecture decisions live in `docs/adr/`.
 
 ## Repo Map
 
-<!-- TEMPLATE: Map your top-level directories so the agent knows where things live. Example: -->
-
 ```
-apps/web/          — Frontend
-apps/api/          — Backend
-packages/shared/   — Shared types, validation schemas, utilities
-docs/              — All documentation (plans, ADRs, architecture, runbooks)
-scripts/           — Developer and CI scripts
+apps/web/              — Next.js 15 (App Router) frontend
+apps/api/              — NestJS backend
+packages/shared/       — Shared types, validation schemas, utilities
+packages/ui/           — Shared React component library (stub)
+packages/eslint-config/ — Centralised ESLint rules (base / nextjs / nestjs)
+packages/jest-config/  — Centralised Jest presets (base / nestjs / nextjs)
+packages/tsconfig/     — Centralised TypeScript configs (base / nestjs / nextjs / react-library)
+packages/test-utils/   — Shared test data builders and helpers (stub)
+docs/                  — All documentation (plans, ADRs, architecture, runbooks)
+scripts/               — Developer and CI scripts
 ```
 
 ## Workflow Loop

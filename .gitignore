@@ -6,6 +6,7 @@ build/
 coverage/
 reports/
 *.log
+*.tsbuildinfo
 
 # Environment — never commit credentials
 .env

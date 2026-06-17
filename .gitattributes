@@ -4,5 +4,21 @@
 .husky/pre-push text eol=lf
 scripts/hooks/* text eol=lf
 
-# Everything else: normalise to LF in the repo, native in the working tree
-* text=auto
+# Everything else: enforce LF in the working copy too (overrides core.autocrlf),
+# so prettier (endOfLine: lf) and the git hooks pass consistently on Windows/macOS/Linux.
+* text=auto eol=lf
+
+# Binary files — never touch line endings
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
+*.otf binary
+*.zip binary
+*.gz binary
+*.tar binary

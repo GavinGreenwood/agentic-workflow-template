@@ -1,0 +1,9 @@
+node_modules/
+dist/
+build/
+.next/
+.turbo/
+coverage/
+reports/
+*.tsbuildinfo
+package-lock.json
