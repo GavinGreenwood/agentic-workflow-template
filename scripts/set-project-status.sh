@@ -47,6 +47,10 @@ if [ -z "$owner" ] || [ -z "$project_number" ]; then
   exit 0
 fi
 
+if [ "$owner_type" != "user" ] && [ "$owner_type" != "org" ]; then
+  echo "error: GH_PROJECT_OWNER_TYPE must be 'user' or 'org' (got '${owner_type}')" >&2
+  exit 1
+fi
 owner_field="user"
 [ "$owner_type" = "org" ] && owner_field="organization"
 
@@ -64,11 +68,12 @@ read_query="query(\$owner:String!, \$number:Int!){
 }"
 
 resolved="$(gh api graphql -f owner="$owner" -F number="$project_number" -f query="$read_query" \
-  --jq ".data.${owner_field}.projectV2 | [.id, .field.id, (.field.options[] | select(.name == \"${status}\") | .id)] | @tsv" \
-  2>/dev/null || true)"
+  2>/dev/null \
+  | jq -r --arg s "$status" ".data.${owner_field}.projectV2 | [.id, .field.id, (.field.options[] | select(.name == \$s) | .id)] | @tsv" \
+  || true)"
 
 if [ -z "$resolved" ]; then
-  echo "error: could not read project #${project_number} for owner '${owner}' (${owner_type}). Check GH_PROJECT_* config and that the token has the read:project scope." >&2
+  echo "error: could not read project #${project_number} for owner '${owner}' (${owner_type}). Check GH_PROJECT_* config and that the token has the project scope (gh auth refresh -s project)." >&2
   exit 1
 fi
 
