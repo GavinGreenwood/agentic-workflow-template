@@ -279,7 +279,8 @@ jobs:
           docker build \
             --build-arg APP_VERSION=${{ env.SEMVER }} \
             -t ${{ env.IMAGE_NAME }}:${{ env.SEMVER }} \
-            apps/api/
+            -f apps/api/Dockerfile \
+            .
       - name: Smoke test API image
         run: bash scripts/ci-smoke-test.sh api ${{ env.IMAGE_NAME }}:${{ env.SEMVER }} ${{ env.SEMVER }}
       - name: Trivy scan (blocking — fixable CRITICAL)
@@ -332,7 +333,8 @@ jobs:
           docker build \
             --build-arg APP_VERSION=${{ env.SEMVER }} \
             -t ${{ env.IMAGE_NAME }}:${{ env.SEMVER }} \
-            apps/web/
+            -f apps/web/Dockerfile \
+            .
       - name: Smoke test web image
         run: bash scripts/ci-smoke-test.sh web ${{ env.IMAGE_NAME }}:${{ env.SEMVER }} ${{ env.SEMVER }}
       - name: Trivy scan (blocking — fixable CRITICAL)
