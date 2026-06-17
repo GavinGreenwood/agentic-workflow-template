@@ -24,13 +24,16 @@ Capture the issue number from the output URL.
 
 ## Step 3 — Place it on the board
 
-If the repo uses a GitHub Project board, add the issue to it and set its status to In Progress:
+Add the new issue to the project board in the **Backlog** column:
 
 ```bash
-gh project item-add <project-number> --owner <owner> --url <issue-url>
+scripts/set-project-status.sh <issue-number> "Backlog"
 ```
 
-If no project board is configured, skip this step.
+The helper adds the issue to the board if it isn't already there, then sets its
+status. Board owner/number come from `.env` (see `.env.example` and
+CONTRIBUTING.md § Project board). If the board isn't configured, the helper
+warns and no-ops — but for this repo board tracking is required, so configure it.
 
 ## Step 4 — Commit changes (if any)
 

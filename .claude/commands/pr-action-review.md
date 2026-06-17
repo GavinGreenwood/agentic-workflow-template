@@ -239,6 +239,14 @@ gh pr merge <pr-number> --merge --delete-branch
 
 The linked issue closes automatically via the `Closes #N` line in the PR body. If the body lacks it, close the issue manually with a one-line comment ending `_Actioned by Claude Code_`.
 
+Then move the linked issue's card to **Done** on the project board (derive the issue number from the `Closes #N` line or the branch name):
+
+```bash
+scripts/set-project-status.sh <issue-number> "Done"
+```
+
+Chore branches have no linked issue and no card — skip this step for them.
+
 ### If approved but not yet fully mergeable (CI still running)
 
 Do **not** offer to merge — all status checks must pass first. Explain the current state concisely and stop. Do not enable GitHub's native auto-merge — the merge is always an explicit decision once the PR is green.
