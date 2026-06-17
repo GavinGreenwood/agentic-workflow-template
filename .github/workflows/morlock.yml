@@ -1,0 +1,51 @@
+name: Morlock — Nightly Security Probe
+
+on:
+  schedule:
+    - cron: "0 1 * * *"
+  workflow_dispatch:
+
+jobs:
+  morlock:
+    name: Morlock security probe
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Read Morlock persona
+        id: persona
+        run: |
+          persona=$(cat .claude/agents/morlock.md)
+          echo "content<<EOF" >> $GITHUB_OUTPUT
+          echo "$persona" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Run Morlock probe
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          branch_prefix: morlock
+          allowed_tools: "Bash,Read,Write,Edit,Glob,Grep"
+          prompt: |
+            ${{ steps.persona.outputs.content }}
+
+            Today's probe session. Your job:
+            1. Read and understand the current codebase — focus on auth boundaries, data isolation, input validation, and error leakage.
+            2. Identify the most interesting attack surfaces.
+            3. For each finding, write a proving test under `apps/api/integration/security/` (create the directory if needed).
+            4. Summarise your findings.
+
+            After completing the probe:
+            - Commit any new tests on the current branch (you are already on a morlock/* branch).
+            - Open a PR titled "security: Morlock probe findings — $(date +%Y-%m-%d)".
+            - Open a summary issue titled "Morlock report — $(date +%Y-%m-%d)" listing each finding with severity and the test that proves it.
+            - All external writes (PR body, issue body, comments) must end with `_Actioned by Claude Code_`.
+
+            If the codebase is too sparse to probe yet, note that in both the PR and issue and exit cleanly.

@@ -1,0 +1,369 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+# ─── Stage 1: Fast checks (run in parallel) ──────────────────────────────────
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - run: npm run lint
+
+  typecheck:
+    name: Typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - run: npm run typecheck
+
+  unit-tests:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - run: npm run test
+
+  integration-tests:
+    name: Integration tests
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: app
+          POSTGRES_PASSWORD: app
+          POSTGRES_DB: app_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+      redis:
+        image: redis:7
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - name: Run schema migration (if Prisma present)
+        run: |
+          schema=$(find apps -name "schema.prisma" 2>/dev/null | head -1)
+          if [ -n "$schema" ]; then
+            npx prisma migrate deploy --schema "$schema"
+          fi
+        env:
+          DATABASE_URL: postgresql://app:app@localhost:5432/app_test
+      - run: npm run test:integration
+        env:
+          DATABASE_URL: postgresql://app:app@localhost:5432/app_test
+          REDIS_URL: redis://localhost:6379
+
+  i18n-check:
+    name: i18n key parity
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - run: npm run lint:i18n --if-present
+
+  code-health:
+    name: Code health
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - run: npm run check:circular --if-present
+      - run: npm run check:unused --if-present
+      - run: npm run check:dupes --if-present
+
+  openapi:
+    name: OpenAPI drift gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - name: Generate OpenAPI spec
+        run: npm run generate:openapi --if-present
+      - name: Check for drift
+        run: git diff --exit-code
+        continue-on-error: true
+      - name: Spectral lint
+        run: npx @stoplight/spectral-cli lint --ruleset .spectral.yml openapi.json --if-present 2>/dev/null || true
+
+  # ─── Stage 2: Build + Security ───────────────────────────────────────────────
+
+  build:
+    name: Build
+    needs:
+      - lint
+      - typecheck
+      - unit-tests
+      - integration-tests
+      - i18n-check
+      - code-health
+      - openapi
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - name: Export build-time env defaults
+        run: |
+          if [ -f apps/web/.env.example ]; then
+            while IFS='=' read -r key value; do
+              [[ "$key" =~ ^NEXT_PUBLIC_ ]] && echo "$key=${value:-placeholder}" >> $GITHUB_ENV
+            done < <(grep '^NEXT_PUBLIC_' apps/web/.env.example || true)
+          fi
+      - run: npm run build
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-output
+          path: |
+            apps/web/.next/
+            apps/api/dist/
+            packages/shared/dist/
+          retention-days: 1
+
+  security:
+    name: Security
+    needs:
+      - lint
+      - typecheck
+      - unit-tests
+      - integration-tests
+      - i18n-check
+      - code-health
+      - openapi
+    uses: ./.github/workflows/security.yml
+    permissions:
+      contents: read
+      security-events: write
+    secrets: inherit
+
+  # ─── Stage 3: E2E ────────────────────────────────────────────────────────────
+
+  e2e:
+    name: E2E tests
+    needs: build
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: app
+          POSTGRES_PASSWORD: app
+          POSTGRES_DB: app_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+      redis:
+        image: redis:7
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-output
+      - name: Run migrations and seed
+        run: |
+          schema=$(find apps -name "schema.prisma" 2>/dev/null | head -1)
+          if [ -n "$schema" ]; then
+            npx prisma migrate deploy --schema "$schema"
+            npm run prisma:seed --if-present
+          fi
+        env:
+          DATABASE_URL: postgresql://app:app@localhost:5432/app_test
+      - name: Start API
+        run: npm run start --workspace=apps/api &
+        env:
+          DATABASE_URL: postgresql://app:app@localhost:5432/app_test
+          REDIS_URL: redis://localhost:6379
+          PORT: 3001
+          NODE_ENV: test
+          # Replace with repo secrets for external services in your project:
+          # KEYCLOAK_URL: ${{ secrets.KEYCLOAK_URL }}
+          # OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      - name: Wait for API health
+        run: |
+          timeout 30 bash -c 'until curl -sf http://localhost:3001/healthz; do sleep 1; done'
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+      - name: Run E2E tests
+        run: npm run test:e2e
+        env:
+          DATABASE_URL: postgresql://app:app@localhost:5432/app_test
+          API_URL: http://localhost:3001
+          NEXT_PUBLIC_API_URL: http://localhost:3001
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+
+  # ─── Stage 4: Versioning (independent) ───────────────────────────────────────
+
+  version:
+    name: Compute version
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      semver: ${{ steps.gitversion.outputs.semVer }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gittools/actions/gitversion/setup@v3
+        with:
+          versionSpec: "6.x"
+      - id: gitversion
+        uses: gittools/actions/gitversion/execute@v3
+        with:
+          useConfigFile: true
+
+  # ─── Stage 5: Docker image build, smoke test, Trivy scan ─────────────────────
+
+  image-api:
+    name: API image
+    needs: [e2e, security, version]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    env:
+      IMAGE_NAME: app-api
+      SEMVER: ${{ needs.version.outputs.semver }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build API image
+        run: |
+          docker build \
+            --build-arg APP_VERSION=${{ env.SEMVER }} \
+            -t ${{ env.IMAGE_NAME }}:${{ env.SEMVER }} \
+            apps/api/
+      - name: Smoke test API image
+        run: bash scripts/ci-smoke-test.sh api ${{ env.IMAGE_NAME }}:${{ env.SEMVER }} ${{ env.SEMVER }}
+      - name: Trivy scan (blocking — fixable CRITICAL)
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ env.IMAGE_NAME }}:${{ env.SEMVER }}
+          exit-code: "1"
+          ignore-unfixed: true
+          severity: CRITICAL
+      - name: Trivy scan (SARIF — CRITICAL+HIGH)
+        uses: aquasecurity/trivy-action@master
+        if: always()
+        with:
+          image-ref: ${{ env.IMAGE_NAME }}:${{ env.SEMVER }}
+          format: sarif
+          output: trivy-api.sarif
+          severity: CRITICAL,HIGH
+      - name: Upload Trivy SARIF
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: trivy-api.sarif
+      # ─────────────────────────────────────────────────────────────────────
+      # IMAGE PUSH IS INTENTIONALLY DISABLED. This template builds, versions,
+      # smoke-tests and scans images but does NOT publish them.
+      # To enable: set `if:` to your branch condition, add registry login
+      # (GHCR default below), and provide the relevant secrets.
+      # ─────────────────────────────────────────────────────────────────────
+      - name: Push API image
+        if: false
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+          docker tag ${{ env.IMAGE_NAME }}:${{ env.SEMVER }} ghcr.io/${{ github.repository }}/app-api:${{ env.SEMVER }}
+          docker push ghcr.io/${{ github.repository }}/app-api:${{ env.SEMVER }}
+
+  image-web:
+    name: Web image
+    needs: [e2e, security, version]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    env:
+      IMAGE_NAME: app-web
+      SEMVER: ${{ needs.version.outputs.semver }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build web image
+        run: |
+          docker build \
+            --build-arg APP_VERSION=${{ env.SEMVER }} \
+            -t ${{ env.IMAGE_NAME }}:${{ env.SEMVER }} \
+            apps/web/
+      - name: Smoke test web image
+        run: bash scripts/ci-smoke-test.sh web ${{ env.IMAGE_NAME }}:${{ env.SEMVER }} ${{ env.SEMVER }}
+      - name: Trivy scan (blocking — fixable CRITICAL)
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ env.IMAGE_NAME }}:${{ env.SEMVER }}
+          exit-code: "1"
+          ignore-unfixed: true
+          severity: CRITICAL
+      - name: Trivy scan (SARIF — CRITICAL+HIGH)
+        uses: aquasecurity/trivy-action@master
+        if: always()
+        with:
+          image-ref: ${{ env.IMAGE_NAME }}:${{ env.SEMVER }}
+          format: sarif
+          output: trivy-web.sarif
+          severity: CRITICAL,HIGH
+      - name: Upload Trivy SARIF
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: trivy-web.sarif
+      # ─────────────────────────────────────────────────────────────────────
+      # IMAGE PUSH IS INTENTIONALLY DISABLED. This template builds, versions,
+      # smoke-tests and scans images but does NOT publish them.
+      # To enable: set `if:` to your branch condition, add registry login
+      # (GHCR default below), and provide the relevant secrets.
+      # ─────────────────────────────────────────────────────────────────────
+      - name: Push web image
+        if: false
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+          docker tag ${{ env.IMAGE_NAME }}:${{ env.SEMVER }} ghcr.io/${{ github.repository }}/app-web:${{ env.SEMVER }}
+          docker push ghcr.io/${{ github.repository }}/app-web:${{ env.SEMVER }}

@@ -1,0 +1,22 @@
+name: Setup
+description: Install Node.js, restore npm cache, install dependencies, run optional Prisma generation
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v4
+      with:
+        node-version: "24"
+        cache: npm
+
+    - name: Install dependencies
+      run: npm ci
+      shell: bash
+
+    - name: Generate Prisma client (if schema present)
+      run: |
+        schema=$(find apps -name "schema.prisma" 2>/dev/null | head -1)
+        if [ -n "$schema" ]; then
+          npx prisma generate --schema "$schema"
+        fi
+      shell: bash
