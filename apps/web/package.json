@@ -9,7 +9,7 @@
     "lint": "eslint src",
     "typecheck": "tsc --noEmit",
     "test": "jest --coverage --passWithNoTests",
-    "test:e2e": "playwright test --config ../../playwright.config.ts"
+    "test:e2e": "playwright test --config ../../playwright.config.ts --pass-with-no-tests"
   },
   "dependencies": {
     "@template/shared": "*",

@@ -21,7 +21,7 @@
     "typecheck": "turbo typecheck",
     "test": "turbo test",
     "test:integration": "turbo test:integration --continue",
-    "test:e2e": "playwright test",
+    "test:e2e": "playwright test --pass-with-no-tests",
     "clean": "turbo clean",
     "prepare": "husky"
   },

@@ -1,0 +1,1 @@
+# Playwright E2E specs live here. Reserved so playwright.config.ts `testDir` resolves; remove once real specs land.
