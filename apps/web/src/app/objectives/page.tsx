@@ -12,7 +12,7 @@ const statusStyles: Record<string, string> = {
 
 function getStatusClass(status: string): string {
   const cls = statusStyles[status];
-  return cls !== undefined ? cls : "bg-slate-100 text-slate-600";
+  return cls ?? "bg-slate-100 text-slate-600";
 }
 
 export default async function ObjectivesPage() {
@@ -86,13 +86,27 @@ export default async function ObjectivesPage() {
                 >
                   Cycle
                 </label>
-                <input
+                <select
                   id="cycleId"
                   name="cycleId"
-                  type="text"
                   defaultValue="2025-Q1"
-                  className="block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                />
+                  className="block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-white"
+                >
+                  {[
+                    "2025-Q1",
+                    "2025-Q2",
+                    "2025-Q3",
+                    "2025-Q4",
+                    "2026-Q1",
+                    "2026-Q2",
+                    "2026-Q3",
+                    "2026-Q4",
+                  ].map((q) => (
+                    <option key={q} value={q}>
+                      {q}
+                    </option>
+                  ))}
+                </select>
               </div>
               <button
                 type="submit"

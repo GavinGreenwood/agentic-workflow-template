@@ -15,7 +15,7 @@ const statusStyles: Record<string, string> = {
 
 function getStatusClass(status: string): string {
   const cls = statusStyles[status];
-  return cls !== undefined ? cls : "bg-slate-100 text-slate-600";
+  return cls ?? "bg-slate-100 text-slate-600";
 }
 
 interface Props {
@@ -103,7 +103,7 @@ export default async function ObjectivePage({ params }: Props) {
           <div className="w-full bg-slate-200 rounded-full h-2">
             <div
               className="bg-indigo-500 rounded-full h-2 transition-all"
-              style={{ width: progress.progressPercent + "%" }}
+              style={{ width: `${String(progress.progressPercent)}%` }}
             />
           </div>
         </div>
@@ -154,7 +154,7 @@ export default async function ObjectivePage({ params }: Props) {
                     <div className="w-full bg-slate-200 rounded-full h-1.5">
                       <div
                         className="bg-indigo-500 rounded-full h-1.5 transition-all"
-                        style={{ width: pct + "%" }}
+                        style={{ width: `${String(pct)}%` }}
                       />
                     </div>
                   </li>
