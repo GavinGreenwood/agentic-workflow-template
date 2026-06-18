@@ -1,6 +1,6 @@
 {
   "name": "@template/web",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "private": true,
   "scripts": {
     "build": "next build",
@@ -19,6 +19,7 @@
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.1",
     "@template/eslint-config": "*",
     "@template/jest-config": "*",
     "@template/tsconfig": "*",
@@ -31,6 +32,7 @@
     "eslint": "^9.18.0",
     "jest": "^30.0.0",
     "jest-environment-jsdom": "^30.0.0",
+    "tailwindcss": "^4.3.1",
     "ts-jest": "^29.2.0",
     "typescript": "^5.8.0"
   }
