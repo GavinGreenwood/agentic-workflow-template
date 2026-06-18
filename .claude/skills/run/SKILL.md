@@ -51,13 +51,20 @@ Do **not** loop or sleep-poll. One check only. If not ready, say so and let the 
 
 ## Step 3 — Start the dev servers (only if not running)
 
-Use the Bash tool with `run_in_background: true`:
+First check that dependencies are installed:
 
 ```bash
+# If node_modules is absent or turbo binary is missing, install first
+test -f node_modules/.bin/turbo || npm install
+```
+
+On **Windows**, use the **PowerShell tool** (not Bash) with `run_in_background: true` — Bash on Windows does not resolve local `node_modules/.bin` binaries, so `next` and `nest` will fail with "not recognized":
+
+```powershell
 npm run dev
 ```
 
-This must be run with `run_in_background: true` — without it the agent will hang indefinitely waiting for the server process to exit. Then do a **single** readiness check after a short wait (~10 s). If still not responding, report it and stop — do not loop.
+This must be run with `run_in_background: true` — without it the agent will hang indefinitely. Then do a **single** readiness check after a short wait (~15 s). If still not responding, report it and stop — do not loop.
 
 ---
 
