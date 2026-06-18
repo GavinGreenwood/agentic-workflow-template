@@ -16,3 +16,8 @@ reports/
 # OS noise
 .DS_Store
 Thumbs.db
+
+# Playwright MCP output
+.playwright-mcp/
+screenshot*.png
+screenshot*.jpg
