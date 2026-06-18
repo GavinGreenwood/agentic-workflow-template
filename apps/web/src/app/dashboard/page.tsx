@@ -10,7 +10,7 @@ const statusStyles: Record<string, string> = {
 
 function getStatusClass(status: string): string {
   const cls = statusStyles[status];
-  return cls !== undefined ? cls : "bg-slate-100 text-slate-600";
+  return cls ?? "bg-slate-100 text-slate-600";
 }
 
 function progressColor(pct: number): string {
@@ -82,7 +82,7 @@ export default async function DashboardPage() {
                   <div
                     className="rounded-full h-2 transition-all"
                     style={{
-                      width: summary.progressPercent + "%",
+                      width: `${String(summary.progressPercent)}%`,
                       backgroundColor: progressColor(summary.progressPercent),
                     }}
                   />
