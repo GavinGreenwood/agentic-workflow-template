@@ -13,6 +13,11 @@ const statusStyles: Record<string, string> = {
   archived: "bg-slate-100 text-slate-600",
 };
 
+function getStatusClass(status: string): string {
+  const cls = statusStyles[status];
+  return cls !== undefined ? cls : "bg-slate-100 text-slate-600";
+}
+
 interface Props {
   params: Promise<{ id: string }>;
 }
@@ -83,7 +88,7 @@ export default async function ObjectivePage({ params }: Props) {
         <div className="flex items-start justify-between mb-4">
           <h1 className="text-xl font-bold text-slate-900">{progress.title}</h1>
           <span
-            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusStyles[progress.status] ?? statusStyles["active"]}`}
+            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusClass(progress.status)}`}
           >
             {progress.status}
           </span>
@@ -98,7 +103,7 @@ export default async function ObjectivePage({ params }: Props) {
           <div className="w-full bg-slate-200 rounded-full h-2">
             <div
               className="bg-indigo-500 rounded-full h-2 transition-all"
-              style={{ width: `${progress.progressPercent}%` }}
+              style={{ width: progress.progressPercent + "%" }}
             />
           </div>
         </div>
@@ -149,7 +154,7 @@ export default async function ObjectivePage({ params }: Props) {
                     <div className="w-full bg-slate-200 rounded-full h-1.5">
                       <div
                         className="bg-indigo-500 rounded-full h-1.5 transition-all"
-                        style={{ width: `${pct}%` }}
+                        style={{ width: pct + "%" }}
                       />
                     </div>
                   </li>

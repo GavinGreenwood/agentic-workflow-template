@@ -8,6 +8,11 @@ const statusStyles: Record<string, string> = {
   archived: "bg-slate-100 text-slate-600",
 };
 
+function getStatusClass(status: string): string {
+  const cls = statusStyles[status];
+  return cls !== undefined ? cls : "bg-slate-100 text-slate-600";
+}
+
 function progressColor(pct: number): string {
   if (pct >= 70) return "#10b981";
   if (pct >= 40) return "#6366f1";
@@ -61,7 +66,7 @@ export default async function DashboardPage() {
                   {summary.title}
                 </h2>
                 <span
-                  className={`shrink-0 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusStyles[summary.status] ?? statusStyles["active"]}`}
+                  className={`shrink-0 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusClass(summary.status)}`}
                 >
                   {summary.status}
                 </span>
@@ -77,7 +82,7 @@ export default async function DashboardPage() {
                   <div
                     className="rounded-full h-2 transition-all"
                     style={{
-                      width: `${summary.progressPercent}%`,
+                      width: summary.progressPercent + "%",
                       backgroundColor: progressColor(summary.progressPercent),
                     }}
                   />

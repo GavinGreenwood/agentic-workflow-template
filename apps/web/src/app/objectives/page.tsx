@@ -10,6 +10,11 @@ const statusStyles: Record<string, string> = {
   archived: "bg-slate-100 text-slate-600",
 };
 
+function getStatusClass(status: string): string {
+  const cls = statusStyles[status];
+  return cls !== undefined ? cls : "bg-slate-100 text-slate-600";
+}
+
 export default async function ObjectivesPage() {
   let objectives: Objective[] = [];
   try {
@@ -123,7 +128,7 @@ export default async function ObjectivesPage() {
                         {obj.title}
                       </span>
                       <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusStyles[obj.status] ?? statusStyles["active"]}`}
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusClass(obj.status)}`}
                       >
                         {obj.status}
                       </span>
