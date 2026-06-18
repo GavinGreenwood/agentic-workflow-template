@@ -17,7 +17,8 @@ reports/
 .DS_Store
 Thumbs.db
 
-# Playwright MCP output
+# Playwright MCP output — screenshots saved to repo root by /run skill
 .playwright-mcp/
-screenshot*.png
-screenshot*.jpg
+/*.png
+/*.jpg
+/*.jpeg
