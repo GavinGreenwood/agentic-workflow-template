@@ -92,6 +92,30 @@ Pass `POSTGRES_DSN` and `REDIS_URL` env vars to the script if sidecars are neede
 - **CycloneDX SBOM** — generates `sbom.json`, uploaded as an artifact
 - **Semgrep** — `p/owasp-top-ten`, `p/javascript`, `p/typescript`, `p/nodejs` rulesets; SARIF uploaded to the Security tab
 
+### npm overrides — keeping the audit gate green
+
+Transitive dependencies that Dependabot cannot bump directly are pinned via the `overrides` block in root `package.json`. This lets the `--audit-level=high` gate stay green without requiring breaking upgrades to direct dependencies.
+
+**Current overrides and why they exist:**
+
+| Package       | Pinned to | Root cause                                                                    |
+| ------------- | --------- | ----------------------------------------------------------------------------- |
+| `glob`        | `10.5.0`  | `@nestjs/cli` devDep (CLI injection)                                          |
+| `tmp`         | `0.2.7`   | `@nestjs/cli` devDep (path traversal)                                         |
+| `picomatch@2` | `2.3.2`   | `@angular-devkit` via `@nestjs/cli` (ReDoS)                                   |
+| `picomatch@4` | `4.0.4`   | `@angular-devkit` via `@nestjs/cli` (ReDoS)                                   |
+| `lodash`      | `4.18.1`  | `@nestjs/swagger` + `@nestjs/config` (prototype pollution)                    |
+| `multer`      | `2.2.0`   | `@nestjs/platform-express` (DoS — no file-upload endpoints, safe to override) |
+
+**Note on `multer`**: npm `overrides` does not propagate to workspace-nested packages when the depender uses an exact version pin. The `multer@2.2.0` entry is therefore applied directly in `package-lock.json` (lockfile patch). `npm ls multer` will report `invalid: "2.1.1"` — this is expected and intentional. When `@nestjs/platform-express` releases a version that depends on `multer@>=2.2.0`, both the lockfile patch and the `overrides` entry can be removed.
+
+**Maintenance rule:** when a HIGH-severity transitive finding appears:
+
+1. Add an override entry to `overrides` in root `package.json` pinning to the safe version.
+2. Run `npm install` to regenerate the lockfile.
+3. If the override doesn't propagate (workspace-nested exact pin), patch the lockfile entry directly.
+4. When the direct dependency ships a clean upgrade via Dependabot, remove the override and any lockfile patch at that point.
+
 Trivy runs separately per image in Stage 5 with two passes: blocking on fixable CRITICAL, SARIF report for CRITICAL+HIGH.
 
 ## Morlock
