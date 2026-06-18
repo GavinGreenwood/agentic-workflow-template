@@ -67,6 +67,14 @@ Every schema change requires a versioned migration file committed in the same PR
 
 ## Frontend
 
+### Styling
+
+This project uses **Tailwind CSS v4** (CSS-first, no `tailwind.config.ts` needed). The PostCSS plugin is `@tailwindcss/postcss`. Global styles live in `apps/web/src/app/globals.css` and consist of a single `@import "tailwindcss"` directive.
+
+Design tokens in use: `slate` for neutrals, `indigo-600` for the primary accent, `rounded-xl` cards, `shadow-sm` elevation, `bg-slate-50` page background. Keep new UI consistent with these.
+
+Font: Inter loaded via `next/font/google` in `apps/web/src/app/layout.tsx`.
+
 ### Data Fetching
 
 Prefer server-side data fetching (e.g. Next.js server components). Presentational components receive data as props; they do not fetch.

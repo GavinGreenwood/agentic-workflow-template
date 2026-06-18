@@ -21,7 +21,21 @@
 
 - `docs/development/engineering-standards.md` — added "Cache revalidation after mutations" pattern under Data Fetching: always call `revalidatePath`/`revalidateTag` before `redirect()` in server actions
 
+**Tailwind CSS v4 + full UI styling**
+
+- Installed `tailwindcss` + `@tailwindcss/postcss` in `apps/web`
+- Created `postcss.config.mjs`, `globals.css` (`@import "tailwindcss"`)
+- Added `Navbar` component with sticky top bar, brand + nav links
+- Added Inter font via `next/font/google` in `layout.tsx`
+- Styled all 5 pages: home, objectives list, objective detail, dashboard, check-in
+- Design language: `slate` neutrals, `indigo-600` accent, `rounded-xl` cards, `shadow-sm`, `bg-slate-50` background
+- Also applied missing `revalidatePath` to objective detail and check-in server actions
+
+### Docs updated
+
+- `docs/development/engineering-standards.md` — added "Cache revalidation after mutations" pattern under Data Fetching
+- `docs/development/engineering-standards.md` — added "Styling" section documenting Tailwind v4 setup, design tokens, and font
+
 ### Open questions / next steps
 
-- The objectives list has no styling — purely functional stub
-- No issue exists for the revalidation bug fix; was discovered during `/run` verification
+- No issues exist for the styling work or the revalidation bug fixes; all were discovered and fixed during `/run` verification sessions
