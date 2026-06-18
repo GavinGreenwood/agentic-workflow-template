@@ -42,7 +42,7 @@ Interpret the result as follows:
 - **`000`** — connection refused; the server is not running.
 - **Any other code (200, 302, 401, 404, 503, etc.)** — TCP connection succeeded; the server is up.
 
-- **Both up** → skip to Step 4.
+- **Both up** → skip to Step 5.
 - **One or both down** → proceed to Step 3.
 
 Do **not** loop or sleep-poll. One check only. If not ready, say so and let the user know to try again in ~10 s.
@@ -68,7 +68,20 @@ This must be run with `run_in_background: true` — without it the agent will ha
 
 ---
 
-## Step 4 — Navigate to the app
+## Step 4 — Verify Playwright MCP is available
+
+Before navigating, confirm the Playwright MCP server is connected. If it is not available as a tool in the current session, prompt the user to enable it:
+
+> **To enable Playwright MCP:**
+>
+> - **VSCode extension**: open the Command Palette (`Ctrl+Shift+P`) and run **"Claude: Open MCP Settings"**, then enable the Playwright server.
+> - **Desktop app / CLI**: type `/mcp` in the chat input to see connected servers and their status.
+
+Once Playwright MCP is confirmed available, proceed.
+
+---
+
+## Step 5 — Navigate to the app
 
 Use the **Playwright MCP** (`playwright`) to navigate to:
 
@@ -78,7 +91,7 @@ http://localhost:<WEB_PORT>/
 
 ---
 
-## Step 5 — Handle authentication (if applicable)
+## Step 6 — Handle authentication (if applicable)
 
 If the app redirects to a login page, check `apps/web/.env` for test credentials:
 
@@ -93,7 +106,7 @@ If no auth is configured, skip this step.
 
 ---
 
-## Step 6 — Drive the app
+## Step 7 — Drive the app
 
 Navigate, click, and inspect as needed for the verification task. Key routes for this template:
 
@@ -106,7 +119,7 @@ Adjust routes to match the feature under test.
 
 ---
 
-## Step 7 — Screenshots and snapshots
+## Step 8 — Screenshots and snapshots
 
 - **Screenshots** are saved to the **project root** (e.g. `./screenshot.png`). Read them from the absolute path.
 - Use snapshots (accessibility tree / DOM snapshot) to locate element references before clicking.
