@@ -71,6 +71,15 @@ Every schema change requires a versioned migration file committed in the same PR
 
 Prefer server-side data fetching (e.g. Next.js server components). Presentational components receive data as props; they do not fetch.
 
+**Cache revalidation after mutations:** When a server action mutates data, always call `revalidatePath` (or `revalidateTag`) before redirecting. Without it, Next.js serves the cached response and the mutation appears not to have taken effect.
+
+```ts
+// server action — correct pattern
+await createObjective(dto);
+revalidatePath("/objectives"); // bust the cache first
+redirect("/objectives"); // then redirect
+```
+
 ### i18n
 
 Organise translation keys by feature/page namespace, not as a flat file. Never hardcode user-facing strings — all UI text goes through the localisation system. A key added to the default locale must be added to every locale in the same change.

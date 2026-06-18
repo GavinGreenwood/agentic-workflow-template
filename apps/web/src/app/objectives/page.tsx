@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import type { Objective } from "@template/shared";
 import { getObjectives, createObjective } from "../../lib/okr-api";
@@ -19,6 +20,7 @@ export default async function ObjectivesPage() {
       ownerId: "demo-user",
       cycleId: (formData.get("cycleId") as string) || "2025-Q1",
     });
+    revalidatePath("/objectives");
     redirect("/objectives");
   }
 
