@@ -21,7 +21,7 @@ jobs:
     name: Lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/setup
       - run: npm run lint
 
@@ -29,7 +29,7 @@ jobs:
     name: Typecheck
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/setup
       - run: npm run typecheck
 
@@ -37,7 +37,7 @@ jobs:
     name: Unit tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/setup
       - run: npm run test
 
@@ -68,7 +68,7 @@ jobs:
         ports:
           - 6379:6379
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/setup
       - name: Run schema migration (if Prisma present)
         run: |
@@ -87,7 +87,7 @@ jobs:
     name: i18n key parity
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/setup
       - run: npm run lint:i18n --if-present
 
@@ -95,7 +95,7 @@ jobs:
     name: Code health
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/setup
       - run: npm run check:circular --if-present
       - run: npm run check:unused --if-present
@@ -105,7 +105,7 @@ jobs:
     name: OpenAPI drift gate
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/setup
       - name: Generate OpenAPI spec
         run: npm run generate:openapi --if-present
@@ -129,7 +129,7 @@ jobs:
       - openapi
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/setup
       - name: Export build-time env defaults
         run: |
@@ -140,7 +140,7 @@ jobs:
           fi
       - run: npm run build
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: build-output
           path: |
@@ -195,10 +195,10 @@ jobs:
         ports:
           - 6379:6379
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/setup
       - name: Download build artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: build-output
       - name: Run migrations and seed
@@ -232,7 +232,7 @@ jobs:
           API_URL: http://localhost:3001
           NEXT_PUBLIC_API_URL: http://localhost:3001
       - name: Upload Playwright report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: playwright-report
@@ -249,14 +249,14 @@ jobs:
     outputs:
       semver: ${{ steps.gitversion.outputs.semVer }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
-      - uses: gittools/actions/gitversion/setup@v3
+      - uses: gittools/actions/gitversion/setup@v4
         with:
           versionSpec: "6.x"
       - id: gitversion
-        uses: gittools/actions/gitversion/execute@v3
+        uses: gittools/actions/gitversion/execute@v4
         with:
           useConfigFile: true
 
@@ -273,7 +273,7 @@ jobs:
       IMAGE_NAME: app-api
       SEMVER: ${{ needs.version.outputs.semver }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Build API image
         run: |
           docker build \
@@ -299,7 +299,7 @@ jobs:
           output: trivy-api.sarif
           severity: CRITICAL,HIGH
       - name: Upload Trivy SARIF
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         if: always()
         with:
           sarif_file: trivy-api.sarif
@@ -327,7 +327,7 @@ jobs:
       IMAGE_NAME: app-web
       SEMVER: ${{ needs.version.outputs.semver }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Build web image
         run: |
           docker build \
@@ -353,7 +353,7 @@ jobs:
           output: trivy-web.sarif
           severity: CRITICAL,HIGH
       - name: Upload Trivy SARIF
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         if: always()
         with:
           sarif_file: trivy-web.sarif

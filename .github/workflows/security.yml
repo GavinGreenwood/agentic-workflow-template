@@ -13,18 +13,12 @@ jobs:
       security-events: write
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - uses: ./.github/actions/setup
 
       - name: npm audit
-        # Threshold is 'critical' rather than 'high' because the high-severity findings
-        # are either: (a) in @nestjs/cli devDependencies that never run in production,
-        # or (b) in transitive deps of runtime packages (postcss in Next.js, lodash in
-        # @nestjs/swagger) where the fix requires a major-version upgrade. Those should
-        # be tracked and resolved on a planned upgrade cycle, not as a hard gate.
-        # Zero critical vulnerabilities are allowed — if any appear, this step will fail.
-        run: npm audit --audit-level=critical
+        run: npm audit --audit-level=high
 
       - name: Secretlint
         run: npx secretlint "**/*"
@@ -36,7 +30,7 @@ jobs:
         continue-on-error: true
 
       - name: Upload SBOM
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: sbom
@@ -56,7 +50,7 @@ jobs:
         continue-on-error: true
 
       - name: Upload Semgrep SARIF
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         if: always()
         with:
           sarif_file: semgrep.sarif
