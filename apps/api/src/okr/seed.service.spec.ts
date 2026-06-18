@@ -8,11 +8,11 @@ import { OkrStore } from "./okr.store";
 const makeStore = () => new OkrStore();
 
 describe("SeedService", () => {
-  let service: SeedService;
+  let module: TestingModule;
   let objectives: ObjectivesService;
 
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+    module = await Test.createTestingModule({
       providers: [
         SeedService,
         ObjectivesService,
@@ -21,12 +21,15 @@ describe("SeedService", () => {
         { provide: OkrStore, useFactory: makeStore },
       ],
     }).compile();
-    service = module.get<SeedService>(SeedService);
     objectives = module.get<ObjectivesService>(ObjectivesService);
   });
 
-  it("seeds three objectives on init", () => {
-    service.onModuleInit();
+  afterEach(async () => {
+    await module.close();
+  });
+
+  it("seeds three objectives on init", async () => {
+    await module.init();
     expect(objectives.findAll()).toHaveLength(3);
   });
 });
