@@ -83,11 +83,20 @@ Once Playwright MCP is confirmed available, proceed.
 
 ## Step 5 — Navigate to the app
 
-Use the **Playwright MCP** (`playwright`) to navigate to:
+Use `mcp__playwright__browser_navigate` to open the app:
 
 ```
-http://localhost:<WEB_PORT>/
+url: http://localhost:<WEB_PORT>/
 ```
+
+Then take a screenshot with `mcp__playwright__browser_take_screenshot` to confirm the page rendered:
+
+```
+type: png
+filename: screenshot.png
+```
+
+Read the saved screenshot from the absolute project root path to visually verify it is not blank.
 
 ---
 
