@@ -29,7 +29,7 @@
     "@types/node": "^22.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
-    "eslint": "^9.18.0",
+    "eslint": "^10.5.0",
     "jest": "^30.0.0",
     "jest-environment-jsdom": "^30.0.0",
     "tailwindcss": "^4.3.1",
