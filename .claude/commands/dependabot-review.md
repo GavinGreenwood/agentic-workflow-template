@@ -48,8 +48,11 @@ For each Green PR:
 
 For each Failing PR:
 
-1. Identify which checks failed: `gh pr checks <number>`
-2. Fetch the failed job logs from your CI (e.g. `gh run view <run-id> --log-failed`). Read the logs and identify the root cause.
+1. Identify which checks failed:
+   ```bash
+   gh pr checks <number>
+   ```
+2. Fetch the failed job logs via the CircleCI REST API v2 (`curl` with `CIRCLECI_TOKEN` from `.env` — see [`fix-cicd.md`](fix-cicd.md) for the drill-down pattern; use the pipeline URL from the checks output). Read the logs and identify the root cause.
 3. Categorise the failure:
    - **Dependency conflict** — the new version conflicts with another package
    - **Type error** — the new version changed a type signature
@@ -74,7 +77,7 @@ For each Failing PR:
      gh pr close <number> --comment "## Dependabot Review\n\n**Closing** — <reason the fix isn't viable now, e.g. upstream incompatibility>. Dependabot will re-raise this once <condition>.\n\n_Actioned by Claude Code_"
      ```
    - Default to **close** when: it is a major bump with ecosystem-wide incompatibility, the fix requires significant code changes, or the upstream package hasn't yet released a compatible version.
-   - Default to **fix** when: it is a minor/patch bump, the fix is a one-liner, and the change is low-risk.
+   - Default to **fix** when: it is a minor/patch bump, the fix is a one-liner (e.g. adding a missing param), and the change is low-risk.
 
 6. For Unknown failures → leave a diagnostic comment and flag to the user.
 

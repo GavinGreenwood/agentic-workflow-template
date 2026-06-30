@@ -1,4 +1,4 @@
-Raise a PR for a specific set of files discussed in the current session — tooling fixes, command updates, config changes. No issue required.
+Raise a PR for a specific set of files discussed in the current session — tooling fixes, skill updates, config changes. No Jira ticket required.
 
 **The current branch must not be touched.** All work happens in a temporary git worktree so the active feature branch (and any other agent working on it) is completely unaffected.
 
@@ -16,7 +16,7 @@ From the repo root:
 
 ```bash
 CHORE_BRANCH="chore/<short-description>"
-git worktree add -b "$CHORE_BRANCH" /tmp/chore-pr origin/main
+git worktree add -b "$CHORE_BRANCH" /tmp/wur-chore-pr origin/main
 ```
 
 This creates a new branch from `main` in a temporary directory with a full checkout. The current branch is never checked out or modified.
@@ -26,7 +26,7 @@ This creates a new branch from `main` in a temporary directory with a full check
 For each file identified in Step 1, copy it from the current working tree into the worktree at the same relative path:
 
 ```bash
-cp <file> /tmp/chore-pr/<file>
+cp <file> /tmp/wur-chore-pr/<file>
 ```
 
 Create any intermediate directories as needed.
@@ -35,21 +35,23 @@ Confirm the copy succeeded before doing anything else — every Step 1 file must
 
 ```bash
 for f in <file1> <file2> ...; do
-  test -f "/tmp/chore-pr/$f" && echo "present: $f" || echo "MISSING: $f"
+  test -f "/tmp/wur-chore-pr/$f" && echo "present: $f" || echo "MISSING: $f"
 done
 ```
+
+Optionally also run `git -C /tmp/wur-chore-pr status --short` to see which copied files differ from `main`.
 
 Only proceed to Step 4 once you have verified the files are present in the worktree. Do not restore the current branch until this is confirmed, or the work could be lost.
 
 ## Step 4 — Restore the current branch immediately
 
-Now that the files are safely in the worktree, restore the current branch so it returns to a clean state at once. Only act on the files identified in Step 1.
+Now that the files are safely in the worktree, restore the current branch so it returns to a clean state at once — do not wait until after verification. Only act on the files identified in Step 1.
 
-**Run every command in this step from the original working tree — not from `/tmp/chore-pr`.**
+**Run every command in this step from the original working tree (the repo root on the currently checked-out branch) — not from `/tmp/wur-chore-pr`.** Restoring or deleting inside the worktree would undo the copy you just made.
 
 First, from the Step 1 list, separate the files by git state (use `git status --short`):
 
-- Tracked files with uncommitted modifications (staged, unstaged, or both) → restore from HEAD. Use `--staged --worktree` so both the index and the working tree are reset:
+- Tracked files with uncommitted modifications (staged, unstaged, or both) → restore from HEAD. Use `--staged --worktree` so both the index and the working tree are reset; a bare `git restore <file>` rewrites only the working tree from the index, leaving any staged modification in place and the branch not actually clean:
 
 ```bash
 git restore --staged --worktree <modified-files>
@@ -73,22 +75,26 @@ If any Step 1 file was already committed on the feature branch (not just an unco
 
 **Only ever touch the exact files from Step 1.** Never run `git restore .`, `git checkout .`, or any blanket reset — the branch may hold unrelated in-progress work from other agents.
 
-**Do not delete PROGRESS.md unless it is one of the Step 1 chore files.** A PROGRESS.md on the branch normally belongs to the active feature session — leave it alone.
+**Do not delete PROGRESS.md unless it is one of the Step 1 chore files.** A PROGRESS.md on the branch normally belongs to the active feature session — leave it alone. (It is untracked and off `main`, so it never enters the chore worktree regardless.)
 
 ## Step 5 — Run verification from the worktree
 
+**Skip this step entirely** if every file in Step 1 is non-code (e.g. only `.md`, `.yml`, `.json` config, skill/command files, or other documentation). These changes cannot break TypeScript, lint, or tests — running the full suite wastes significant time and tokens for no benefit.
+
+**Run the full suite** only when at least one Step 1 file is a source file (`.ts`, `.tsx`, `.js`, `.jsx`, `.css`, or anything compiled/tested):
+
 ```bash
-cd /tmp/chore-pr && npm install && bash scripts/verify.sh
+cd /tmp/wur-chore-pr && npm install && bash scripts/verify.sh
 ```
 
-If it fails, fix the issues inside the worktree. The original copies are already gone from the current branch (Step 4), so all fixes happen in the worktree. Re-run until it passes.
+If it fails, fix the issues inside the worktree. The original copies are already gone from the current branch (Step 4), so all fixes happen in the worktree — there are no original working-tree copies to edit. Re-run until it passes.
 
 ## Step 6 — Commit and push from the worktree
 
 Before committing, remove PROGRESS.md if it exists in the worktree — it must never be committed:
 
 ```bash
-cd /tmp/chore-pr
+cd /tmp/wur-chore-pr
 rm -f PROGRESS.md
 git add <files>
 git commit -m "chore: <description>"
@@ -142,7 +148,7 @@ If there are 🔴 Must fix findings: fix them in the worktree, push a follow-up 
 ## Step 9 — Clean up the worktree
 
 ```bash
-git worktree remove --force /tmp/chore-pr
+git worktree remove --force /tmp/wur-chore-pr
 ```
 
 `--force` is required on Windows — `node_modules` makes the directory non-empty, which causes a plain `git worktree remove` to fail.

@@ -27,28 +27,28 @@ scripts/               — Developer and CI scripts
 ## Workflow Loop
 
 ```
-Proposal -> Plan -> Issues -> Branch -> Code -> Gates -> Deploy -> Monitor -> Trace back
+Proposal -> Plan -> Tickets -> Branch -> Code -> Gates -> Deploy -> Monitor -> Trace back
 ```
 
-- Work starts from GitHub issues. Every branch references an issue.
-- Claude can pick up issues from the backlog and execute them (`/pickup <number>`).
+- Work starts from Jira tickets. Every branch references a ticket.
+- Claude can pick up tickets from the backlog and execute them (`/pickup PROJ-1`).
 - Fast feedback loops (tests, lint, typecheck) catch problems early.
 - CI pipeline and repo hooks act as deterministic guardrails.
 - Claude should browse, test, and verify the running app as part of the build experience (e.g. via the Playwright MCP server), not just write code blindly.
 
-The GitHub Project board mirrors this loop, and keeping it in sync is **required, not optional**. Tickets move forward through four statuses — **Backlog** (`/capture`) → **In progress** (`/pickup`) → **In review** (`/pr`) → **Done** (`/pr-action-review` on merge) — driven by `scripts/set-project-status.sh`. See CONTRIBUTING.md § Project board for setup and the full mapping.
+The Jira board mirrors this loop, and keeping it in sync is **required, not optional**. Tickets move forward through four statuses — **Backlog** (`/capture`) → **In Progress** (`/pickup`) → **In Review** (`/pr`) → **Done** (`/pr-action-review` on merge).
 
 ## Required Context — Read Before Every Task
 
 Before starting any task, read the relevant context files. Do not code from memory or assumptions.
 
-| Area                            | Files to Read                                                        |
-| ------------------------------- | -------------------------------------------------------------------- |
-| Always                          | `CLAUDE.md`, `CONTRIBUTING.md`                                       |
-| Architecture / design decisions | `docs/architecture/`, `docs/adr/`                                    |
-| Engineering patterns            | `docs/development/engineering-standards.md`                          |
-| Quality / testing               | `docs/development/quality-strategy.md`                               |
-| Feature work                    | The GitHub issue — it is the source of truth for acceptance criteria |
+| Area                            | Files to Read                                                       |
+| ------------------------------- | ------------------------------------------------------------------- |
+| Always                          | `CLAUDE.md`, `CONTRIBUTING.md`                                      |
+| Architecture / design decisions | `docs/architecture/`, `docs/adr/`                                   |
+| Engineering patterns            | `docs/development/engineering-standards.md`                         |
+| Quality / testing               | `docs/development/quality-strategy.md`                              |
+| Feature work                    | The Jira ticket — it is the source of truth for acceptance criteria |
 
 If a task spans multiple areas, read all relevant files. When in doubt, read more rather than less.
 
@@ -72,13 +72,13 @@ When writing **any** code **always** refer to @docs/development/engineering-stan
 
 ## PROGRESS.md — Session Scratchpad
 
-> **Primary development agent only.** PROGRESS.md is for the agent actively working a feature or fix on this branch. Secondary agents opened for quick, unrelated tasks must **not** write to it.
+> **Primary development agent only.** PROGRESS.md is for the agent actively working a feature or fix on this branch. Secondary agents opened for quick, unrelated tasks (Jira lookups, ticket creation, chore commands, one-off queries) must **not** write to PROGRESS.md — they have no relevant progress to log and doing so pollutes the scratchpad and triggers the stop hook unnecessarily.
 
 Maintain a `PROGRESS.md` file in the repo root during development sessions. This is a running log of progress, decisions, open questions, and direction changes.
 
 ### During a session
 
-- Append progress after completing each issue or significant milestone.
+- Append progress after completing each ticket or significant milestone.
 - Record decisions made, problems encountered, and questions that arose.
 - Note any direction changes or deviations from the plan.
 
@@ -106,22 +106,22 @@ Follow test-driven development where possible:
 
 **Exploratory-first exception**: When proving out an unfamiliar approach, write the production code first to validate it works. Once validated, comment out the production code, write the failing tests (RED), then uncomment incrementally to make them pass (GREEN).
 
-When picking up an issue, start by writing the test that proves the acceptance criteria, then implement.
+When picking up a ticket, start by writing the test that proves the acceptance criteria, then implement.
 
 ## Absolute Rules
 
 These are non-negotiable. No exceptions, no workarounds.
 
-1. **Every task needs a GitHub issue.** No work without an issue. **Exception:** `chore/` branches (dependency bumps, test maintenance, config housekeeping) — use a `chore/<short-description>` branch name and a `chore:` commit prefix.
-2. **Every code change needs a feature branch** — named per CONTRIBUTING.md (`<issue-number>-<short-description>`, or `chore/<short-description>`).
-3. **Merge = Close** — Close the GitHub issue immediately when the PR merges (use `Closes #N` in the PR body so GitHub does it automatically).
+1. **Every task needs a Jira ticket.** No work without a ticket. **Exception:** `chore/` branches (dependency bumps, test maintenance, config housekeeping) — use a `chore/<short-description>` branch name and a `chore:` commit prefix.
+2. **Every code change needs a feature branch** — named per CONTRIBUTING.md (`<ticket-id>-<short-description>`, or `chore/<short-description>`).
+3. **Merge = Close** — Close the Jira ticket immediately when the PR merges.
 4. **Never commit a schema change without a migration file** — Schema and migration travel together, always.
 5. **ADRs are immutable** — Never edit the body of an accepted ADR. The only permitted change is updating its status line to `Superseded by ADR-XXXX`. All decision changes require a brand new ADR.
 6. **Never push with `--no-verify`** without explicit user approval.
 7. **Never ignore pre-existing errors** — Fix them, don't bypass them.
 8. **Never use `any` types** — Strict TypeScript only. Use `unknown` and narrow with type guards if the type is genuinely uncertain.
 9. **Always use i18n keys** (if the project is localised) — Never hardcode user-facing strings.
-10. **Issue update safety check** — Before updating any issue, check its assignee. If it's assigned to someone else, STOP and ask before proceeding.
+10. **Ticket update safety check** — Before updating any ticket, check its assignee. If it's assigned to someone else, STOP and ask before proceeding.
 
 ## What Claude MUST Always Do
 
@@ -133,14 +133,14 @@ These are non-negotiable. No exceptions, no workarounds.
 - **Tests with features**: Every feature or fix includes tests. Never reduce coverage.
 - **Strict TypeScript**: No `any` types. Use strict mode, proper generics, and type guards.
 - **Run verification**: Run `scripts/verify.sh` before opening a PR.
-- **Follow branching rules**: Branch from `main`, name branches with issue numbers (see CONTRIBUTING.md).
-- **Follow commit conventions**: Include the issue number in commit messages (see CONTRIBUTING.md).
-- **Close issues on merge**: When a PR merges, close the corresponding issue immediately.
+- **Follow branching rules**: Branch from `main`, name branches with ticket IDs (see CONTRIBUTING.md).
+- **Follow commit conventions**: Include the ticket ID in commit messages (see CONTRIBUTING.md).
+- **Close tickets on merge**: When a PR merges, close the corresponding Jira ticket immediately.
 - **Respect quality gates**: Never bypass lint, typecheck, tests, or CI checks.
 - **Test against standards**: Explicitly test against WCAG and OWASP compliance standards.
-- **Trace everything**: Include the issue number, plan link, and test evidence in PRs.
-- **Fill the PR template fully**: issue, summary, test evidence, risk, rollback.
-- **Attribute all external writes**: Any comment, reply, or message posted to an external system (GitHub PR comments, issue comments, chat messages) must end with `_Actioned by Claude Code_`. Humans must always be able to tell when Claude authored or actioned something.
+- **Trace everything**: Include the ticket ID, plan link, and test evidence in PRs.
+- **Fill the PR template fully**: ticket, summary, test evidence, risk, rollback.
+- **Attribute all external writes**: Any comment, reply, or message posted to an external system (GitHub PR comments, Jira ticket comments, chat messages) must end with `_Actioned by Claude Code_`. Humans must always be able to tell when Claude authored or actioned something.
 
 ## What Claude MUST Never Do
 
@@ -157,7 +157,7 @@ These are non-negotiable. No exceptions, no workarounds.
 - Hard-code credentials or sensitive values in test or application code — read them from environment variables; the only exception is a mocked secrets provider returning fixture values.
 - Bypass pre-commit or pre-push hooks.
 - Create PRs without running `scripts/verify.sh`.
-- Start work without an issue (except `chore/` branches).
+- Start work without a ticket (except `chore/` branches).
 
 ## PR Review Standards
 

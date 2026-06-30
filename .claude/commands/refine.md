@@ -1,35 +1,78 @@
-Review a GitHub issue by number: surface clarification questions, propose implementation approaches in priority order, then post conclusions as a comment on the issue.
+Review a Jira ticket by ID: surface clarification questions, propose implementation approaches in priority order, then post conclusions as a comment on the ticket.
 
-**Issue:** $ARGUMENTS
+**Ticket:** $ARGUMENTS
 
 ---
 
-## Step 1 — Fetch the issue and its comments
+## Step 0 — Normalise the ticket ID
+
+If `$ARGUMENTS` is a bare number (e.g. `25`), prepend `$JIRA_PROJECT_KEY-` to get e.g. `PROJ-25`. Store the result as `TICKET_ID` and use it in place of `$ARGUMENTS` for all curl commands below.
+
+## Step 1 — Verify credentials
+
+Check that `JIRA_BASE_URL`, `JIRA_API_TOKEN`, `JIRA_EMAIL`, and `JIRA_ACCOUNT_ID` are set in `.env`. If any are missing, stop and ask the user to add them. Source `.env` before all Jira API calls.
+
+## Step 2 — Fetch the ticket and its comments
 
 ```bash
-gh issue view $ARGUMENTS --json number,title,body,assignees,labels,milestone,state,url
-gh issue view $ARGUMENTS --comments
+source .env && curl -s -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
+  "$JIRA_BASE_URL/rest/api/3/issue/$TICKET_ID?expand=subtasks,renderedFields"
 ```
 
-For each comment, note the author and date. Mark any comment whose body ends with `_Actioned by Claude Code_` as **Claude-authored** — treat the rest as **human-authored**. Human-authored comments represent decisions that have already been made and take precedence over any prior Claude analysis.
+Parse the response and extract:
 
-## Step 2 — Check assignee and status
+- `fields.summary`
+- `fields.description` (full rendered text)
+- `fields.assignee`
+- `fields.status.name`
+- `fields.issuetype.name`
+- `fields.parent` (if present — epic or story)
+- `fields.subtasks` (array of subtask keys)
+- `fields.issuelinks` (linked issues)
+- `fields.labels`
+- `fields.priority.name`
+- `fields.customfield_10014` (epic link, if present)
 
-If the issue is already assigned or in development, ask the user to confirm they still want to refine it. Mention who it is assigned to and how long it has been open.
+Then fetch the comment thread, ordered oldest-first:
 
-## Step 3 — Fetch linked context
+```bash
+source .env && curl -s -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
+  "$JIRA_BASE_URL/rest/api/3/issue/$TICKET_ID/comment?orderBy=created"
+```
 
-If the issue references other issues or a tracking/epic issue, fetch those too to understand the broader goal.
+For each comment, extract `author.displayName`, `created`, and the plain-text body. Mark any comment whose body ends with `_Actioned by Claude Code_` as **Claude-authored** — treat the rest as **human-authored**. Human-authored comments represent decisions that have already been made and take precedence over any prior Claude analysis.
 
-## Step 4 — Read relevant codebase context
+## Step 3 — Check assignee and status
 
-Based on the issue's domain (frontend, backend, infrastructure, shared), read the relevant documentation and source files to understand the current state before forming opinions:
+If the ticket is already assigned or in development, ask the user to confirm if they still want to refine it. Remember to mention the JIRA user that the ticket is assigned to, the current status and how many days it has been in that status.
+
+## Step 4 — Fetch parent/epic and subtask context
+
+If the ticket has a `fields.parent`, fetch that ticket to understand the broader story or epic:
+
+```bash
+source .env && curl -s -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
+  "$JIRA_BASE_URL/rest/api/3/issue/<parent-key>?expand=renderedFields"
+```
+
+For each key in `fields.subtasks`, fetch the full issue:
+
+```bash
+source .env && curl -s -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
+  "$JIRA_BASE_URL/rest/api/3/issue/<subtask-key>?expand=renderedFields"
+```
+
+## Step 5 — Read relevant codebase context
+
+Based on the ticket's domain (frontend, backend, infrastructure, shared), read the relevant documentation and source files to understand the current state before forming opinions:
 
 - Always: `CONTRIBUTING.md`, `docs/development/engineering-standards.md`
-- Architecture changes: `docs/architecture/`, `docs/adr/`
+- Architecture changes: `docs/architecture/context.md`, `docs/architecture/containers.md`, `docs/adr/`
+- Frontend work: `docs/development/react-conventions.md`, `apps/web/`
+- Backend work: `docs/development/backend-patterns.md`, `apps/api/`
 - Quality/testing: `docs/development/quality-strategy.md`
 
-## Step 5 — Analyse the issue
+## Step 6 — Analyse the ticket
 
 With all context gathered, think through:
 
@@ -37,24 +80,24 @@ With all context gathered, think through:
 2. **Scope** — Is the scope appropriate? Could it be split? Does it implicitly require other changes not mentioned?
 3. **Constraints** — What architectural, performance, security, or accessibility constraints apply? Which documented patterns are relevant?
 4. **Approaches** — What are the distinct ways this could be implemented? Consider trade-offs in complexity, testability, reversibility, and alignment with existing patterns.
-5. **Discussion** — Read the comments. If there are definitive answers from humans, those take precedence.
+5. **Discussion** – Read the comments. If there are any definitive answers by human users (not actioned by Claude Code), those take precedence.
 
-## Step 6 — Ask clarifications
+## Step 7 — Ask clarifications
 
-- Ask clarifying questions to the user until you have a complete understanding of the issue. For each question, reference the specific part of the issue that is unclear. If the issue is already clear, explicitly state that no clarifications are needed.
-- If there are distinct alternatives to be considered, ask the user to select one. Present up to 2 pros and cons of each alternative, and which you prefer and why. Highlight your preference and rate each approach with 1–5 stars.
+- Ask clarifying questions to the user until you have a complete understanding of the ticket. For each question, reference the specific part of the ticket that is unclear. If the ticket is already clear, explicitly state that no clarifications are needed.
+- If there are distinct alternatives to be considered, ask the user to select one. Present up to 2 pros and cons of each alternative, and which ones you prefer and why. Highlight your preference in the name/id of each option and use 1-5 stars to rate each approach.
 
-## Step 7 — Produce the refinement brief
+## Step 8 — Produce the refinement brief
 
 Output a structured brief:
 
 ```
-## Refinement: #<issue-number> — <title>
+## Refinement: <ticket-id> — <summary>
 
 ### Clarifications needed
-List questions where the issue is ambiguous, incomplete, or where assumptions need validating.
+List questions where the ticket is ambiguous, incomplete, or where assumptions need validating.
 Be specific — reference the exact part of the description or acceptance criteria that is unclear.
-If the issue is clear, say so explicitly rather than inventing questions.
+If the ticket is clear, say so explicitly rather than inventing questions.
 
 ### Proposed approaches
 
@@ -72,28 +115,35 @@ If the issue is clear, say so explicitly rather than inventing questions.
 *(Add further alternatives only if genuinely distinct — do not pad)*
 
 ### Recommendation
-One paragraph synthesising the preferred path and why, referencing the codebase context read in Step 4.
+One paragraph synthesising the preferred path and why, referencing the codebase context read in Step 5.
 
 ### Open questions before implementation
-Numbered list of things that must be resolved before coding starts. Separate from clarifications — these are architectural or risk decisions, not ambiguities in the issue text.
+Numbered list of things that must be resolved before coding starts. Separate from clarifications — these are architectural or risk decisions, not ambiguities in the ticket text.
 
-### Clarifications resolved
-For every question that was clarified by the user, list the question and the answer verbatim. This is an audit trail of how the issue evolved from its original state to the clarified state — do not summarise.
+## Clarifications resolved
+- Explain that these were the clarifications that were resolved by the user when asked by Claude Code.
+- For every question that was clarified, list the question and the answer that was provided by the user. This is a record of how the ticket evolved from its original state to the clarified state.
+- Do not summarise the questions or the answers, this is an audit trail.
+- Do not use block quotes, they break the ADF format.
+
 ```
 
-## Step 8 — Post conclusions as an issue comment
+## Step 9 — Post conclusions as a Jira comment
 
-Post the brief as a comment on the issue:
+Format the brief above as Atlassian Document Format (ADF) JSON and post it as a comment on the ticket:
 
 ```bash
-gh issue comment $ARGUMENTS --body-file <temp-file-with-brief>
+source .env && curl -s -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
+  -X POST "$JIRA_BASE_URL/rest/api/3/issue/$TICKET_ID/comment" \
+  -H "Content-Type: application/json" \
+  -d '<ADF comment body>'
 ```
 
-End the comment with the line:
+The comment body must use ADF. Structure it with headings for each section (Clarifications, Approaches, Recommendation, Open questions). End the comment with the line:
 
 _Actioned by Claude Code_
 
-Confirm to the user that the comment was posted successfully, or report the error if it failed.
+Confirm to the user that the comment was posted successfully (HTTP 201) or report the error if it failed.
 
 ---
 
