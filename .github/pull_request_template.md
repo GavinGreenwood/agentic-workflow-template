@@ -1,6 +1,6 @@
-## Issue
+## Ticket
 
-Closes #<!-- issue number -->
+<!-- Jira ticket key e.g. PROJ-123 -->
 
 ## Plan Link
 
@@ -23,7 +23,7 @@ Closes #<!-- issue number -->
 
 ## Review Checklist
 
-- [ ] Does this match the plan/issue intent?
+- [ ] Does this match the ticket intent?
 - [ ] Are data boundaries respected?
 - [ ] Does this introduce new operational risk?
 - [ ] Are rollback mechanisms in place?

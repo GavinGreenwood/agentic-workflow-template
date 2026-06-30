@@ -1,36 +1,36 @@
 # Check nightly CI runs and triage failures
 
-Review the most recent nightly (scheduled) pipeline runs for this repo, diagnose any failures, and action them.
+Review the most recent nightly pipeline runs for this repo, diagnose any failures, and action them.
+
+**Repo:** This repo — `THE-Engineering/wur-executive` on CircleCI (see CLAUDE.md for the scoped URL).
 
 ---
 
-## Step 1 — Fetch recent scheduled runs
+## Step 1 — Fetch recent pipelines
 
-Fetch the most recent scheduled runs (GitHub Actions shown; adapt to your CI). Look at the last 7 days:
+Use the CircleCI REST API v2 (via `curl` with `CIRCLECI_TOKEN` from `.env` — see [`fix-cicd.md`](fix-cicd.md) for the pattern) to fetch the most recent pipelines for this repo. Filter to pipelines triggered by a schedule (nightly runs). Look at the last 7 days of nightly runs.
 
-```bash
-gh run list --event schedule --limit 20 --json databaseId,conclusion,createdAt,workflowName
-```
+For each nightly pipeline, note:
 
-For each nightly run, note:
-
-- Run ID and workflow name
+- Pipeline number and ID
 - Triggered at (date/time)
 - Overall status (success / failed / running)
 
 ## Step 2 — Identify failures
 
-List every failed nightly run. For each failure:
+List every failed nightly pipeline. For each failure:
 
-1. Fetch the failed jobs and their logs: `gh run view <run-id> --log-failed`
-2. Read the logs carefully and identify the root cause.
+1. Fetch the workflow(s) in that pipeline.
+2. For each failed workflow, fetch its jobs.
+3. For each failed job, fetch the full logs.
+4. Read the logs carefully and identify the root cause.
 
 Categorise each failure as one of:
 
 - **Flake** — non-deterministic failure (network timeout, race condition, transient infra)
 - **Regression** — a code change broke something
-- **Config** — CI config, environment variable, or secret issue
-- **Infra** — underlying infrastructure problem (disk, memory, runner crash)
+- **Config** — CircleCI config, environment variable, or secret issue
+- **Infra** — underlying infrastructure problem (disk, memory, pod crash)
 - **Unknown** — cannot determine from logs alone
 
 ## Step 3 — Summarise findings
@@ -38,8 +38,8 @@ Categorise each failure as one of:
 Print a table:
 
 ```
-| Run | Date | Status | Job | Category | Root cause (1 line) |
-|-----|------|--------|-----|----------|---------------------|
+| Pipeline | Date | Status | Job | Category | Root cause (1 line) |
+|----------|------|--------|-----|----------|---------------------|
 ```
 
 If all nightly runs are passing, output: "✅ All nightly runs passing — nothing to action." and stop.
@@ -51,25 +51,25 @@ These are actionable. For each one:
 1. Identify the affected files, tests, or config.
 2. Read the relevant source files to understand the failure.
 3. Propose a concrete fix plan (what to change, where, why).
-4. Ask: "Should I create an issue and pick it up for [failure description]?"
-   - If yes → run `/capture` to log it, then run `/pickup <issue>` to start work.
+4. Ask: "Should I create a Jira ticket and pick it up for [failure description]?"
+   - If yes → run `/capture` to log it, then run `/pickup <ticket>` to start work.
    - If no → note it and move on.
 
 ## Step 5 — For each Flake failure
 
 1. Check if the flake has occurred more than twice in the last 7 days.
-2. If yes → it is chronic and needs fixing. Propose a fix plan and ask whether to create an issue.
+2. If yes → it is chronic and needs fixing. Propose a fix plan and ask whether to create a ticket.
 3. If no → log it as a known flake and move on.
 
 ## Step 6 — For Infra failures
 
-Flag to the user. These are not fixable via code — they need infra investigation. Note the run ID and affected jobs so the user can escalate.
+Flag to the user. These are not fixable via code — they need infra investigation. Note the pipeline number and affected jobs so the user can escalate.
 
 ## Step 7 — Final report
 
 Summarise what was found and what was actioned:
 
-- Runs reviewed
+- Pipelines reviewed
 - Failures found (by category)
-- Issues created (if any)
+- Tickets created (if any)
 - Recommended next steps
