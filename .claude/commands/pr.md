@@ -62,31 +62,25 @@ Run the full ship workflow: verify, commit, push, and open a PR.
    - If there are 🔴 Must fix findings: fix them before the comment is posted, include them in a follow-up commit, then note them as "Fixed prior to this comment" in the findings list.
    - If there are only 🟡/🔵 findings: post the comment as-is and let the human reviewer decide.
 
-9. Flag the ticket for re-enrichment if needed:
-   - Invoke the `flag-reenrich` skill (no arguments — it derives the ticket from the branch).
-   - It decides whether this branch changed enrichment-affecting code (prompts, the enrichment pipeline, or the GRA/ranking data feeding them) and, if so, adds the `reenrich` label and a comment so QA knows the data must be re-enriched before this ticket's effects are visible.
-   - It is idempotent and runs its own assignee safety check — if nothing enrichment-affecting changed, it no-ops. Do not skip it; a forgotten flag means a reviewer validates against stale content.
-   - Credentials: `flag-reenrich` needs `JIRA_ACCOUNT_ID` in addition to the three base Jira variables (it uses it for its assignee safety check) and validates this itself in its own Step 1. Step 10 below does **not** use `JIRA_ACCOUNT_ID`, which is why its credential check lists only the three base variables.
+9. Move the Jira ticket to Review:
+   - Extract the ticket ID from the branch name (e.g. `wei-123-...` → `WEI-123`).
+   - Source `.env` and fetch available transitions: `GET $JIRA_BASE_URL/rest/api/3/issue/<ticket>/transitions`
+   - Find the transition whose `name` matches "Review" (case-insensitive) and apply it:
 
-10. Move the Jira ticket to Review:
-    - Extract the ticket ID from the branch name (e.g. `wei-123-...` → `WEI-123`).
-    - Source `.env` and fetch available transitions: `GET $JIRA_BASE_URL/rest/api/3/issue/<ticket>/transitions`
-    - Find the transition whose `name` matches "Review" (case-insensitive) and apply it:
+     ```bash
+     source .env && curl -s -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
+       -X POST "$JIRA_BASE_URL/rest/api/3/issue/<ticket>/transitions" \
+       -H "Content-Type: application/json" \
+       -d '{"transition": {"id": "<transition-id>"}}'
+     ```
 
-      ```bash
-      source .env && curl -s -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
-        -X POST "$JIRA_BASE_URL/rest/api/3/issue/<ticket>/transitions" \
-        -H "Content-Type: application/json" \
-        -d '{"transition": {"id": "<transition-id>"}}'
-      ```
+   - If `JIRA_BASE_URL`, `JIRA_API_TOKEN`, or `JIRA_EMAIL` are not set, skip this step and warn the user.
 
-    - If `JIRA_BASE_URL`, `JIRA_API_TOKEN`, or `JIRA_EMAIL` are not set, skip this step and warn the user.
-
-11. Post a Jira comment if it adds value:
+10. Post a Jira comment if it adds value:
 
     If any of `JIRA_BASE_URL`, `JIRA_API_TOKEN`, or `JIRA_EMAIL` are not set, skip this step and warn the user.
 
-    Use the ticket ID extracted in Step 10 above (e.g. `WEI-123`) wherever `<ticket>` appears below.
+    Use the ticket ID extracted in Step 9 above (e.g. `PROJ-123`) wherever `<ticket>` appears below.
 
     Use judgment — post when a comment would genuinely help QA or the team understand what changed and what to verify. Skip when there's nothing meaningful to add beyond the PR title.
 
@@ -130,7 +124,7 @@ Run the full ship workflow: verify, commit, push, and open a PR.
 
     A `201` means success. On failure (`HTTP_CODE` not 2xx), print the contents of `$RESPONSE_BODY` before removing it to help diagnose the error, then continue — do not block the rest of the workflow.
 
-12. Offer to watch for reviews and auto-run `/pr-action-review`:
+11. Offer to watch for reviews and auto-run `/pr-action-review`:
 
     If `--watch` was passed as an argument, skip the question below and proceed automatically as if the user said yes.
 
@@ -143,7 +137,8 @@ Run the full ship workflow: verify, commit, push, and open a PR.
     **Source 1 — formal reviews** (`/pulls/{pr}/reviews`):
 
     ```bash
-    gh api repos/THE-Engineering/wur-executive/pulls/<number>/reviews --paginate \
+    REPO=$(gh repo view --json nameWithOwner -q .nameWithOwner)
+    gh api "repos/$REPO/pulls/<number>/reviews" --paginate \
       --jq '[.[] | select(.user.type != "Bot") | select(.user.login | ascii_downcase | contains("copilot") | not)] | length'
     ```
 
@@ -152,14 +147,14 @@ Run the full ship workflow: verify, commit, push, and open a PR.
     Also check for Copilot specifically:
 
     ```bash
-    gh api repos/THE-Engineering/wur-executive/pulls/<number>/reviews --paginate \
+    gh api "repos/$REPO/pulls/<number>/reviews" --paginate \
       --jq '[.[] | select(.user.login | ascii_downcase | contains("copilot"))] | length'
     ```
 
     **Source 2 — issue comments** (`/issues/{pr}/comments`):
 
     ```bash
-    gh api repos/THE-Engineering/wur-executive/issues/<number>/comments --paginate \
+    gh api "repos/$REPO/issues/<number>/comments" --paginate \
       --jq '[.[] | select(.user.type != "Bot") | select(.body | contains("Actioned by Claude Code") | not)] | length'
     ```
 

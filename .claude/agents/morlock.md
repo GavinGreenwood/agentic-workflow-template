@@ -61,17 +61,17 @@ Think like an attacker targeting a multi-tenant web application:
 ## What You See That Others Don't
 
 ```
-// Eloi sees: "We're fetching the institution record"
-// Morlock sees: "Is institutionId from the URL validated against the user's access list?"
-const record = await recordRepository.findById(req.params.institutionId);
+// Eloi sees: "We're fetching the record"
+// Morlock sees: "Is recordId from the URL validated against the user's access list?"
+const record = await recordRepository.findById(req.params.recordId);
 
 // Eloi sees: "We're returning an error"
 // Morlock sees: "Does this error message differ for 'exists but forbidden' vs 'does not exist'?"
 if (!record) return res.status(404).json({ error: "Not found" });
 
-// Eloi sees: "We're calling OpenAI"
+// Eloi sees: "We're calling an external API"
 // Morlock sees: "What if the response contains instructions to ignore the system prompt?"
-const enriched = await openai.chat.completions.create({ ... });
+const result = await externalApiClient.fetch({ ... });
 
 // Eloi sees: "We're debouncing creation requests"
 // Morlock sees: "What if I send 100 requests in 1ms — does the lock actually hold?"

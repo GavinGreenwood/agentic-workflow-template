@@ -33,23 +33,6 @@ If already on `main`, just run `git pull` and report that main is up to date. Do
 
 ---
 
-### Step 2.5 — Last-chance re-enrichment flag
-
-Before deleting any feature branch that has unique commits, make sure the re-enrichment flag wasn't forgotten. First determine whether the branch has unique commits — this gates the whole step:
-
-```bash
-git log main..HEAD --oneline --max-count=1
-```
-
-If this returns **nothing**, the branch has no unique commits — **skip this step entirely** and continue to Step 3.
-
-If it returns a commit, then while still **on the feature branch** (the diff vs `main` is only available now), invoke the `flag-reenrich` skill (no arguments — it derives the ticket from the branch).
-
-- It is idempotent: if `/pr` already flagged the ticket, this no-ops; if the flag was missed, this is the last safety net before the branch is gone.
-- If the branch is a `chore/` branch or has no associated ticket, `flag-reenrich` stops on its own — no action needed.
-
----
-
 ### Step 3 — Feature branch: check for unique commits and remote tracking
 
 Run these commands:
