@@ -3,58 +3,56 @@
 ## Branching
 
 - Branch from `main`, always.
-- Feature/fix branches: `<issue-number>-<short-description>` — e.g. `42-fix-header-contrast`.
-- Chore branches (no issue required): `chore/<short-description>` — e.g. `chore/bump-eslint`.
+- Feature/fix branches: `<ticket-id-lowercase>-<short-description>` — e.g. `proj-42-fix-header-contrast`.
+- Chore branches (no ticket required): `chore/<short-description>` — e.g. `chore/bump-eslint`.
 - Never commit directly to `main`, `staging`, or `production` (the pre-commit hook blocks this).
 
 ## Commits
 
-- Conventional Commits format, with the issue number:
-  - `feat(#42): add institution comparison table`
-  - `fix(#107): debounce search input`
+- Conventional Commits format, with the Jira ticket key:
+  - `feat(PROJ-42): add institution comparison table`
+  - `fix(PROJ-107): debounce search input`
   - `chore: bump prettier to 3.x`
 - Keep commits small and focused. One logical change per commit.
 
 ## Pull Requests
 
 - Run `scripts/verify.sh` before opening any PR. No exceptions.
-- Fill the PR template fully: issue link, summary, test evidence, risk, rollback.
-- Include `Closes #<issue>` in the PR body so the issue closes on merge.
+- Fill the PR template fully: ticket link, summary, test evidence, risk, rollback.
+- Include the Jira ticket key in the PR body (e.g. `PROJ-42`) so it links on merge.
 - Delete `PROGRESS.md` before raising the PR (the `/pr` command does this).
 - Stacked PRs: prepend the ⚠️ stacked-PR warning block at the very top of the body, and never squash-merge a stacked chain — use merge commits.
 
-## Project board
+## Jira setup
 
-Every issue is tracked on the GitHub Project board, and the slash commands keep
-its **Status** in sync — board tracking is required, not optional. The board has
-four statuses, and tickets move through them in one direction:
+Every ticket is tracked on the Jira board, and the slash commands keep its
+**Status** in sync — board tracking is required, not optional. Tickets move
+through four statuses in one direction:
 
-| Status          | Meaning                  | Set by                                    |
-| --------------- | ------------------------ | ----------------------------------------- |
-| **Backlog**     | Filed, not yet started   | `/capture` (and any manually-filed issue) |
-| **In progress** | Assigned and being built | `/pickup`                                 |
-| **In review**   | PR open, awaiting review | `/pr` (after the PR is raised)            |
-| **Done**        | PR merged, issue closed  | `/pr-action-review` (after merge)         |
+| Status          | Meaning                  | Set by                                     |
+| --------------- | ------------------------ | ------------------------------------------ |
+| **Backlog**     | Filed, not yet started   | `/capture` (and any manually-filed ticket) |
+| **In Progress** | Assigned and being built | `/pickup`                                  |
+| **In Review**   | PR open, awaiting review | `/pr` (after the PR is raised)             |
+| **Done**        | PR merged, ticket closed | `/pr-action-review` (after merge)          |
 
-`/refine` does not move the card — a refined issue stays in **Backlog** until it
+`/refine` does not move the card — a refined ticket stays in **Backlog** until it
 is picked up.
 
-Transitions are driven by [`scripts/set-project-status.sh`](scripts/set-project-status.sh)
-`<issue-or-pr-number> "<Status>"`, which adds the item to the board if needed and
-sets its status by name (no hard-coded IDs). Configure the board once via `.env`:
+Transitions are made via the Jira REST API (`/rest/api/3/issue/<KEY>/transitions`)
+using transition names (no hard-coded IDs). Configure via `.env`:
 
 ```bash
-GH_PROJECT_OWNER=your-github-login-or-org
-GH_PROJECT_NUMBER=<number from the project URL>
-GH_PROJECT_OWNER_TYPE=user   # or 'org'
+JIRA_BASE_URL=https://yourorg.atlassian.net
+JIRA_EMAIL=you@example.com
+JIRA_API_TOKEN=<from id.atlassian.com → Security → API tokens>
+JIRA_ACCOUNT_ID=<your Atlassian account ID>
+JIRA_PROJECT_KEY=PROJ
+JIRA_BOARD_ID=<optional — board ID from the agile board URL>
 ```
 
-The `gh` token needs the read-write `project` scope: `gh auth refresh -s project`.
-This is a **one-time, per-developer** grant — `gh` stores the token in your OS
-keychain, not in the repo or `.env`, so there is nothing to commit, share, or
-rotate. Each developer authenticates as themselves once. For CI that needs to
-move cards, use a fine-grained PAT or GitHub App token held as an Actions
-secret — never a committed file.
+The API token is personal and stays in your local `.env` — never committed.
+Each developer creates their own at `id.atlassian.com → Security → API tokens`.
 
 ## Architecture Decision Records
 

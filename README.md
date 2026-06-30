@@ -39,12 +39,10 @@ CLAUDE.md                 The agent contract — rules, workflow, golden rules
 CONTRIBUTING.md           Branch, commit, and PR conventions
 .claude/
   settings.json           Hook wiring (PreToolUse / PostToolUse / Stop)
-  commands/               Slash commands (GitHub Issues flavour)
-  commands/jira/          Jira + Tempo variants of the ticket commands
+  commands/               Slash commands (Jira flavour — ticket lifecycle + PR workflow)
   agents/morlock.md       Internal adversarial security agent
 scripts/
   verify.sh               Full verification suite — same checks as CI
-  set-project-status.sh   Moves an issue/PR card across the Project board
   hooks/                  The guardrail hook scripts
 .husky/                   pre-commit and pre-push quality gates
 .github/
@@ -77,23 +75,21 @@ docs/
 | `/pr-chore`                   | Raise a small no-ticket chore PR from a worktree without touching your feature branch                     |
 | `/multi-repo`                 | Manage parallel development slots — several clones, isolated ports, one agent each                        |
 
-The `commands/jira/` folder holds the original Jira-flavoured variants (`pickup`, `refine`, `capture`, `qa-review-action`, plus `log-time` for Tempo time tracking) for teams on Atlassian.
-
-Several of these commands keep a **GitHub Project board** in sync as tickets move: `/capture` files into **Backlog**, `/pickup` moves to **In progress**, `/pr` to **In review**, and `/pr-action-review` to **Done** on merge. Configure the board once in `.env` (`GH_PROJECT_OWNER`, `GH_PROJECT_NUMBER`) — see CONTRIBUTING.md § Project board.
+These commands use the **Jira REST API** directly (no MCP server required). Ticket lifecycle commands keep the Jira board in sync: `/capture` files into **Backlog**, `/pickup` moves to **In Progress**, `/pr` to **In Review**, and `/pr-action-review` to **Done** on merge. Configure via `.env` — see CONTRIBUTING.md § Jira setup.
 
 ## Quickstart
 
 1. **Use this template** (GitHub → "Use this template") or copy `.claude/`, `scripts/`, `.husky/`, `CLAUDE.md` into your existing repo.
-2. **Authenticate the GitHub CLI** — run `gh auth login`, then grant the Projects scope once with `gh auth refresh -s project`. The commands drive GitHub Issues, PRs, and the Project board through it. This is one-time and per developer: `gh` stores the token in your OS keychain — never in the repo, never in `.env`.
+2. **Authenticate the GitHub CLI** — run `gh auth login`. The commands use `gh` for PRs and CI; Jira tickets are handled via the REST API, not the CLI.
 3. Edit `CLAUDE.md`: fill in your project overview, repo map, and stack-specific rules. Delete what doesn't apply — the contract only works if it's true.
 4. Wire your package scripts: the gates expect `npm run lint`, `typecheck`, `test`, `build` (and optionally `format:check`, `test:integration`). Adjust `scripts/verify.sh` and `.husky/*` to match your stack.
-5. **Configure the board** — copy `.env.example` to `.env` and set `GH_PROJECT_OWNER` and `GH_PROJECT_NUMBER` (both read off the project URL `…/projects/<number>`). These are config, not secrets, so `.env.example` documents them and your real `.env` stays uncommitted.
-6. Create a well-written GitHub issue (acceptance criteria included — the agent implements exactly what the ticket says).
-7. Open Claude Code and type `/pickup 1`.
+5. **Configure Jira** — copy `.env.example` to `.env` and set `JIRA_BASE_URL`, `JIRA_EMAIL`, `JIRA_API_TOKEN`, `JIRA_ACCOUNT_ID`, and `JIRA_PROJECT_KEY`. These are config, not secrets — `.env.example` documents them and your real `.env` stays uncommitted.
+6. Create a well-written Jira ticket (acceptance criteria included — the agent implements exactly what the ticket says).
+7. Open Claude Code and type `/pickup PROJ-1`.
 
 ## Adapting it
 
-- **Different tracker?** The commands are markdown instructions, not code — port the `gh issue` calls to your tracker's CLI/API. The Jira variants show how.
+- **Different tracker?** The commands are markdown instructions, not code — port the `curl` Jira API calls to your tracker's API.
 - **Different CI?** `/fix-cicd`, `/nightly-check` and `/morning` use `gh run`; swap for your CI's API (the original project used CircleCI via an MCP server).
 - **Different stack?** The hooks and gates are stack-agnostic except for the npm script names and the Prisma migration check in pre-push — replace with your migration tool's paths.
 
