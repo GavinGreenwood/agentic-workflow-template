@@ -1,36 +1,37 @@
 # Check nightly CI runs and triage failures
 
-Review the most recent nightly pipeline runs for this repo, diagnose any failures, and action them.
-
-**Repo:** This repo — `THE-Engineering/wur-executive` on CircleCI (see CLAUDE.md for the scoped URL).
+Review the most recent nightly workflow runs for this repo, diagnose any failures, and action them.
 
 ---
 
-## Step 1 — Fetch recent pipelines
+## Step 1 — Fetch recent scheduled runs
 
-Use the CircleCI REST API v2 (via `curl` with `CIRCLECI_TOKEN` from `.env` — see [`fix-cicd.md`](fix-cicd.md) for the pattern) to fetch the most recent pipelines for this repo. Filter to pipelines triggered by a schedule (nightly runs). Look at the last 7 days of nightly runs.
+Use the `gh` CLI to fetch scheduled workflow runs for this repo. Look at the last 7 days of nightly (schedule-triggered) runs.
 
-For each nightly pipeline, note:
+```bash
+gh run list --event schedule --limit 30 --json databaseId,displayTitle,status,conclusion,createdAt,headSha,workflowName
+```
 
-- Pipeline number and ID
+Filter to runs from the last 7 days. For each run, note:
+
+- Run ID and workflow name
 - Triggered at (date/time)
-- Overall status (success / failed / running)
+- Overall status (success / failure / in_progress)
 
 ## Step 2 — Identify failures
 
-List every failed nightly pipeline. For each failure:
+List every failed nightly run. For each failure:
 
-1. Fetch the workflow(s) in that pipeline.
-2. For each failed workflow, fetch its jobs.
-3. For each failed job, fetch the full logs.
-4. Read the logs carefully and identify the root cause.
+1. Fetch the jobs: `gh run view <run-id> --json jobs`
+2. For each failed job, fetch the full logs: `gh run view <run-id> --log-failed`
+3. Read the logs carefully and identify the root cause.
 
 Categorise each failure as one of:
 
 - **Flake** — non-deterministic failure (network timeout, race condition, transient infra)
 - **Regression** — a code change broke something
-- **Config** — CircleCI config, environment variable, or secret issue
-- **Infra** — underlying infrastructure problem (disk, memory, pod crash)
+- **Config** — GitHub Actions workflow config, environment variable, or secret issue
+- **Infra** — underlying infrastructure problem (disk, memory, runner crash)
 - **Unknown** — cannot determine from logs alone
 
 ## Step 3 — Summarise findings

@@ -42,7 +42,7 @@ Once the ownership check passes, check out the branch:
    - **Failing checks** → first diagnose whether the failure is this PR's fault before touching anything (steps 3–4).
 
 3. **Diagnose the failing check — is it related to this PR's changes?**
-   - Read the failing job(s) from `statusCheckRollup`. For deeper logs use the CircleCI MCP (scoped to this repo only — see CLAUDE.md).
+   - Read the failing job(s) from `statusCheckRollup`. For deeper logs use `gh run view <run-id> --log-failed` (see [`fix-cicd.md`](fix-cicd.md) for the full drill-down pattern).
    - Treat it as **unrelated** when, for example: the same job is green on the latest `<baseRefName>`; the failure is in code this PR never touched (compare against `gh pr diff <pr-number> --name-only`); or it's an infra / dependency / lockfile / audit failure that has since been fixed on `<baseRefName>`.
    - Treat it as **related** when the failure is in code this PR changed, or in a test for behaviour this PR introduced.
 
