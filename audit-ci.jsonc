@@ -19,6 +19,6 @@
     // Mitigating controls: authenticate all file-upload endpoints; enforce per-request
     // body-size limits via NestJS's body-parser config so the DoS vector is bounded.
     "GHSA-72gw-mp4g-v24j",
-    "GHSA-3p4h-7m6x-2hcm"
-  ]
+    "GHSA-3p4h-7m6x-2hcm",
+  ],
 }
