@@ -1,0 +1,24 @@
+{
+  // audit-ci config — runs npm audit and enforces a "high" threshold.
+  // See: https://github.com/IBM/audit-ci
+  "high": true,
+
+  // Allowlisted advisories — known upstream issues with no available fix.
+  // Each entry must include a comment explaining the rationale and an expected
+  // resolution so the allowlist doesn't silently persist forever.
+  "allowlist": [
+    // multer 1.0.0–2.1.1: DoS via deeply nested field names (GHSA-72gw-mp4g-v24j)
+    // multer 1.0.0–2.1.1: DoS via incomplete cleanup of aborted uploads (GHSA-3p4h-7m6x-2hcm)
+    //
+    // Root cause: @nestjs/platform-express@11.1.27 pins multer to exactly 2.1.1.
+    // npm overrides cannot bypass exact-version pins set by transitive dependencies.
+    // multer 2.2.0 fixes both CVEs but NestJS has not yet released a version that
+    // allows it. Remove these entries once @nestjs/platform-express ships with
+    // multer >= 2.2.0 or a compatible patch.
+    //
+    // Mitigating controls: authenticate all file-upload endpoints; enforce per-request
+    // body-size limits via NestJS's body-parser config so the DoS vector is bounded.
+    "GHSA-72gw-mp4g-v24j",
+    "GHSA-3p4h-7m6x-2hcm"
+  ]
+}
