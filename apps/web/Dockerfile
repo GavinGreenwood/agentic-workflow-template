@@ -13,6 +13,8 @@ COPY packages/ packages/
 ARG APP_VERSION=0.0.0
 ENV NEXT_PUBLIC_APP_VERSION=$APP_VERSION
 ENV NEXT_TELEMETRY_DISABLED=1
+ENV COREPACK_ENABLE_STRICT=0
+ENV SKIP_YARN_COREPACK_CHECK=1
 
 RUN npm run build --workspace=packages/shared
 RUN npm run build --workspace=apps/web

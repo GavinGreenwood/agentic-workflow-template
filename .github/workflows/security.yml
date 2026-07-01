@@ -18,7 +18,7 @@ jobs:
       - uses: ./.github/actions/setup
 
       - name: npm audit
-        run: npm audit --audit-level=high
+        run: npx audit-ci@7.1.0 --config audit-ci.jsonc
 
       - name: Secretlint
         run: npx secretlint "**/*"
@@ -51,7 +51,7 @@ jobs:
 
       - name: Upload Semgrep SARIF
         uses: github/codeql-action/upload-sarif@v4
-        if: always()
+        if: always() && hashFiles('semgrep.sarif') != ''
         with:
           sarif_file: semgrep.sarif
         continue-on-error: true

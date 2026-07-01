@@ -18,7 +18,7 @@
     "@nestjs/swagger": "^11.0.0",
     "@template/shared": "*",
     "reflect-metadata": "^0.2.0",
-    "rxjs": "^7.8.0",
+    "rxjs": "^7.8.2",
     "zod": "^4.4.3"
   },
   "devDependencies": {
@@ -31,7 +31,7 @@
     "@types/express": "^5.0.0",
     "@types/jest": "^30.0.0",
     "@types/node": "^22.0.0",
-    "@types/supertest": "^6.0.0",
+    "@types/supertest": "^7.2.0",
     "eslint": "^9.18.0",
     "jest": "^30.0.0",
     "supertest": "^7.0.0",
