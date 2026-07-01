@@ -52,7 +52,7 @@ For each Failing PR:
    ```bash
    gh pr checks <number>
    ```
-2. Fetch the failed job logs via the CircleCI REST API v2 (`curl` with `CIRCLECI_TOKEN` from `.env` — see [`fix-cicd.md`](fix-cicd.md) for the drill-down pattern; use the pipeline URL from the checks output). Read the logs and identify the root cause.
+2. Fetch the failed job logs via the `gh` CLI (see [`fix-cicd.md`](fix-cicd.md) for the drill-down pattern — use the run ID from the checks output). Read the logs and identify the root cause.
 3. Categorise the failure:
    - **Dependency conflict** — the new version conflicts with another package
    - **Type error** — the new version changed a type signature

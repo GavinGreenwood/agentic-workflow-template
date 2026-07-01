@@ -6,11 +6,15 @@ Run the full morning maintenance sequence in order.
 
 ## Step 1 — Main branch health check
 
-Use the CircleCI REST API v2 (via `curl` with `CIRCLECI_TOKEN` from `.env` — see [`fix-cicd.md`](fix-cicd.md) for the pattern) to fetch the most recent pipelines for this repo triggered by a push to the `main` branch. Look at the most recent 3 push-triggered pipelines on `main` (not scheduled runs).
+Use the `gh` CLI to fetch the most recent workflow runs for this repo triggered by a push to the `main` branch. Look at the most recent 3 completed push-triggered runs on `main` (not scheduled runs).
 
-For each pipeline:
+```bash
+gh run list --branch main --event push --limit 10 --json databaseId,displayTitle,status,conclusion,createdAt,headSha,workflowName
+```
 
-- Note the pipeline number, commit SHA, triggered-at time, and overall status.
+Filter to `status: completed` runs only (skip any that are `in_progress`). For each run:
+
+- Note the run ID, workflow name, commit SHA, triggered-at time, and conclusion.
 
 Determine the **current health of main**:
 
@@ -20,9 +24,10 @@ Determine the **current health of main**:
 
 If main is **Red**:
 
-1. Fetch the failed workflow(s) and their jobs.
-2. Fetch logs for each failed job and identify the root cause.
-3. Print a prominent warning:
+1. Fetch the failed jobs: `gh run view <run-id> --json jobs`
+2. Fetch logs for each failed job: `gh run view <run-id> --log-failed`
+3. Read the logs and identify the root cause.
+4. Print a prominent warning:
 
 ```
 ⚠️  MAIN IS BROKEN
