@@ -18,6 +18,14 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
+  "optionalDependencies": {
+    "@next/swc-linux-x64-gnu": "15.5.19",
+    "@next/swc-linux-x64-musl": "15.5.19",
+    "@tailwindcss/oxide-linux-x64-gnu": "4.3.1",
+    "@tailwindcss/oxide-linux-x64-musl": "4.3.1",
+    "lightningcss-linux-x64-gnu": "1.32.0",
+    "lightningcss-linux-x64-musl": "1.32.0"
+  },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.3.1",
     "@template/eslint-config": "*",
