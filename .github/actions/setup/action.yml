@@ -9,8 +9,10 @@ runs:
         node-version: "24"
         cache: npm
 
-    - name: Disable Corepack strict mode
-      run: echo "COREPACK_ENABLE_STRICT=0" >> $GITHUB_ENV
+    - name: Suppress package manager version checks
+      run: |
+        echo "COREPACK_ENABLE_STRICT=0" >> $GITHUB_ENV
+        echo "SKIP_YARN_COREPACK_CHECK=1" >> $GITHUB_ENV
       shell: bash
 
     - name: Install dependencies
