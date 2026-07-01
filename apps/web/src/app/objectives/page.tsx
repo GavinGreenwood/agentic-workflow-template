@@ -86,27 +86,13 @@ export default async function ObjectivesPage() {
                 >
                   Cycle
                 </label>
-                <select
+                <input
                   id="cycleId"
                   name="cycleId"
+                  type="text"
                   defaultValue="2025-Q1"
-                  className="block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-white"
-                >
-                  {[
-                    "2025-Q1",
-                    "2025-Q2",
-                    "2025-Q3",
-                    "2025-Q4",
-                    "2026-Q1",
-                    "2026-Q2",
-                    "2026-Q3",
-                    "2026-Q4",
-                  ].map((q) => (
-                    <option key={q} value={q}>
-                      {q}
-                    </option>
-                  ))}
-                </select>
+                  className="block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                />
               </div>
               <button
                 type="submit"
