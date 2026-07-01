@@ -16,7 +16,7 @@ runs:
       shell: bash
 
     - name: Install dependencies
-      run: npm ci
+      run: npm install
       shell: bash
 
     - name: Generate Prisma client (if schema present)
