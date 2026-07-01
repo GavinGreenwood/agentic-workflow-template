@@ -62,7 +62,9 @@ If a task spans multiple areas, read all relevant files. When in doubt, read mor
    - Flag the deviation explicitly: what the docs say vs. what you think should change and why.
    - Ask whether we should update the docs to reflect the new direction.
    - Default: update the docs first, then implement. The docs lead, code follows.
+   - Also flag if the deviation might indicate we're heading in the wrong direction.
 4. **After coding**: Check if any docs need updating to reflect what was built. If you added a new pattern, endpoint, data flow, ADR, or changed behaviour — update the relevant docs in the same PR.
+5. **New features or significant changes**: Update architecture docs if the system shape changed. Feature context lives in Jira — not in the repo.
 
 If docs are stale or contradictory, flag it. Don't guess which version is correct — ask.
 
@@ -104,15 +106,15 @@ Follow test-driven development where possible:
 2. **GREEN**: Write the minimum implementation to make the test pass.
 3. **REFACTOR**: Clean up the code while all tests stay green.
 
-**Exploratory-first exception**: When proving out an unfamiliar approach, write the production code first to validate it works. Once validated, comment out the production code, write the failing tests (RED), then uncomment incrementally to make them pass (GREEN).
+**Exploratory-first exception**: When proving out an unfamiliar approach, write the production code first to validate it works. Once validated, comment out the production code, write the failing tests (RED), then uncomment incrementally to make them pass (GREEN). This preserves TDD integrity while allowing necessary exploration.
 
-When picking up a ticket, start by writing the test that proves the acceptance criteria, then implement.
+This cycle applies to unit, integration, and E2E tests. When picking up a ticket, start by writing the test that proves the acceptance criteria, then implement.
 
 ## Absolute Rules
 
 These are non-negotiable. No exceptions, no workarounds.
 
-1. **Every task needs a Jira ticket.** No work without a ticket. **Exception:** `chore/` branches (dependency bumps, test maintenance, config housekeeping) — use a `chore/<short-description>` branch name and a `chore:` commit prefix.
+1. **Every task needs a Jira ticket.** No work without a ticket. **Exception:** `chore/` branches (dependency bumps, test maintenance, config housekeeping) are exempt — use a `chore/<short-description>` branch name and a `chore:` commit prefix. All `feat/` and `fix/` work still requires a ticket.
 2. **Every code change needs a feature branch** — named per CONTRIBUTING.md (`<ticket-id>-<short-description>`, or `chore/<short-description>`).
 3. **Merge = Close** — Close the Jira ticket immediately when the PR merges.
 4. **Never commit a schema change without a migration file** — Schema and migration travel together, always.
@@ -128,6 +130,7 @@ These are non-negotiable. No exceptions, no workarounds.
 - **Read context first**: Read all relevant documentation files before starting any task.
 - **Keep docs in sync**: Update documentation in the same PR as code changes. Never let docs drift from reality.
 - **Flag deviations**: If implementation needs to differ from documented standards, flag it explicitly and discuss before proceeding.
+- **Docs before code**: Create or update documentation before coding when work is non-trivial.
 - **TDD by default**: Write failing tests first, then implement, then refactor.
 - **Small changes**: Keep changes small and focused. Prefer safe refactors.
 - **Tests with features**: Every feature or fix includes tests. Never reduce coverage.
@@ -156,6 +159,7 @@ These are non-negotiable. No exceptions, no workarounds.
 - Commit secrets, API keys, credentials, or `.env` files.
 - Hard-code credentials or sensitive values in test or application code — read them from environment variables; the only exception is a mocked secrets provider returning fixture values.
 - Bypass pre-commit or pre-push hooks.
+- Deploy without passing all quality gates.
 - Create PRs without running `scripts/verify.sh`.
 - Start work without a ticket (except `chore/` branches).
 
@@ -183,12 +187,12 @@ Build a map of every issue that has been raised before. For each prior finding, 
 
 ### Verdict and approval rules
 
-| Situation                                                    | Verdict                                                         |
-| ------------------------------------------------------------ | --------------------------------------------------------------- |
-| No must-fix findings detected                                | **Approve**                                                     |
-| Must-fix findings detected, but all have been pushed back on | **Approve** — note the outstanding items for the human reviewer |
-| Must-fix findings detected and none have been discussed      | **Request changes**                                             |
-| Must-fix findings that are new AND genuinely blockers        | **Request changes**                                             |
+| Situation                                                    | Verdict                                                                                                 |
+| ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------- |
+| No must-fix findings detected                                | **Approve**                                                                                             |
+| Must-fix findings detected, but all have been pushed back on | **Approve** — note the outstanding items in the summary for the human reviewer, but do not block the PR |
+| Must-fix findings detected and none have been discussed      | **Request changes**                                                                                     |
+| Must-fix findings that are new AND genuinely blockers        | **Request changes**                                                                                     |
 
 The goal is to avoid blocking PRs on issues the team has already decided to accept. When in doubt, approve and note — do not block.
 
@@ -199,6 +203,36 @@ The goal is to avoid blocking PRs on issues the team has already decided to acce
 - 🔵 **Consider** — nit, optional improvement
 
 Only 🔴 findings block approval. 🟡 and 🔵 findings are informational — post them, but still approve.
+
+### Review comment format
+
+Post findings as a PR comment using `gh pr comment`:
+
+```
+## AI Review
+
+Reviewed against correctness, TypeScript strictness, OWASP, WCAG AA, test coverage, conventions, docs sync, and performance.
+
+**Conversation history checked** — [N previously discussed items were found; X were pushed back on and are not re-listed.]
+
+### Findings
+
+<list each finding with classification emoji, file:line, and one-sentence description>
+
+_or_ ✅ No findings — all lenses clear.
+
+### Previously discussed — not re-raised
+
+<list any issues found in the diff that were previously raised and pushed back on, with a one-line note: "Raised previously by @reviewer — author pushed back, not re-raised.">
+
+_or_ (omit this section if none)
+
+### Verdict
+
+<Approve / Request changes — and why in one sentence>
+
+_Actioned by Claude Code_
+```
 
 ### After posting the review comment — submit the formal GitHub review
 
