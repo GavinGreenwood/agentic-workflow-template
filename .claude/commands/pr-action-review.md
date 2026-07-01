@@ -123,7 +123,7 @@ For each auto-fix:
 1. Make the code change.
 2. Run `scripts/verify.sh` after all fixes are applied (not after each one).
 3. If verify fails, fix the failures before continuing.
-4. Commit with the ticket ID and a message referencing the review (e.g. `WEI-8: address PR review comments`).
+4. Commit with the ticket ID and a message referencing the review (e.g. `PROJ-8: address PR review comments`).
 5. Push the branch.
 6. Reply to each resolved comment via `gh api` POST to mark it addressed. Keep replies concise — one sentence describing what was done. Example: `"Fixed — renamed to \`providerKey\` for consistency."`.
 7. Resolve each fixed thread via the GraphQL API:
@@ -275,7 +275,7 @@ Do not enable GitHub's native auto-merge. The merge is always a human decision o
 
 ### Post-merge Jira action
 
-Extract the ticket ID from the branch name (e.g. `wei-41-...` → `WEI-41`).
+Extract the ticket ID from the branch name (e.g. `proj-41-...` → `PROJ-41`).
 
 **If Leave as-is (option 3):** No Jira action. Skip this section entirely.
 
