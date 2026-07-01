@@ -50,10 +50,7 @@ export default async function ObjectivePage({ params }: Props) {
       objectiveId: id,
       title: formData.get("title") as string,
       unit: formData.get("unit") as
-        | "number"
-        | "percent"
-        | "currency"
-        | "boolean",
+        "number" | "percent" | "currency" | "boolean",
       startValue: Number(formData.get("startValue")),
       targetValue: Number(formData.get("targetValue")),
     });
