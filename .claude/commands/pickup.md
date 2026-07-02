@@ -67,9 +67,22 @@ source .env && curl -s -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
   -d "{\"accountId\": \"$JIRA_ACCOUNT_ID\"}"
 ```
 
-## Step 5 — Move to In Progress
+## Step 5 — Move onto the active board
 
-First, get available transitions:
+Do this **before** the In Progress transition (Step 6). Adding an issue to the board drops it into the board's default column (e.g. "Ready for Development"), which would overwrite an In Progress status set beforehand. Always add to the board first, then transition last.
+
+```bash
+source .env && curl -s -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
+  -X POST "$JIRA_BASE_URL/rest/agile/1.0/board/$JIRA_BOARD_ID/issue" \
+  -H "Content-Type: application/json" \
+  -d "{\"issues\": [\"$TICKET_KEY\"]}"
+```
+
+## Step 6 — Move to In Progress
+
+This must be the **last** Jira write, so nothing (like the board-add above) can clobber the status afterwards.
+
+First, get available transitions (fetch them fresh — available transitions and their ids depend on the ticket's current status, so never reuse an id from an earlier run):
 
 ```bash
 source .env && curl -s -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
@@ -85,13 +98,11 @@ source .env && curl -s -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
   -d '{"transition": {"id": "<transition-id>"}}'
 ```
 
-## Step 6 — Move onto the active board
+Then confirm the status actually landed on In Progress (a `204` only means the request was accepted, not that the status stuck):
 
 ```bash
 source .env && curl -s -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
-  -X POST "$JIRA_BASE_URL/rest/agile/1.0/board/$JIRA_BOARD_ID/issue" \
-  -H "Content-Type: application/json" \
-  -d "{\"issues\": [\"$TICKET_KEY\"]}"
+  "$JIRA_BASE_URL/rest/api/3/issue/$TICKET_KEY?fields=status"
 ```
 
 ## Step 7 — Fetch all subtasks
