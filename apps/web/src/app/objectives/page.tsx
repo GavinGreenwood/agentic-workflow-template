@@ -2,7 +2,9 @@ import Link from "next/link";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import type { Objective } from "@template/shared";
+import { DEFAULT_CYCLE } from "@template/shared";
 import { getObjectives, createObjective } from "../../lib/okr-api";
+import { CycleField } from "./CycleField";
 
 const statusStyles: Record<string, string> = {
   active: "bg-emerald-100 text-emerald-700",
@@ -29,7 +31,7 @@ export default async function ObjectivesPage() {
       title: formData.get("title") as string,
       description: (formData.get("description") as string) || undefined,
       ownerId: "demo-user",
-      cycleId: (formData.get("cycleId") as string) || "2025-Q1",
+      cycleId: (formData.get("cycleId") as string) || DEFAULT_CYCLE,
     });
     revalidatePath("/objectives");
     redirect("/objectives");
@@ -79,21 +81,7 @@ export default async function ObjectivesPage() {
                   className="block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 resize-none"
                 />
               </div>
-              <div>
-                <label
-                  htmlFor="cycleId"
-                  className="block text-sm font-medium text-slate-700 mb-1"
-                >
-                  Cycle
-                </label>
-                <input
-                  id="cycleId"
-                  name="cycleId"
-                  type="text"
-                  defaultValue="2025-Q1"
-                  className="block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                />
-              </div>
+              <CycleField />
               <button
                 type="submit"
                 className="w-full inline-flex justify-center items-center px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors"
