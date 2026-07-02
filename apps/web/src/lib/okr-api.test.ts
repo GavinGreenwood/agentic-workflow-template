@@ -10,6 +10,7 @@ import {
 } from "./okr-api";
 
 let fetchMock: jest.Mock;
+const originalFetch = global.fetch;
 
 function mockJson(body: unknown, status = 200): void {
   const res = {
@@ -24,6 +25,10 @@ describe("okr-api", () => {
   beforeEach(() => {
     fetchMock = jest.fn();
     global.fetch = fetchMock;
+  });
+
+  afterEach(() => {
+    global.fetch = originalFetch;
   });
 
   it("getObjectives returns the parsed list", async () => {

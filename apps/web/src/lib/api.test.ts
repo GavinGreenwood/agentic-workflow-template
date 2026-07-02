@@ -8,6 +8,8 @@ function mockRes(body: unknown, status = 200): Response {
   } as unknown as Response;
 }
 
+const originalFetch = global.fetch;
+
 function setFetch(): jest.Mock {
   const fetchMock = jest.fn();
   global.fetch = fetchMock;
@@ -15,6 +17,10 @@ function setFetch(): jest.Mock {
 }
 
 describe("fetchApiVersion", () => {
+  afterEach(() => {
+    global.fetch = originalFetch;
+  });
+
   it("returns the version from a successful response", async () => {
     setFetch().mockResolvedValue(mockRes({ version: "2.0.0" }));
     await expect(fetchApiVersion()).resolves.toBe("2.0.0");
