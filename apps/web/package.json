@@ -19,7 +19,7 @@
     "react-dom": "^19.0.0"
   },
   "optionalDependencies": {
-    "@next/swc-darwin-arm64": "15.5.19",
+    "@next/swc-darwin-arm64": "16.2.10",
     "@next/swc-darwin-x64": "15.5.19",
     "@next/swc-linux-arm64-gnu": "15.5.19",
     "@next/swc-linux-arm64-musl": "15.5.19",
