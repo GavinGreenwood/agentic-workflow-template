@@ -11,20 +11,20 @@
     "test": "jest --coverage"
   },
   "dependencies": {
-    "@nestjs/common": "^11.0.0",
+    "@nestjs/common": "^11.1.28",
     "@nestjs/config": "^4.0.0",
-    "@nestjs/core": "^11.0.0",
-    "@nestjs/platform-express": "^11.0.0",
+    "@nestjs/core": "^11.1.28",
+    "@nestjs/platform-express": "^11.1.28",
     "@nestjs/swagger": "^11.0.0",
     "@template/shared": "*",
     "reflect-metadata": "^0.2.0",
-    "rxjs": "^7.8.2",
+    "rxjs": "^7.8.1",
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@nestjs/cli": "^11.0.0",
+    "@nestjs/cli": "^11.0.24",
     "@nestjs/schematics": "^11.0.0",
-    "@nestjs/testing": "^11.0.0",
+    "@nestjs/testing": "^11.1.28",
     "@template/eslint-config": "*",
     "@template/jest-config": "*",
     "@template/tsconfig": "*",
