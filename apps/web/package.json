@@ -27,13 +27,13 @@
     "@next/swc-linux-x64-musl": "15.5.19",
     "@next/swc-win32-arm64-msvc": "15.5.19",
     "@next/swc-win32-x64-msvc": "15.5.19",
-    "@tailwindcss/oxide-linux-x64-gnu": "4.3.1",
-    "@tailwindcss/oxide-linux-x64-musl": "4.3.1",
+    "@tailwindcss/oxide-linux-x64-gnu": "4.3.2",
+    "@tailwindcss/oxide-linux-x64-musl": "4.3.2",
     "lightningcss-linux-x64-gnu": "1.32.0",
     "lightningcss-linux-x64-musl": "1.32.0"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4.3.1",
+    "@tailwindcss/postcss": "^4.3.2",
     "@template/eslint-config": "*",
     "@template/jest-config": "*",
     "@template/tsconfig": "*",
