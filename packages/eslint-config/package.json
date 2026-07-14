@@ -9,7 +9,7 @@
     "./nestjs": "./nestjs.mjs"
   },
   "dependencies": {
-    "@eslint/js": "^9.18.0",
+    "@eslint/js": "^10.0.1",
     "@next/eslint-plugin-next": "^16.2.10",
     "eslint-plugin-jsx-a11y": "^6.10.0",
     "eslint-plugin-react": "^7.37.0",
