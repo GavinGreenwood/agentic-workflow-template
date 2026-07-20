@@ -4,6 +4,20 @@ A complete, battle-tested workflow for running a software project with **Claude 
 
 Everything in this repo was developed and refined on a real production client project (a Next.js + NestJS monorepo on AWS), where it ran the full delivery loop for months: tickets picked up, features built test-first, PRs raised, reviews actioned, CI fixed, dependencies maintained — with humans steering and machines enforcing quality.
 
+## Import into your repo
+
+Open Claude Code in the repo you want to standardise, and paste:
+
+```
+Import the agentic workflow standards from
+https://github.com/GavinGreenwood/agentic-workflow-template — read its ADOPT.md
+and follow it.
+```
+
+The agent reads **[ADOPT.md](ADOPT.md)**, which is a playbook, not a copy script. It inspects your repo's actual stack (language, package manager, test runner, CI, tracker, branching model), maps every part of this template to your equivalents (dropping anything that has none), then **asks you the decisions that matter** — how strict the ticket rule is, coverage floor vs ratchet, mandatory vs recommended TDD, which quality layers and slash commands to bring, who owns CI — with a recommended default for each. Only after you approve the plan does it write anything. The goal is an adoption that fits _your_ repo, in _your_ language, not a TypeScript template pasted on top.
+
+Prefer to drive it yourself? Read [ADOPT.md](ADOPT.md) directly — it doubles as a manual checklist.
+
 ## The philosophy
 
 This workflow is built on the engineering philosophy from two Mark Ridley articles — read these first:
@@ -35,6 +49,7 @@ And **end-to-end traceability**: every change starts from an issue, the issue nu
 ## What's inside
 
 ```
+ADOPT.md                  Playbook an agent follows to import this into your repo
 CLAUDE.md                 The agent contract — rules, workflow, golden rules
 CONTRIBUTING.md           Branch, commit, and PR conventions
 .claude/
@@ -93,9 +108,7 @@ These commands use the **Jira REST API** directly (no MCP server required). Tick
 
 ## Adapting it
 
-- **Different tracker?** The commands are markdown instructions, not code — port the `curl` Jira API calls to your tracker's API.
-- **Different CI?** `/fix-cicd`, `/nightly-check` and `/morning` use `gh run`; swap for your CI's API (the original project used CircleCI via an MCP server).
-- **Different stack?** The hooks and gates are stack-agnostic except for the npm script names and the Prisma migration check in pre-push — replace with your migration tool's paths.
+Different tracker, CI, or stack? That's exactly what **[ADOPT.md](ADOPT.md)** handles — it maps every part of this template (the Jira `curl` calls, the `gh run` CI commands, the npm scripts and Prisma migration check) to your equivalents and drops anything with none. Point an agent at it, or work through it yourself as a checklist.
 
 ## Licence
 
