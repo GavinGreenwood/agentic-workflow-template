@@ -15,10 +15,10 @@
     "@nestjs/config": "^4.0.0",
     "@nestjs/core": "^11.1.28",
     "@nestjs/platform-express": "^11.1.28",
-    "@nestjs/swagger": "^11.0.0",
+    "@nestjs/swagger": "^11.4.6",
     "@template/shared": "*",
     "reflect-metadata": "^0.2.0",
-    "rxjs": "^7.8.1",
+    "rxjs": "^7.8.2",
     "zod": "^4.4.3"
   },
   "devDependencies": {
@@ -31,7 +31,7 @@
     "@types/express": "^5.0.0",
     "@types/jest": "^30.0.0",
     "@types/node": "^22.0.0",
-    "@types/supertest": "^7.2.0",
+    "@types/supertest": "^7.2.1",
     "eslint": "^9.18.0",
     "jest": "^30.0.0",
     "supertest": "^7.0.0",
