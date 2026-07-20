@@ -30,7 +30,7 @@
     "@template/tsconfig": "*",
     "@types/express": "^5.0.0",
     "@types/jest": "^30.0.0",
-    "@types/node": "^22.0.0",
+    "@types/node": "^26.1.1",
     "@types/supertest": "^7.2.1",
     "eslint": "^9.18.0",
     "jest": "^30.0.0",
