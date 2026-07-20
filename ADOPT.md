@@ -149,7 +149,13 @@ approval before writing anything.** A good plan separates:
 - **Phase C — docs**: philosophy (carried across near-verbatim; it is
   stack-agnostic), engineering standards + quality strategy rewritten for the
   target language, ADR scaffolding, an "adoption decisions" note recording the
-  Phase 2 answers.
+  Phase 2 answers. Start that note with a one-line **provenance** breadcrumb so
+  the workflow's origin — and the path to send improvements back — is not lost
+  in translation:
+
+  > Adapted from [agentic-workflow-template](https://github.com/GavinGreenwood/agentic-workflow-template)
+  > by Gavin Greenwood (MIT). Found a general, non-project-specific improvement
+  > to the workflow itself? PRs welcome upstream.
 
 State what you are **not** bringing over and why. List any follow-ups (e.g.
 "CI pipeline — deferred, ADR added").

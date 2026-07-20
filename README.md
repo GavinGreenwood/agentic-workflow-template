@@ -113,3 +113,5 @@ Different tracker, CI, or stack? That's exactly what **[ADOPT.md](ADOPT.md)** ha
 ## Licence
 
 MIT — take it, adapt it, ship with it.
+
+Built by [Gavin Greenwood](https://github.com/GavinGreenwood). If you adapt this into your own repo and land a general improvement to the workflow itself, [PRs back to this repo](https://github.com/GavinGreenwood/agentic-workflow-template) are welcome — everyone downstream benefits.
