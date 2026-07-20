@@ -38,6 +38,10 @@ Proposal -> Plan -> Tickets -> Branch -> Code -> Gates -> Deploy -> Monitor -> T
 
 The Jira board mirrors this loop, and keeping it in sync is **required, not optional**. Tickets move forward through four statuses — **Backlog** (`/capture`) → **In Progress** (`/pickup`) → **In Review** (`/pr`) → **Done** (`/pr-action-review` on merge).
 
+## MCP Servers
+
+`.mcp.json` configures the `playwright` MCP server (`@playwright/mcp`), available in every Claude Code session — used to browse, click through, and screenshot the running app during verification (see the [run skill](.claude/skills/run/SKILL.md)). Add further MCP servers here as the project grows (e.g. a design-source server for Figma/Storybook, a CI-status server).
+
 ## Required Context — Read Before Every Task
 
 Before starting any task, read the relevant context files. Do not code from memory or assumptions.
@@ -51,6 +55,14 @@ Before starting any task, read the relevant context files. Do not code from memo
 | Feature work                    | The Jira ticket — it is the source of truth for acceptance criteria |
 
 If a task spans multiple areas, read all relevant files. When in doubt, read more rather than less.
+
+### ADR reading policy
+
+`docs/architecture/*.md` (once populated) is the current-state layer — read it first, and treat it as the answer for "what's true now." `docs/adr/` is an immutable decision log, not required reading on its own. Only open a specific ADR by name when the architecture docs cite it (e.g. "see ADR-0021") or are silent/ambiguous on something you need the historical "why" for. Do not read the whole `docs/adr/` folder as a matter of course — as the ADR count grows, several will only _partially_ supersede earlier ones (a specific section, not the whole document), and reading the folder wholesale burns tokens walking chains that a one-line current-state fact in `docs/architecture/` would already answer.
+
+This only works if the architecture docs stay in sync: per the Documentation Sync golden rule below, accepting an ADR that changes current-state behaviour (a data flow, a schema, a pattern) requires updating the relevant `docs/architecture/*.md` file in the _same_ PR — not just writing the ADR. An ADR with no corresponding architecture-doc update is a sync failure, not a future to-do.
+
+CI enforces this with `scripts/check-adr-sync.sh`: a diff that touches `docs/adr/*.md` without also touching `docs/architecture/*.md` fails the build (the check no-ops until `docs/architecture/` exists). Some ADRs (tooling/process decisions) genuinely have no current-state doc to update — for those, add `[skip-adr-sync: reason]` to a commit message on the branch to skip the check. The override is reviewable in the commit history alongside the ADR itself, so keep the reason short but specific (e.g. `[skip-adr-sync: CI tooling change, no architecture-doc impact]`).
 
 ## Documentation Sync — The Golden Rule
 
@@ -96,7 +108,11 @@ PROGRESS.md serves three purposes:
 2. **Knowledge capture** — temporary home for discoveries during implementation.
 3. **Recovery point** — if a session is interrupted, the next session picks up where we left off.
 
-> **Do not git-ignore `PROGRESS.md`.** It must be committable to feature branches so the recovery-point use case works across sessions. The pre-push hook and the `/pr` command enforce that it is deleted before any PR is raised — that is sufficient.
+> **Do not git-ignore `PROGRESS.md`.** It must be committable to feature branches so the recovery-point use case works across sessions. The pre-push hook and the `/pr` command enforce that it is deleted before any PR is raised — that is sufficient. Git-ignoring it breaks cross-session continuity without adding any real protection.
+
+### Plans
+
+- End with a concise unresolved questions list.
 
 ## TDD Workflow (Red-Green-Refactor)
 
@@ -118,12 +134,12 @@ These are non-negotiable. No exceptions, no workarounds.
 2. **Every code change needs a feature branch** — named per CONTRIBUTING.md (`<ticket-id>-<short-description>`, or `chore/<short-description>`).
 3. **Merge = Close** — Close the Jira ticket immediately when the PR merges.
 4. **Never commit a schema change without a migration file** — Schema and migration travel together, always.
-5. **ADRs are immutable** — Never edit the body of an accepted ADR. The only permitted change is updating its status line to `Superseded by ADR-XXXX`. All decision changes require a brand new ADR.
+5. **ADRs are immutable** — Never edit the body of an accepted ADR. The only permitted change is updating its status line to `Superseded by ADR-XXXX` and adding the corresponding blockquote pointer. All decision changes require a brand new ADR. See `CONTRIBUTING.md` § Architecture Decision Records.
 6. **Never push with `--no-verify`** without explicit user approval.
 7. **Never ignore pre-existing errors** — Fix them, don't bypass them.
 8. **Never use `any` types** — Strict TypeScript only. Use `unknown` and narrow with type guards if the type is genuinely uncertain.
 9. **Always use i18n keys** (if the project is localised) — Never hardcode user-facing strings.
-10. **Ticket update safety check** — Before updating any ticket, check its assignee. If it's assigned to someone else, STOP and ask before proceeding.
+10. **Ticket update safety check** — Before updating any ticket, check its assignee. If it's assigned to someone other than the current user, or is unassigned, STOP and ask before proceeding.
 
 ## What Claude MUST Always Do
 
@@ -143,7 +159,7 @@ These are non-negotiable. No exceptions, no workarounds.
 - **Test against standards**: Explicitly test against WCAG and OWASP compliance standards.
 - **Trace everything**: Include the ticket ID, plan link, and test evidence in PRs.
 - **Fill the PR template fully**: ticket, summary, test evidence, risk, rollback.
-- **Attribute all external writes**: Any comment, reply, or message posted to an external system (GitHub PR comments, Jira ticket comments, chat messages) must end with `_Actioned by Claude Code_`. Humans must always be able to tell when Claude authored or actioned something.
+- **Attribute all external writes**: Any comment, reply, or message posted to an external system (GitHub PR comments, Jira ticket comments, Slack messages, chat messages) must end with `_Actioned by Claude Code_`. Humans must always be able to tell when Claude authored or actioned something.
 
 ## What Claude MUST Never Do
 
@@ -252,6 +268,7 @@ scripts/verify.sh     # Run the full verification suite (same as CI)
 npm run lint          # ESLint across all packages
 npm run typecheck     # TypeScript compilation check
 npm run test          # Unit tests
+npm run test:e2e      # End-to-end tests
 npm run build         # Production build
 ```
 

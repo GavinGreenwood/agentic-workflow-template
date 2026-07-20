@@ -115,6 +115,15 @@ jobs:
       - name: Spectral lint
         run: npx @stoplight/spectral-cli lint --ruleset .spectral.yml openapi.json --if-present 2>/dev/null || true
 
+  adr-sync:
+    name: ADR sync check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - run: bash scripts/check-adr-sync.sh origin/main
+
   # ─── Stage 2: Build + Security ───────────────────────────────────────────────
 
   build:
@@ -127,6 +136,7 @@ jobs:
       - i18n-check
       - code-health
       - openapi
+      - adr-sync
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -159,6 +169,7 @@ jobs:
       - i18n-check
       - code-health
       - openapi
+      - adr-sync
     uses: ./.github/workflows/security.yml
     permissions:
       contents: read

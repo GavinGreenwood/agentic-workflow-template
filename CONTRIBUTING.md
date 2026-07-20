@@ -14,6 +14,7 @@
   - `fix(PROJ-107): debounce search input`
   - `chore: bump prettier to 3.x`
 - Keep commits small and focused. One logical change per commit.
+- `[skip-adr-sync: reason]` — add to a commit message to bypass the `adr-sync` CI check for an ADR that genuinely has no current-state architecture doc to update (see CLAUDE.md § ADR reading policy). Keep the reason short but specific.
 
 ## Pull Requests
 
@@ -53,6 +54,21 @@ JIRA_BOARD_ID=<optional — board ID from the agile board URL>
 
 The API token is personal and stays in your local `.env` — never committed.
 Each developer creates their own at `id.atlassian.com → Security → API tokens`.
+
+### Time logging (`/log-time`)
+
+`/log-time` logs time to Tempo automatically, derived from git activity since your last logged
+entry — no need to say which ticket or how long. Configure via `.env`:
+
+```bash
+TEMPO_API_TOKEN=<from app.tempo.io → Settings → API Integration>
+TEMPO_ISSUE_ID=<numeric Jira issue id to log against — not the key; see .env.example>
+TEMPO_ACCOUNT_ID=<your Atlassian account ID — same value as JIRA_ACCOUNT_ID>
+GIT_AUTHOR_NAME=<your git author name, e.g. from: git log -1 --format='%an'>
+```
+
+`TEMPO_API_TOKEN` and `TEMPO_ACCOUNT_ID` stay constant across every repo you use it in (one Tempo
+identity); only `TEMPO_ISSUE_ID` changes per project.
 
 ## Architecture Decision Records
 

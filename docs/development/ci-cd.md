@@ -13,7 +13,7 @@ push / PR
   │
   ├── Stage 1 (parallel fast checks)
   │     lint · typecheck · unit-tests · integration-tests
-  │     i18n-check · code-health · openapi
+  │     i18n-check · code-health · openapi · adr-sync
   │
   ├── Stage 2 (needs: all stage 1)
   │     build (artifact) · security (reusable workflow)
@@ -117,6 +117,13 @@ Transitive dependencies that Dependabot cannot bump directly are pinned via the 
 4. When the direct dependency ships a clean upgrade via Dependabot, remove the override and any lockfile patch at that point.
 
 Trivy runs separately per image in Stage 5 with two passes: blocking on fixable CRITICAL, SARIF report for CRITICAL+HIGH.
+
+## ADR sync check
+
+`adr-sync` (Stage 1) runs `scripts/check-adr-sync.sh`, which fails the build if a diff touches
+`docs/adr/*.md` without also touching `docs/architecture/*.md` in the same diff — see CLAUDE.md §
+ADR reading policy. It no-ops until `docs/architecture/` exists. Skip it for a specific ADR with no
+current-state doc to update by adding `[skip-adr-sync: reason]` to a commit message on the branch.
 
 ## Morlock
 

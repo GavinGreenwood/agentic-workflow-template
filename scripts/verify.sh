@@ -23,6 +23,9 @@ npm run test:integration --if-present
 echo "=== Build ==="
 npm run build
 
+echo "=== ADR Sync Check ==="
+bash scripts/check-adr-sync.sh origin/main
+
 echo "=== Security Scan ==="
 npm audit --audit-level=high || echo "Warning: npm audit found issues"
 

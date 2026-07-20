@@ -421,12 +421,12 @@ Also include variables that exist in the source but are absent from the target (
 
 **Variable categorisation** for the table's "Category" column (check in order — first match wins):
 
-1. Prefix `JIRA_`, `CIRCLECI_`, `FIGMA_`, `HARNESS_` → **dev-tooling** (mask value)
+1. Prefix `JIRA_`, `TEMPO_` → **dev-tooling** (mask value)
 2. Contains `TOKEN`, `SECRET`, `PASSWORD`, `_KEY` → **secret** (mask value as `[changed]`)
 3. All others (URLs, model names, flags, rate limits) → **config** (show actual value)
 
-Prefix rules take precedence — e.g. `JIRA_API_TOKEN` is `dev-tooling` (not `secret`) because
-the `JIRA_` prefix match is checked first.
+Prefix rules take precedence — e.g. `TEMPO_API_TOKEN` is `dev-tooling` (not `secret`) because
+the `TEMPO_` prefix match is checked first.
 
 **Do not print raw values for `secret` or `dev-tooling` variables** — the user can see them in
 their files; printing them here risks exposing them in conversation history.

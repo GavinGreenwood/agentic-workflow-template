@@ -41,6 +41,8 @@ CONTRIBUTING.md           Branch, commit, and PR conventions
   settings.json           Hook wiring (PreToolUse / PostToolUse / Stop)
   commands/               Slash commands (Jira flavour — ticket lifecycle + PR workflow)
   agents/morlock.md       Internal adversarial security agent
+  agents/advisor.md       On-demand strategic advisor (heavier model, no edits)
+  agents/worker.md        Cheap delegate for well-specified grunt work (lighter model)
 scripts/
   verify.sh               Full verification suite — same checks as CI
   hooks/                  The guardrail hook scripts
@@ -74,6 +76,8 @@ docs/
 | `/sync`                       | Post-pull sync: missing env vars, install, generate, build                                                |
 | `/pr-chore`                   | Raise a small no-ticket chore PR from a worktree without touching your feature branch                     |
 | `/multi-repo`                 | Manage parallel development slots — several clones, isolated ports, one agent each                        |
+| `/bump-version`               | Bump main's semver tag by one minor version and push it — a tag-only operation, no code change            |
+| `/log-time`                   | Log time to Tempo automatically, derived from git activity since your last logged entry                   |
 
 These commands use the **Jira REST API** directly (no MCP server required). Ticket lifecycle commands keep the Jira board in sync: `/capture` files into **Backlog**, `/pickup` moves to **In Progress**, `/pr` to **In Review**, and `/pr-action-review` to **Done** on merge. Configure via `.env` — see CONTRIBUTING.md § Jira setup.
 
