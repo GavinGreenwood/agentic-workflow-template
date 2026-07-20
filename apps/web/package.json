@@ -26,7 +26,7 @@
     "@next/swc-linux-x64-gnu": "15.5.19",
     "@next/swc-linux-x64-musl": "15.5.19",
     "@next/swc-win32-arm64-msvc": "15.5.19",
-    "@next/swc-win32-x64-msvc": "15.5.19",
+    "@next/swc-win32-x64-msvc": "16.2.10",
     "@tailwindcss/oxide-linux-x64-gnu": "4.3.3",
     "@tailwindcss/oxide-linux-x64-musl": "4.3.3",
     "lightningcss-linux-x64-gnu": "1.33.0",
