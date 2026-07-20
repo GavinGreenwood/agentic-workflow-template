@@ -13,7 +13,11 @@ export default tseslint.config(...baseConfig, {
     "@next/next": nextPlugin,
   },
   settings: {
-    react: { version: "detect" },
+    // Pin the React version explicitly. ESLint 10 removed the deprecated
+    // `context.getFilename()` API that eslint-plugin-react@7.37.5 relies on for
+    // "detect" auto-detection, which crashes rule loading. Pinning skips that
+    // code path. Revert to "detect" once eslint-plugin-react supports ESLint 10.
+    react: { version: "19" },
   },
   rules: {
     ...reactPlugin.configs.recommended.rules,
