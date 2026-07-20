@@ -78,6 +78,8 @@ CI enforces this with `scripts/check-adr-sync.sh`: a diff that touches `docs/adr
 4. **After coding**: Check if any docs need updating to reflect what was built. If you added a new pattern, endpoint, data flow, ADR, or changed behaviour — update the relevant docs in the same PR.
 5. **New features or significant changes**: Update architecture docs if the system shape changed. Feature context lives in Jira — not in the repo.
 
+This applies to ALL documentation: architecture, ADRs, conventions, engineering standards, quality strategy, and runbooks.
+
 If docs are stale or contradictory, flag it. Don't guess which version is correct — ask.
 
 ## Coding Standards
@@ -259,6 +261,8 @@ gh pr review <pr-number> --approve --body $'<one-line verdict summary>\n\n_Actio
 # or
 gh pr review <pr-number> --request-changes --body $'<one-line verdict summary>\n\n_Actioned by Claude Code_'
 ```
+
+The first line of the body should be a single sentence summarising the verdict (e.g. `"No 🔴 findings — approving. One 🟡 noted in the review comment above."` or `"🔴 must-fix: <brief description> — see review comment above."`), followed by a blank line and the standard `_Actioned by Claude Code_` footer. This first line is what shows up in GitHub's review status and counts toward branch protection approval requirements.
 
 ## Commands for Validation
 

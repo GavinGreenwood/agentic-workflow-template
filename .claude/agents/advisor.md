@@ -5,7 +5,7 @@ description: >
   committing to a consequential decision — a non-trivial design choice, a risky
   refactor, an ambiguous tradeoff, or when the executor is stuck. It advises;
   it does not edit. Invoke it deliberately, not every turn.
-model: fable
+model: opus
 tools: Read, Grep, Glob
 ---
 
