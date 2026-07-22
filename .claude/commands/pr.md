@@ -55,8 +55,6 @@ Run the full ship workflow: verify, commit, push, and open a PR.
      ### Summary
 
      <1–2 sentence overall assessment — is this ready for human review, or are there blockers?>
-
-     _Actioned by Claude Code_
      ```
 
    - If there are 🔴 Must fix findings: fix them before the comment is posted, include them in a follow-up commit, then note them as "Fixed prior to this comment" in the findings list.
@@ -93,7 +91,7 @@ Run the full ship workflow: verify, commit, push, and open a PR.
 
     **Skip the comment when** it's a pure refactor with no visible change, a chore (deps bump, config, docs), or the PR description already covers everything and there's nothing extra to tell QA.
 
-    When posting, write the body to a temp file with a single-quoted heredoc, then send with `--data-binary @file` (avoids shell mangling of backticks and special characters in the text). Replace `<your comment text here>` with the generated comment text — keep the `\n\n_Actioned by Claude Code_` suffix as-is:
+    When posting, write the body to a temp file with a single-quoted heredoc, then send with `--data-binary @file` (avoids shell mangling of backticks and special characters in the text). Replace `<your comment text here>` with the generated comment text:
 
     ```bash
     COMMENT_BODY=$(mktemp)
@@ -106,7 +104,7 @@ Run the full ship workflow: verify, commit, push, and open a PR.
           "type": "paragraph",
           "content": [{
             "type": "text",
-            "text": "<your comment text here>\n\n_Actioned by Claude Code_"
+            "text": "<your comment text here>"
           }]
         }]
       }
@@ -155,10 +153,10 @@ Run the full ship workflow: verify, commit, push, and open a PR.
 
     ```bash
     gh api "repos/$REPO/issues/<number>/comments" --paginate \
-      --jq '[.[] | select(.user.type != "Bot") | select(.body | contains("Actioned by Claude Code") | not)] | length'
+      --jq '[.[] | select(.user.type != "Bot") | select(.body | test("## AI (Pre-)?Review") | not)] | length'
     ```
 
-    A non-zero count means a human has posted a substantive comment that isn't one of Claude's own replies.
+    A non-zero count means a human has posted a substantive comment that isn't one of Claude's own AI-review replies.
 
     **Decision**:
     - If **either source** shows new review activity: run `/pr-action-review <number>` by invoking the skill `pr-action-review` with args `<number>`. **Do not schedule another wakeup** — this watcher is one-shot per PR. Running `/pr-action-review` re-requests review from all pending reviewers, which would trigger another Copilot review and loop indefinitely if the watcher kept running.

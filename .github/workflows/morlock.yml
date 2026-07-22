@@ -61,6 +61,5 @@ jobs:
             - Commit any new tests on the current branch (you are already on a morlock/* branch).
             - Open a PR titled "security: Morlock probe findings — $(date +%Y-%m-%d)".
             - Open a summary issue titled "Morlock report — $(date +%Y-%m-%d)" listing each finding with severity and the test that proves it.
-            - All external writes (PR body, issue body, comments) must end with `_Actioned by Claude Code_`.
 
             If the codebase is too sparse to probe yet, note that in both the PR and issue and exit cleanly.

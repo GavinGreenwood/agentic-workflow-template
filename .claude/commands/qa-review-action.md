@@ -37,9 +37,9 @@ source .env && curl -s -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
 
 Check the `total` field in the response. If `total` exceeds the number of comments returned, continue fetching with `startAt=100`, `startAt=200`, etc. until all pages are retrieved. Concatenate all results into a single comment list.
 
-For each comment, extract `author.displayName`, `created`, and convert the `body` field (which is Atlassian Document Format JSON) to plain text by extracting all text nodes while preserving whitespace and line breaks. Mark comments ending with `_Actioned by Claude Code_` as **Claude-authored**; all others are **human-authored**.
+For each comment, extract `author.displayName`, `created`, and convert the `body` field (which is Atlassian Document Format JSON) to plain text by extracting all text nodes while preserving whitespace and line breaks.
 
-Discard all Claude-authored comments. Only apply the QA feedback heuristics below to human-authored comments.
+Discard any comment that is a prior QA review response posted by this command — identified by its **QA Review Response** heading and the classification-bullet structure described in Step 10. Only apply the QA feedback heuristics below to the remaining (genuine QA feedback) comments.
 
 Filter human-authored comments to those that look like QA feedback. Signs of QA feedback:
 
@@ -206,10 +206,6 @@ For each QA point, one bullet:
 - **Pushed back** `[N]` (user decision) — <brief explanation>
 - **Skipped** `[N]` (user decision) — no action taken
 
-End the comment with:
-
-_Actioned by Claude Code_
-
 Confirm HTTP 201 to the user, or report the error if it failed.
 
 ## Step 11 — Transition ticket if all QA points are resolved
@@ -233,5 +229,4 @@ source .env && curl -s -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
 - When classifying INTENDED BEHAVIOUR, require an explicit reference. "It probably makes sense" is not sufficient.
 - Push-back replies must be respectful and cite the specific ADR, design doc, or acceptance criteria that supports the position.
 - If a fix touches multiple files, commit them together in one commit — not separately.
-- All Jira comments must end with `_Actioned by Claude Code_`.
 - Screenshots are evidence, not decoration — describe what they show and use that description as part of your classification reasoning.

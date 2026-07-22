@@ -30,7 +30,7 @@ source .env && curl -s -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
           \"type\": \"paragraph\",
           \"content\": [{
             \"type\": \"text\",
-            \"text\": \"<brief description: what the problem was, what was done, any relevant context>\n\n_Actioned by Claude Code_\"
+            \"text\": \"<brief description: what the problem was, what was done, any relevant context>\"
           }]
         }]
       },

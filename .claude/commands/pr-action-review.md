@@ -313,4 +313,3 @@ Explain why concisely (e.g. "GitHub reports conflicts" or "`mergeStateStatus` is
 - Never mark a comment as resolved unless the fix is committed and pushed.
 - If a discussion comment reveals a docs gap, update the relevant doc in the same commit.
 - If the total number of auto-fixes is large (>10 files changed), pause and summarise what you're about to do before proceeding.
-- **Always attribute replies**: Every comment or reply posted to GitHub must end with `_Actioned by Claude Code_`. Humans must always be able to tell when Claude authored or actioned something.

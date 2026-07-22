@@ -114,7 +114,7 @@ gh api graphql -f query='
 
 ### Step 3 — Build the prior-AI-review history
 
-Identify all comments whose body contains `_Actioned by Claude Code_`. These are prior AI reviews posted by this command or any other Claude Code review command.
+Identify all comments whose body starts with an AI-review heading — any of `## AI Code Review`, `## AI Review`, or `## AI Pre-Review` (regex: `^## AI .*Review`). These are prior AI reviews posted by this command or any other Claude Code review command.
 
 For each such prior finding:
 
@@ -204,8 +204,6 @@ _or_ (omit section if none)
 ### Verdict
 
 <one of: Approving — no 🔴 findings. / Requesting changes — see 🔴 finding(s) above.>
-
-_Actioned by Claude Code_
 ```
 
 Post the comment:
@@ -228,11 +226,11 @@ Compute the verdict:
 ```bash
 # Approving
 gh pr review <pr-number> --approve \
-  --body $'No 🔴 findings — approving. See review comment for details.\n\n_Actioned by Claude Code_'
+  --body 'No 🔴 findings — approving. See review comment for details.'
 
 # Requesting changes
 gh pr review <pr-number> --request-changes \
-  --body $'🔴 must-fix finding(s) — see review comment above.\n\n_Actioned by Claude Code_'
+  --body '🔴 must-fix finding(s) — see review comment above.'
 ```
 
 ---
@@ -282,7 +280,7 @@ If any new PRs from other team members appeared since we started, list them and 
 - **Do not check out or modify any branch.** This command is read-only and review-only. Never commit to, push to, or create branches for other people's PRs.
 - **Do not skip the prior-review check.** Even if a PR has no previous AI review, record that explicitly ("no prior AI review found") so the next run knows it is a first review.
 - **One review comment per run.** Do not append to a prior AI comment — post a fresh comment each time, which contains the full picture including what was addressed and what is still open.
-- **Always attribute.** Every comment posted must end with `_Actioned by Claude Code_`.
+- **Lead every review comment with the `## AI Code Review` heading.** The prior-review check (Step 3) uses that heading to recognise its own past comments — dropping it breaks re-run detection.
 - **Do not re-raise pushed-back findings.** Once an author has disagreed with a suggestion, respect that decision.
 - **Skip bot comments.** Do not include findings from github-actions[bot], codecov, dependabot in the prior-review history analysis.
 - **Draft PRs are excluded.** Never review a draft PR — the author has signalled it is not ready.

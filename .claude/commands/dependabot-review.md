@@ -36,7 +36,7 @@ For each Green PR:
    - If minor or patch → proceed automatically.
 3. Approve the PR:
    ```bash
-   gh pr review <number> --approve --body "Dependabot auto-approval: all checks green, patch/minor bump.\n\n_Actioned by Claude Code_"
+   gh pr review <number> --approve --body "Dependabot auto-approval: all checks green, patch/minor bump."
    ```
 4. Merge the PR using squash merge:
    ```bash
@@ -64,7 +64,7 @@ For each Failing PR:
 4. For Flake failures → re-trigger the checks:
 
    ```bash
-   gh pr comment <number> --body "@dependabot rebase\n\n_Actioned by Claude Code_"
+   gh pr comment <number> --body "@dependabot rebase"
    ```
 
 5. For fixable failures (conflict, type error, test, lint):
@@ -74,7 +74,7 @@ For each Failing PR:
    - If fix → check out the branch, apply the fix, push, and wait for CI to re-run.
    - If close → close the PR with an explanation comment and let Dependabot re-raise when the ecosystem catches up:
      ```bash
-     gh pr close <number> --comment "## Dependabot Review\n\n**Closing** — <reason the fix isn't viable now, e.g. upstream incompatibility>. Dependabot will re-raise this once <condition>.\n\n_Actioned by Claude Code_"
+     gh pr close <number> --comment "## Dependabot Review\n\n**Closing** — <reason the fix isn't viable now, e.g. upstream incompatibility>. Dependabot will re-raise this once <condition>."
      ```
    - Default to **close** when: it is a major bump with ecosystem-wide incompatibility, the fix requires significant code changes, or the upstream package hasn't yet released a compatible version.
    - Default to **fix** when: it is a minor/patch bump, the fix is a one-liner (e.g. adding a missing param), and the change is low-risk.

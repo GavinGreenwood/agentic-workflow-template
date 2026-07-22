@@ -40,7 +40,7 @@ source .env && curl -s -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
   "$JIRA_BASE_URL/rest/api/3/issue/$TICKET_ID/comment?orderBy=created"
 ```
 
-For each comment, extract `author.displayName`, `created`, and the plain-text body. Mark any comment whose body ends with `_Actioned by Claude Code_` as **Claude-authored** — treat the rest as **human-authored**. Human-authored comments represent decisions that have already been made and take precedence over any prior Claude analysis.
+For each comment, extract `author.displayName`, `created`, and the plain-text body. Comments represent decisions and context that already exist on the ticket and take precedence over any fresh analysis — read them all before proposing anything.
 
 ## Step 3 — Check assignee and status
 
@@ -139,9 +139,7 @@ source .env && curl -s -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
   -d '<ADF comment body>'
 ```
 
-The comment body must use ADF. Structure it with headings for each section (Clarifications, Approaches, Recommendation, Open questions). End the comment with the line:
-
-_Actioned by Claude Code_
+The comment body must use ADF. Structure it with headings for each section (Clarifications, Approaches, Recommendation, Open questions).
 
 Confirm to the user that the comment was posted successfully (HTTP 201) or report the error if it failed.
 

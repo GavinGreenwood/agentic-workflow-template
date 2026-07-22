@@ -161,7 +161,6 @@ These are non-negotiable. No exceptions, no workarounds.
 - **Test against standards**: Explicitly test against WCAG and OWASP compliance standards.
 - **Trace everything**: Include the ticket ID, plan link, and test evidence in PRs.
 - **Fill the PR template fully**: ticket, summary, test evidence, risk, rollback.
-- **Attribute all external writes**: Any comment, reply, or message posted to an external system (GitHub PR comments, Jira ticket comments, Slack messages, chat messages) must end with `_Actioned by Claude Code_`. Humans must always be able to tell when Claude authored or actioned something.
 
 ## What Claude MUST Never Do
 
@@ -248,8 +247,6 @@ _or_ (omit this section if none)
 ### Verdict
 
 <Approve / Request changes — and why in one sentence>
-
-_Actioned by Claude Code_
 ```
 
 ### After posting the review comment — submit the formal GitHub review
@@ -257,12 +254,12 @@ _Actioned by Claude Code_
 **This step is mandatory.** A `gh pr comment` does not record a verdict in GitHub's review system. Always follow it with:
 
 ```bash
-gh pr review <pr-number> --approve --body $'<one-line verdict summary>\n\n_Actioned by Claude Code_'
+gh pr review <pr-number> --approve --body '<one-line verdict summary>'
 # or
-gh pr review <pr-number> --request-changes --body $'<one-line verdict summary>\n\n_Actioned by Claude Code_'
+gh pr review <pr-number> --request-changes --body '<one-line verdict summary>'
 ```
 
-The first line of the body should be a single sentence summarising the verdict (e.g. `"No 🔴 findings — approving. One 🟡 noted in the review comment above."` or `"🔴 must-fix: <brief description> — see review comment above."`), followed by a blank line and the standard `_Actioned by Claude Code_` footer. This first line is what shows up in GitHub's review status and counts toward branch protection approval requirements.
+The body should be a single sentence summarising the verdict (e.g. `"No 🔴 findings — approving. One 🟡 noted in the review comment above."` or `"🔴 must-fix: <brief description> — see review comment above."`). This is what shows up in GitHub's review status and counts toward branch protection approval requirements.
 
 ## Commands for Validation
 

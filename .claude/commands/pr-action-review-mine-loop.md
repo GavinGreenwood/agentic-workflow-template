@@ -214,7 +214,7 @@ A PR is **eligible to merge** when ALL of the following hold:
 gh pr merge <pr-number> --merge --delete-branch
 ```
 
-Confirm it merged (`gh pr view <pr-number> --json state` → `MERGED`). The linked issue closes automatically via the `Closes #N` line in the PR body; if it's missing, close the issue manually with a one-line comment ending `_Actioned by Claude Code_`.
+Confirm it merged (`gh pr view <pr-number> --json state` → `MERGED`). The linked issue closes automatically via the `Closes #N` line in the PR body; if it's missing, close the issue manually with a one-line comment.
 
 **If NOT eligible**, record the reason and do not merge:
 

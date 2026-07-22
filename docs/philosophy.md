@@ -40,7 +40,7 @@ The hook layers above are deliberately _dumb_. The PreToolUse hook is regex, not
 
 Every change must be traceable in both directions: from the issue to the deployed code, and from any line of code back to the decision that motivated it.
 
-**In this repo:** issue → branch name → commit messages → PR (with issue link, test evidence, risk, rollback) → merge closes the issue. ADRs record the _why_ behind architectural decisions and are immutable — superseded, never edited. The `_Actioned by Claude Code_` footer on every external write means a human can always tell who (or what) did something.
+**In this repo:** issue → branch name → commit messages → PR (with issue link, test evidence, risk, rollback) → merge closes the issue. ADRs record the _why_ behind architectural decisions and are immutable — superseded, never edited.
 
 ### 5. The learning loop
 

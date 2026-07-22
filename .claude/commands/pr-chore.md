@@ -111,8 +111,7 @@ gh pr create \
   --body "..."
 ```
 
-PR body should cover: what changed, why, and any risk/rollback notes. End with:
-`_Actioned by Claude Code_`
+PR body should cover: what changed, why, and any risk/rollback notes.
 
 Output the PR URL, then open it: `gh pr view <number> --web`.
 
@@ -139,8 +138,6 @@ _or_ ✅ No findings — all lenses clear.
 ### Summary
 
 <1–2 sentence overall assessment>
-
-_Actioned by Claude Code_
 ```
 
 If there are 🔴 Must fix findings: fix them in the worktree, push a follow-up commit, note as "Fixed prior to this comment."
