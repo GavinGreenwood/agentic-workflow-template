@@ -38,9 +38,9 @@ The hook layers above are deliberately _dumb_. The PreToolUse hook is regex, not
 
 ### 4. End-to-end traceability
 
-Every change must be traceable in both directions: from the issue to the deployed code, and from any line of code back to the decision that motivated it.
+Every change must be traceable in both directions: from the ticket to the deployed code, and from any line of code back to the decision that motivated it.
 
-**In this repo:** issue → branch name → commit messages → PR (with issue link, test evidence, risk, rollback) → merge closes the issue. ADRs record the _why_ behind architectural decisions and are immutable — superseded, never edited.
+**In this repo:** ticket → branch name → commit messages → PR (with ticket link, test evidence, risk, rollback) → merge closes the ticket. ADRs record the _why_ behind architectural decisions and are immutable — superseded, never edited.
 
 ### 5. The learning loop
 
@@ -50,6 +50,6 @@ When something slips through, the response is never "review harder" — it's "wh
 
 ## The division of labour
 
-The human's job moves up the stack: writing good issues (the agent implements exactly what the ticket says), making architectural decisions, reviewing for intent, and tightening the system. The agent's job is everything mechanical: implementation, tests, formatting, review responses, CI triage, dependency maintenance, time logging.
+The human's job moves up the stack: writing good tickets (the agent implements exactly what the ticket says), making architectural decisions, reviewing for intent, and tightening the system. The agent's job is everything mechanical: implementation, tests, formatting, review responses, CI triage, dependency maintenance, time logging.
 
 Code review changes meaning: it is spot-checking the system's output, not proofreading the agent's work. If review keeps finding the same class of problem, that's not a review problem — it's a missing gate.

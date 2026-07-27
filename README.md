@@ -44,7 +44,7 @@ AI self-review       the agent reviews its own PR against 8 lenses
 Human review         spot-checking — the last slice, not the only one
 ```
 
-And **end-to-end traceability**: every change starts from an issue, the issue number is in the branch name and every commit, the PR links the issue with test evidence and a rollback plan, and the issue closes when the PR merges. Machine-enforced, not remembered.
+And **end-to-end traceability**: every change starts from a ticket, the ticket ID is in the branch name and every commit, the PR links the ticket with test evidence and a rollback plan, and the ticket closes when the PR merges. Machine-enforced, not remembered.
 
 ## What's inside
 
@@ -72,27 +72,27 @@ docs/
 
 ### The commands
 
-| Command                       | What it does                                                                                              |
-| ----------------------------- | --------------------------------------------------------------------------------------------------------- |
-| `/pickup <issue>`             | Assign the issue, read it fully, brief the work, create the branch, start PROGRESS.md                     |
-| `/refine <issue>`             | Pre-implementation refinement: clarifying questions, ranked approaches, posted back to the issue          |
-| `/pr`                         | The full ship workflow: verify → commit → push → PR from template → AI self-review against 8 lenses       |
-| `/push`                       | Verify, commit, push — no PR                                                                              |
-| `/pr-action-review <pr>`      | Fetch every review comment, triage (auto-fix / discuss / informational), action them, merge when eligible |
-| `/pr-review-loop`             | Review all teammates' open PRs — respecting prior discussion, never re-raising pushed-back findings       |
-| `/pr-action-review-mine-loop` | Action reviews on all of _your_ open PRs, looping until everything is merged or blocked                   |
-| `/qa-review-action <issue>`   | Classify QA feedback: genuine bug / intended behaviour / out of scope — fix or push back accordingly      |
-| `/morning`                    | Daily routine: main-branch health, nightly CI triage, Dependabot review                                   |
-| `/nightly-check`              | Triage scheduled CI runs: flake vs regression vs config vs infra                                          |
-| `/fix-cicd`                   | Read the failing CI logs on this branch, diagnose flake vs real, fix or re-run                            |
-| `/dependabot-review`          | Merge green minor/patch bumps, diagnose failing ones, escalate majors                                     |
-| `/capture`                    | Turn the current conversation into a tracked issue + commit                                               |
-| `/main`                       | Safely return to main: checks uncommitted/unpushed work before deleting the branch                        |
-| `/sync`                       | Post-pull sync: missing env vars, install, generate, build                                                |
-| `/pr-chore`                   | Raise a small no-ticket chore PR from a worktree without touching your feature branch                     |
-| `/multi-repo`                 | Manage parallel development slots — several clones, isolated ports, one agent each                        |
-| `/bump-version`               | Bump main's semver tag by one minor version and push it — a tag-only operation, no code change            |
-| `/log-time`                   | Log time to Tempo automatically, derived from git activity since your last logged entry                   |
+| Command                         | What it does                                                                                              |
+| ------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `/pickup <ticket-id>`           | Assign the ticket, read it fully, brief the work, create the branch, start PROGRESS.md                    |
+| `/refine <ticket-id>`           | Pre-implementation refinement: clarifying questions, ranked approaches, posted back to the ticket         |
+| `/pr`                           | The full ship workflow: verify → commit → push → PR from template → AI self-review against 8 lenses       |
+| `/push`                         | Verify, commit, push — no PR                                                                              |
+| `/pr-action-review <pr>`        | Fetch every review comment, triage (auto-fix / discuss / informational), action them, merge when eligible |
+| `/pr-review-loop`               | Review all teammates' open PRs — respecting prior discussion, never re-raising pushed-back findings       |
+| `/pr-action-review-mine-loop`   | Action reviews on all of _your_ open PRs, looping until everything is merged or blocked                   |
+| `/qa-review-action <ticket-id>` | Classify QA feedback: genuine bug / intended behaviour / out of scope — fix or push back accordingly      |
+| `/morning`                      | Daily routine: main-branch health, nightly CI triage, Dependabot review                                   |
+| `/nightly-check`                | Triage scheduled CI runs: flake vs regression vs config vs infra                                          |
+| `/fix-cicd`                     | Read the failing CI logs on this branch, diagnose flake vs real, fix or re-run                            |
+| `/dependabot-review`            | Merge green minor/patch bumps, diagnose failing ones, escalate majors                                     |
+| `/capture`                      | Turn the current conversation into a tracked ticket + commit                                              |
+| `/main`                         | Safely return to main: checks uncommitted/unpushed work before deleting the branch                        |
+| `/sync`                         | Post-pull sync: missing env vars, install, generate, build                                                |
+| `/pr-chore`                     | Raise a small no-ticket chore PR from a worktree without touching your feature branch                     |
+| `/multi-repo`                   | Manage parallel development slots — several clones, isolated ports, one agent each                        |
+| `/bump-version`                 | Bump main's semver tag by one minor version and push it — a tag-only operation, no code change            |
+| `/log-time`                     | Log time to Tempo automatically, derived from git activity since your last logged entry                   |
 
 These commands use the **Jira REST API** directly (no MCP server required). Ticket lifecycle commands keep the Jira board in sync: `/capture` files into **Backlog**, `/pickup` moves to **In Progress**, `/pr` to **In Review**, and `/pr-action-review` to **Done** on merge. Configure via `.env` — see CONTRIBUTING.md § Jira setup.
 
