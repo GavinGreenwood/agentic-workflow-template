@@ -9,7 +9,7 @@
     "./nextjs": "./nextjs.js"
   },
   "dependencies": {
-    "ts-jest": "^29.2.0"
+    "ts-jest": "^29.4.12"
   },
   "peerDependencies": {
     "@types/jest": ">=29.0.0",
