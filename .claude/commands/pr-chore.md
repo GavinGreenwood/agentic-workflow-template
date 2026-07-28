@@ -16,7 +16,7 @@ From the repo root:
 
 ```bash
 CHORE_BRANCH="chore/<short-description>"
-git worktree add -b "$CHORE_BRANCH" /tmp/wur-chore-pr origin/main
+git worktree add -b "$CHORE_BRANCH" /tmp/chore-pr origin/main
 ```
 
 This creates a new branch from `main` in a temporary directory with a full checkout. The current branch is never checked out or modified.
@@ -26,7 +26,7 @@ This creates a new branch from `main` in a temporary directory with a full check
 For each file identified in Step 1, copy it from the current working tree into the worktree at the same relative path:
 
 ```bash
-cp <file> /tmp/wur-chore-pr/<file>
+cp <file> /tmp/chore-pr/<file>
 ```
 
 Create any intermediate directories as needed.
@@ -35,11 +35,11 @@ Confirm the copy succeeded before doing anything else — every Step 1 file must
 
 ```bash
 for f in <file1> <file2> ...; do
-  test -f "/tmp/wur-chore-pr/$f" && echo "present: $f" || echo "MISSING: $f"
+  test -f "/tmp/chore-pr/$f" && echo "present: $f" || echo "MISSING: $f"
 done
 ```
 
-Optionally also run `git -C /tmp/wur-chore-pr status --short` to see which copied files differ from `main`.
+Optionally also run `git -C /tmp/chore-pr status --short` to see which copied files differ from `main`.
 
 Only proceed to Step 4 once you have verified the files are present in the worktree. Do not restore the current branch until this is confirmed, or the work could be lost.
 
@@ -47,7 +47,7 @@ Only proceed to Step 4 once you have verified the files are present in the workt
 
 Now that the files are safely in the worktree, restore the current branch so it returns to a clean state at once — do not wait until after verification. Only act on the files identified in Step 1.
 
-**Run every command in this step from the original working tree (the repo root on the currently checked-out branch) — not from `/tmp/wur-chore-pr`.** Restoring or deleting inside the worktree would undo the copy you just made.
+**Run every command in this step from the original working tree (the repo root on the currently checked-out branch) — not from `/tmp/chore-pr`.** Restoring or deleting inside the worktree would undo the copy you just made.
 
 First, from the Step 1 list, separate the files by git state (use `git status --short`):
 
@@ -84,7 +84,7 @@ If any Step 1 file was already committed on the feature branch (not just an unco
 **Run the full suite** only when at least one Step 1 file is a source file (`.ts`, `.tsx`, `.js`, `.jsx`, `.css`, or anything compiled/tested):
 
 ```bash
-cd /tmp/wur-chore-pr && npm install && bash scripts/verify.sh
+cd /tmp/chore-pr && npm install && bash scripts/verify.sh
 ```
 
 If it fails, fix the issues inside the worktree. The original copies are already gone from the current branch (Step 4), so all fixes happen in the worktree — there are no original working-tree copies to edit. Re-run until it passes.
@@ -94,7 +94,7 @@ If it fails, fix the issues inside the worktree. The original copies are already
 Before committing, remove PROGRESS.md if it exists in the worktree — it must never be committed:
 
 ```bash
-cd /tmp/wur-chore-pr
+cd /tmp/chore-pr
 rm -f PROGRESS.md
 git add <files>
 git commit -m "chore: <description>"
@@ -145,7 +145,7 @@ If there are 🔴 Must fix findings: fix them in the worktree, push a follow-up 
 ## Step 9 — Clean up the worktree
 
 ```bash
-git worktree remove --force /tmp/wur-chore-pr
+git worktree remove --force /tmp/chore-pr
 ```
 
 `--force` is required on Windows — `node_modules` makes the directory non-empty, which causes a plain `git worktree remove` to fail.

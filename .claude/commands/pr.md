@@ -61,7 +61,7 @@ Run the full ship workflow: verify, commit, push, and open a PR.
    - If there are only 🟡/🔵 findings: post the comment as-is and let the human reviewer decide.
 
 9. Move the Jira ticket to Review:
-   - Extract the ticket ID from the branch name (e.g. `wei-123-...` → `WEI-123`).
+   - Extract the ticket ID from the branch name (e.g. `proj-123-...` → `PROJ-123`).
    - Source `.env` and fetch available transitions: `GET $JIRA_BASE_URL/rest/api/3/issue/<ticket>/transitions`
    - Find the transition whose `name` matches "Review" (case-insensitive) and apply it:
 

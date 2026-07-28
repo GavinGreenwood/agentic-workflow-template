@@ -4,7 +4,7 @@ Uses the `gh` CLI — no extra credentials needed beyond the GitHub auth already
 
 ## Step 1 — Identify the branch
 
-Run `git branch --show-current`. Extract the ticket ID from the branch name (e.g. `wei-144-...` → `WEI-144`).
+Run `git branch --show-current`. Extract the ticket ID from the branch name (e.g. `proj-144-...` → `PROJ-144`).
 
 ## Step 2 — Fetch the latest run for this branch
 

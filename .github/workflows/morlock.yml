@@ -7,7 +7,7 @@ name: Morlock — Nightly Security Probe
 # request outright (invalid/expired ANTHROPIC_API_KEY, exhausted credit
 # balance, or no account access to the claude-opus-4-8[1m] model) rather
 # than a bug in this workflow's config — the prior allowed_tools ->
-# claude_args fix (THEM-23) is confirmed still correct.
+# claude_args fix is confirmed still correct.
 #
 # Before re-enabling the schedule:
 #   1. Check the ANTHROPIC_API_KEY secret in the Anthropic Console (key
