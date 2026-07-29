@@ -2,23 +2,42 @@ name: Nightly Security
 
 # NOTE: nightly schedule disabled 2026-07-29 — every scheduled run for the past
 # week+ has failed at the same step (`npm audit` via audit-ci) with "Failed
-# security audit due to high vulnerabilities": 7 high-severity advisories, all
-# transitive and with no upstream fix available yet — fast-uri (host confusion
-# via literal backslash authority delimiter, and via failed IDN
-# canonicalisation) and sharp (inherited libvips CVE-2026-33327 / -33328 /
-# -35590 / -35591). This is a genuine finding, not a workflow bug, but it is
-# not actionable from here and a daily red email adds no new information.
+# security audit due to high vulnerabilities". This is a genuine finding, not a
+# workflow bug, but the daily red email carries no new signal, and the same
+# `security.yml` still runs as a blocking stage in `ci.yml` — so the audit
+# failure is NOT suppressed on PRs. This only stops the redundant notification.
 #
-# The same `security.yml` still runs as a blocking stage in `ci.yml`, so the
-# audit failure is NOT being suppressed on PRs — this only stops the redundant
-# nightly notification.
+# State as of 2026-07-29: 6 high advisories remain (fast-uri was fixed by
+# re-resolving the lockfile). The remainder split into two groups:
+#
+#   * next — 9 next-specific advisories (SSRF via rewrites, unauthenticated
+#     disclosure of internal Server Function endpoints, Image Optimization DoS,
+#     unbounded Edge Server Action payload, ...). Vulnerable range is
+#     `9.3.4-canary.0 - 16.3.0-preview.7` and the latest STABLE release
+#     (16.2.12) sits inside it. There is no stable fix — only 16.3.0-preview.8+
+#     is clear, which is not an acceptable dependency for a template repo.
+#     `npm audit fix --force` "resolves" this by proposing next@9.3.3; do not
+#     accept that.
+#
+#   * sharp / postcss / brace-expansion / js-yaml (and @nestjs/swagger, which is
+#     flagged only via js-yaml) — fixed versions ARE published, but parent
+#     version ranges cap them and the root `overrides` block does not currently
+#     work: npm never records an `overrides` key in package-lock.json, and the
+#     pre-existing `glob: "10.5.0"` override demonstrably does not hold either
+#     (glob@13.0.6 and glob@7.2.3 are both still in the tree). Reproduced on npm
+#     11.12.1 with a from-scratch lockfile regen and with --prefer-online, so it
+#     is not a cache artefact. NB: the multer note in audit-ci.jsonc blames
+#     "exact-version pins" for the same symptom — that diagnosis is suspect;
+#     overrides may simply never have been applied in this repo.
 #
 # RE-ENABLE THIS AS SOON AS POSSIBLE. Before uncommenting the `schedule:` block:
-#   1. Re-run `npx audit-ci@7.1.0 --config audit-ci.jsonc` and confirm the
-#      fast-uri and sharp advisories now have fixes (bump, or add a
-#      time-boxed allowlist entry in audit-ci.jsonc with an expiry note).
-#   2. Manually confirm with: gh workflow run nightly-security.yml
-#   3. If it passes, uncomment the `schedule:` block below.
+#   1. Fix the root `overrides` block so it actually applies, then override
+#      sharp / postcss / brace-expansion / js-yaml to their fixed versions.
+#   2. For `next`, wait for 16.3.0 stable, or add a time-boxed allowlist entry
+#      in audit-ci.jsonc with an explicit expiry and mitigating controls.
+#   3. Confirm green with: npx audit-ci@7.1.0 --config audit-ci.jsonc
+#   4. Manually confirm the workflow with: gh workflow run nightly-security.yml
+#   5. If it passes, uncomment the `schedule:` block below.
 on:
   # schedule:
   #   - cron: "0 6 * * *"
