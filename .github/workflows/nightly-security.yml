@@ -1,32 +1,29 @@
 name: Nightly Security
 
-# NOTE: nightly schedule disabled 2026-07-29 because every scheduled run for the
-# preceding week+ failed at the `npm audit` (audit-ci) step, producing a daily
-# red email with no new signal.
+# This schedule was briefly disabled on 2026-07-29 because every run for the
+# preceding week+ failed at the `npm audit` (audit-ci) step, producing a daily red
+# email with no new signal. The underlying failure was fixed the same day and the
+# schedule re-enabled; the repo now reports 0 vulnerabilities with an empty
+# audit-ci allowlist.
 #
-# The underlying audit failure has since been FIXED in the same series of commits
-# that added this note — the repo now reports 0 vulnerabilities and audit-ci
-# passes. The schedule is left commented out only because switching it back on is
-# the repo owner's call, not because anything is still broken.
+# Root cause is recorded here because it was badly misdiagnosed more than once,
+# and the same trap will catch the next person. eslint 10 was incompatible with
+# the peer ranges of eslint-plugin-jsx-a11y and eslint-plugin-react, so npm could
+# not build a fresh dependency tree at all (ERESOLVE on any clean install).
+# Rather than failing loudly, npm silently reused the existing node_modules —
+# which meant the root `overrides` block never applied and transitive
+# dependencies never advanced past their vulnerable versions.
 #
-# Root cause, recorded because it was badly misdiagnosed twice: eslint 10 was
-# incompatible with the peer ranges of eslint-plugin-jsx-a11y and
-# eslint-plugin-react, so npm could not build a fresh dependency tree at all
-# (ERESOLVE on any clean install). Rather than failing loudly, npm silently
-# reused the existing node_modules — which meant the root `overrides` block never
-# applied and transitive dependencies never advanced past their vulnerable
-# versions. Fixing the peer conflict made overrides live again and the advisories
-# resolved. See the history note in audit-ci.jsonc for the full account.
-#
-# TO RE-ENABLE: uncomment the `schedule:` block below. Optionally confirm first
-# with `npx audit-ci@7.1.0 --config audit-ci.jsonc` and
-# `gh workflow run nightly-security.yml`.
+# So: if this workflow starts failing on advisories that look unfixable, check
+# that `npm install` can still resolve from scratch BEFORE reaching for the
+# allowlist. See the history note in audit-ci.jsonc and the Dependency Management
+# section in docs/development/engineering-standards.md.
 #
 # Note that `security.yml` also runs as a blocking stage in `ci.yml`, so audit
-# regressions are still caught on every PR regardless of this schedule.
+# regressions are caught on every PR regardless of this schedule.
 on:
-  # schedule:
-  #   - cron: "0 6 * * *"
+  schedule:
+    - cron: "0 6 * * *"
   workflow_dispatch:
 
 jobs:
