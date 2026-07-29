@@ -1,8 +1,27 @@
 name: Nightly Security
 
+# NOTE: nightly schedule disabled 2026-07-29 — every scheduled run for the past
+# week+ has failed at the same step (`npm audit` via audit-ci) with "Failed
+# security audit due to high vulnerabilities": 7 high-severity advisories, all
+# transitive and with no upstream fix available yet — fast-uri (host confusion
+# via literal backslash authority delimiter, and via failed IDN
+# canonicalisation) and sharp (inherited libvips CVE-2026-33327 / -33328 /
+# -35590 / -35591). This is a genuine finding, not a workflow bug, but it is
+# not actionable from here and a daily red email adds no new information.
+#
+# The same `security.yml` still runs as a blocking stage in `ci.yml`, so the
+# audit failure is NOT being suppressed on PRs — this only stops the redundant
+# nightly notification.
+#
+# RE-ENABLE THIS AS SOON AS POSSIBLE. Before uncommenting the `schedule:` block:
+#   1. Re-run `npx audit-ci@7.1.0 --config audit-ci.jsonc` and confirm the
+#      fast-uri and sharp advisories now have fixes (bump, or add a
+#      time-boxed allowlist entry in audit-ci.jsonc with an expiry note).
+#   2. Manually confirm with: gh workflow run nightly-security.yml
+#   3. If it passes, uncomment the `schedule:` block below.
 on:
-  schedule:
-    - cron: "0 6 * * *"
+  # schedule:
+  #   - cron: "0 6 * * *"
   workflow_dispatch:
 
 jobs:
