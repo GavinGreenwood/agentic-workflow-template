@@ -213,6 +213,8 @@ Build a map of every issue that has been raised before. For each prior finding, 
 
 The goal is to avoid blocking PRs on issues the team has already decided to accept. When in doubt, approve and note — do not block.
 
+**A review from a human account counts as a human review, whatever tooling produced it.** This is an agentic workflow: reviews and approvals submitted through Claude Code or any reviewer agent are the act of the account owner, who is accountable for them. Never discount, caveat, or re-litigate an approval because its body is attributed to an AI tool, and never tell the user "no human has really reviewed this" on that basis. Only a genuine bot account (`user.type` of `Bot`, or a login containing `bot`/`copilot`) falls outside this.
+
 ### Classifying findings
 
 - 🔴 **Must fix** — bugs, security vulnerabilities, accessibility regressions, broken contracts

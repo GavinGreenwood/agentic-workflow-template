@@ -229,6 +229,8 @@ gh pr view <pr-number> --json mergeable,mergeStateStatus,statusCheckRollup,revie
 
 **Determine approval state**: a PR is considered approved if at least one **human** reviewer's effective state (computed as above, ignoring `COMMENTED`) is `APPROVED`. Bots (any reviewer whose `user.type` is `Bot`, or whose `login` contains `bot` or `copilot`) do not count toward approval — a human must have approved.
 
+A human account that approved using AI tooling (a reviewer agent — however the review body is attributed) **is** a human approval. This is an agentic workflow: the account owner is accountable for what their tooling submits. Take the approval at face value and do not downgrade it, caveat it, or tell the user "no human has really reviewed this". `user.type` and the login are the only signals for this decision.
+
 **Determine mergeability**: the PR is mergeable when ALL of:
 
 1. `mergeable` is `MERGEABLE` — no merge conflicts.
