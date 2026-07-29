@@ -108,3 +108,29 @@ Refer to [quality-strategy.md](quality-strategy.md) for all testing standards an
 - **No secrets in code or committed files** — all config comes from environment variables.
 - **Principle of Least Privilege** — IAM roles, database users, and API scopes get minimum required access.
 - **Defence in depth for access control** — auth enforced at multiple independent layers (middleware, service, query). A defect in one layer must not leak data.
+
+---
+
+## Dependency Management
+
+The root `package.json` `overrides` block is the only supported way to force a transitive dependency to a specific version. Three rules keep it trustworthy.
+
+**Verify an override actually applied.** npm will silently reuse an existing `node_modules` tree rather than fail loudly when it cannot resolve a fresh one, and in that state overrides have no effect. A partial clean is not enough — deleting only the lockfile still lets npm hydrate stale versions from disk. To confirm an override took:
+
+```bash
+rm -rf node_modules apps/*/node_modules packages/*/node_modules package-lock.json
+npm install
+npm ls <package>          # every path should show the overridden version
+```
+
+**Scope overrides by major version when consumers disagree.** An unscoped override applies tree-wide, including to packages that require an older, API-incompatible major. Use the `name@major` form (e.g. `"picomatch@2"`) so only the intended range is affected. A tree-wide `glob: "10.5.0"` override previously broke `test-exclude`, which needs glob v7's function export — the failure surfaced as an unrelated-looking `promisify` type error during coverage collection.
+
+**Peer-range overrides are a last resort, and must be justified.** When a linked tool is genuinely compatible but upstream has not widened its `peerDependencies`, a nested override (e.g. forcing `eslint-plugin-react`'s `eslint` peer to `$eslint`) is acceptable. Prefer bumping to a release with native support where one exists. Never reach for `--legacy-peer-deps` or `--force` to paper over the conflict: an unresolvable tree stops npm re-resolving anything, which quietly freezes every transitive dependency at its current version.
+
+### Audit allowlists
+
+`audit-ci.jsonc` gates CI on high-severity advisories. Before allowlisting anything, confirm the fixed version is genuinely unreachable — `npm audit`'s `range` field is a **union across all advisories** for a package, so it routinely implies no fix exists when one does. Check the individual advisory instead.
+
+Never accept `npm audit fix --force` output unread; it resolves by downgrading, and has proposed dropping `next` from 16.x to 9.3.3.
+
+Every allowlist entry needs a rationale, an expected resolution, and any mitigating controls. Remove entries once upstream ships a fix — audit-ci prints a `Consider not allowlisting` hint when an entry is no longer needed.

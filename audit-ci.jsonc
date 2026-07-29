@@ -6,19 +6,23 @@
   // Allowlisted advisories — known upstream issues with no available fix.
   // Each entry must include a comment explaining the rationale and an expected
   // resolution so the allowlist doesn't silently persist forever.
-  "allowlist": [
-    // multer 1.0.0–2.1.1: DoS via deeply nested field names (GHSA-72gw-mp4g-v24j)
-    // multer 1.0.0–2.1.1: DoS via incomplete cleanup of aborted uploads (GHSA-3p4h-7m6x-2hcm)
-    //
-    // Root cause: @nestjs/platform-express@11.1.27 pins multer to exactly 2.1.1.
-    // npm overrides cannot bypass exact-version pins set by transitive dependencies.
-    // multer 2.2.0 fixes both CVEs but NestJS has not yet released a version that
-    // allows it. Remove these entries once @nestjs/platform-express ships with
-    // multer >= 2.2.0 or a compatible patch.
-    //
-    // Mitigating controls: authenticate all file-upload endpoints; enforce per-request
-    // body-size limits via NestJS's body-parser config so the DoS vector is bounded.
-    "GHSA-72gw-mp4g-v24j",
-    "GHSA-3p4h-7m6x-2hcm",
-  ],
+  //
+  // Currently empty, and it should stay that way unless an advisory genuinely has
+  // no fixed version published.
+  //
+  // History: the two multer DoS advisories (GHSA-72gw-mp4g-v24j,
+  // GHSA-3p4h-7m6x-2hcm) were allowlisted here on the stated grounds that
+  // "@nestjs/platform-express pins multer to exactly 2.1.1" and that "npm
+  // overrides cannot bypass exact-version pins". That diagnosis was wrong on both
+  // counts. The real cause was an unresolvable dependency tree (eslint 10 vs the
+  // eslint-plugin-jsx-a11y / eslint-plugin-react peer ranges), which made npm
+  // silently reuse the existing node_modules instead of re-resolving — so no
+  // override in this repo ever took effect, and transitive deps never advanced.
+  // With the peer conflict fixed and the tree re-resolved, multer lands on 2.2.0
+  // via @nestjs/platform-express@11.1.28 and both advisories are gone.
+  //
+  // Lesson: before allowlisting, verify the fixed version is genuinely
+  // unreachable — `npm audit`'s `range` field is a UNION across advisories, so it
+  // routinely looks like no fix exists when one does.
+  "allowlist": [],
 }
