@@ -28,6 +28,11 @@ ENV NEXT_PUBLIC_APP_VERSION=$APP_VERSION
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
+# The base image bundles npm, which is not needed at runtime. Its vendored tar
+# (7.5.15) carries CVE-2026-59873, which the blocking Trivy CRITICAL gate flags
+# and which cannot be fixed from our package.json. Dropping npm removes it.
+RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx
+
 COPY --from=builder /app/apps/web/.next/standalone ./
 COPY --from=builder /app/apps/web/.next/static ./apps/web/.next/static
 COPY --from=builder /app/apps/web/public ./apps/web/public
