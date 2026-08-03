@@ -13,6 +13,9 @@ reports/
 .env.*
 !.env.example
 
+# Private, local-only docs — machine-local junction, never publish
+.private/
+
 # OS noise
 .DS_Store
 Thumbs.db
