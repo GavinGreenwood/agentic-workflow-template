@@ -113,7 +113,7 @@ Refer to [quality-strategy.md](quality-strategy.md) for all testing standards an
 
 ## Dependency Management
 
-The root `package.json` `overrides` block is the only supported way to force a transitive dependency to a specific version. Three rules keep it trustworthy.
+The root `package.json` `overrides` block is the only supported way to force a transitive dependency to a specific version. Four rules keep it trustworthy.
 
 **Verify an override actually applied.** npm will silently reuse an existing `node_modules` tree rather than fail loudly when it cannot resolve a fresh one, and in that state overrides have no effect. A partial clean is not enough — deleting only the lockfile still lets npm hydrate stale versions from disk. To confirm an override took:
 
@@ -124,6 +124,10 @@ npm ls <package>          # every path should show the overridden version
 ```
 
 **Scope overrides by major version when consumers disagree.** An unscoped override applies tree-wide, including to packages that require an older, API-incompatible major. Use the `name@major` form (e.g. `"picomatch@2"`) so only the intended range is affected. A tree-wide `glob: "10.5.0"` override previously broke `test-exclude`, which needs glob v7's function export — the failure surfaced as an unrelated-looking `promisify` type error during coverage collection.
+
+**An exact-pin override is a snapshot, and it goes stale.** Every entry here pins an exact version, so an override written to _escape_ an advisory silently becomes the thing _holding you on_ the vulnerable version once the next advisory lands. `brace-expansion: "5.0.8"` was the correct fix when written; GHSA-rgw5-rvv9-x895 later moved the fix line to `5.0.9`, and the override was the only reason CI could not resolve a patched copy. When a high-severity advisory names a package that already appears in this block, suspect the override before reaching for the allowlist — the fix is usually a one-line bump, not a new exemption.
+
+Bump to the lowest version that clears the advisory rather than to `latest`, and keep the override inside the range its consumers declare. `fast-uri` is reached only via `ajv@8` (`^3.0.6`); with the fix in `3.1.5` and `latest` at `4.1.2`, the correct move was a major-scoped `fast-uri@3` at `3.1.5` — taking 4.x would have crossed ajv's declared range to buy nothing.
 
 **Peer-range overrides are a last resort, and must be justified.** When a linked tool is genuinely compatible but upstream has not widened its `peerDependencies`, a nested override (e.g. forcing `eslint-plugin-react`'s `eslint` peer to `$eslint`) is acceptable. Prefer bumping to a release with native support where one exists. Never reach for `--legacy-peer-deps` or `--force` to paper over the conflict: an unresolvable tree stops npm re-resolving anything, which quietly freezes every transitive dependency at its current version.
 
