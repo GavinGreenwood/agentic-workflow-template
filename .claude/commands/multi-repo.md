@@ -439,8 +439,8 @@ If differences found, present:
 Changes to propagate: <repo>-3400 → <repo>-3410
 
 File             Variable                 Category    Source        Target
-apps/api/.env    OPENAI_MODEL             config      gpt-4o        gpt-4o-mini
-apps/api/.env    OPENAI_API_KEY           secret      [changed]     [differs]
+apps/api/.env    LLM_MODEL                config      fast          cheap
+apps/api/.env    LLM_API_KEY              secret      [changed]     [differs]
 apps/web/.env    AUTH_SECRET              secret      [changed]     [differs]
 .env             JIRA_API_TOKEN           dev-tooling [changed]     [differs]
 ```

@@ -23,7 +23,7 @@ Prefer to drive it yourself? Read [ADOPT.md](ADOPT.md) directly — it doubles a
 This workflow is built on the engineering philosophy from two Mark Ridley articles — read these first:
 
 1. [**Augmented Engineering for Grown-Ups**](https://www.linkedin.com/pulse/augmented-engineering-grown-ups-mark-ridley-llkve/) — the learning loop, planning in git, deterministic quality gates, Swiss cheese defence, end-to-end traceability.
-2. [**Building Robust Quality Gates for AI-Augmented Development**](https://medium.com/p/d0ab1943082f) — layered hooks (PreToolUse, PostToolUse, pre-commit, pre-push), CI pipeline structure, mutation testing, health checks.
+2. [**Implementing Augmented Engineering**](https://mark-ridley.medium.com/implementing-augmented-engineering-d0ab1943082f) (Medium, member-only) — layered hooks (PreToolUse, PostToolUse, pre-commit, pre-push), CI pipeline structure, mutation testing, health checks.
 
 The core idea:
 

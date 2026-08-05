@@ -3,7 +3,7 @@
 This workflow is an implementation of the ideas in two Mark Ridley articles. They are the required reading for anyone working in (or adapting) this repo:
 
 1. [**Augmented Engineering for Grown-Ups**](https://www.linkedin.com/pulse/augmented-engineering-grown-ups-mark-ridley-llkve/)
-2. [**Building Robust Quality Gates for AI-Augmented Development**](https://medium.com/p/d0ab1943082f)
+2. [**Implementing Augmented Engineering**](https://mark-ridley.medium.com/implementing-augmented-engineering-d0ab1943082f) (Medium, member-only)
 
 Also recommended: [Claude Code in Action](https://anthropic.skilljar.com/claude-code-in-action) (Anthropic's free course) — how the agent itself works end-to-end.
 

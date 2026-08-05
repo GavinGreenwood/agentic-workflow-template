@@ -4,10 +4,10 @@
 
 Before picking up your first ticket, read these. They explain the engineering philosophy behind how this project is built and how we work with Claude Code.
 
-| Resource                                                                                                                 | What it covers                                                                                                        |
-| ------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------- |
-| [Augmented Engineering for Grown-Ups](https://www.linkedin.com/pulse/augmented-engineering-grown-ups-mark-ridley-llkve/) | Learning loop, planning in git, deterministic quality gates, Swiss cheese defence, end-to-end traceability            |
-| [Building Robust Quality Gates for AI-Augmented Development](https://medium.com/p/d0ab1943082f)                          | Layered hooks (PreToolUse, PostToolUse, pre-commit, pre-push), CI pipeline structure, mutation testing, health checks |
+| Resource                                                                                                                                   | What it covers                                                                                                        |
+| ------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------- |
+| [Augmented Engineering for Grown-Ups](https://www.linkedin.com/pulse/augmented-engineering-grown-ups-mark-ridley-llkve/)                   | Learning loop, planning in git, deterministic quality gates, Swiss cheese defence, end-to-end traceability            |
+| [Implementing Augmented Engineering](https://mark-ridley.medium.com/implementing-augmented-engineering-d0ab1943082f) (Medium, member-only) | Layered hooks (PreToolUse, PostToolUse, pre-commit, pre-push), CI pipeline structure, mutation testing, health checks |
 
 ## Prerequisites
 

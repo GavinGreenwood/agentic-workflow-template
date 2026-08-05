@@ -70,9 +70,9 @@ Then use the `Read` tool on each downloaded file to view it visually. Note what 
 
 From the QA comments and screenshots, extract a flat numbered list of distinct issues raised. Each issue should be one clearly scoped observation, e.g.:
 
-1. "The chart legend is missing on the Rankings Overview section"
+1. "The chart legend is missing on the summary dashboard section"
 2. "The export button throws a 500 error when clicked with no data"
-3. "The institution name truncates too aggressively on mobile"
+3. "The record title truncates too aggressively on mobile"
 
 If a single comment raises multiple distinct problems, split them into separate numbered points. Do not merge separate observations into one item.
 

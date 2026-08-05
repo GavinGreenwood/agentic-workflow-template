@@ -229,8 +229,8 @@ jobs:
           PORT: 3001
           NODE_ENV: test
           # Replace with repo secrets for external services in your project:
-          # KEYCLOAK_URL: ${{ secrets.KEYCLOAK_URL }}
-          # OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          # AUTH_SERVER_URL: ${{ secrets.AUTH_SERVER_URL }}
+          # THIRD_PARTY_API_KEY: ${{ secrets.THIRD_PARTY_API_KEY }}
       - name: Wait for API health
         run: |
           timeout 30 bash -c 'until curl -sf http://localhost:3001/healthz; do sleep 1; done'

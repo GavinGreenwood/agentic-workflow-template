@@ -10,7 +10,7 @@
 ## Commits
 
 - Conventional Commits format, with the Jira ticket key:
-  - `feat(PROJ-42): add institution comparison table`
+  - `feat(PROJ-42): add record comparison table`
   - `fix(PROJ-107): debounce search input`
   - `chore: bump prettier to 3.x`
 - Keep commits small and focused. One logical change per commit.
