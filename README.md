@@ -5,11 +5,11 @@ A complete, battle-tested workflow for running a software project with **Claude 
 Everything in this repo was developed and refined on a real production client project (a Next.js + NestJS monorepo on AWS), where it ran the full delivery loop for months: tickets picked up, features built test-first, PRs raised, reviews actioned, CI fixed, dependencies maintained — with humans steering and machines enforcing quality.
 
 <p align="center">
-  <a href="https://youtu.be/oxiBNyUlh7c">
+  <a href="https://youtu.be/oxiBNyUlh7c" target="_blank" rel="noopener noreferrer">
     <img src="https://img.youtube.com/vi/oxiBNyUlh7c/maxresdefault.jpg" width="640" alt="Watch the walkthrough on YouTube" />
   </a>
   <br />
-  <a href="https://youtu.be/oxiBNyUlh7c"><b>▶ Watch the walkthrough</b></a>
+  <a href="https://youtu.be/oxiBNyUlh7c" target="_blank" rel="noopener noreferrer"><b>▶ Watch the walkthrough</b></a>
 </p>
 
 ## Import into your repo
