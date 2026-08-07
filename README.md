@@ -4,6 +4,8 @@ A complete, battle-tested workflow for running a software project with **Claude 
 
 Everything in this repo was developed and refined on a real production client project (a Next.js + NestJS monorepo on AWS), where it ran the full delivery loop for months: tickets picked up, features built test-first, PRs raised, reviews actioned, CI fixed, dependencies maintained — with humans steering and machines enforcing quality.
 
+📺 **Watch the walkthrough:** [Agentic Workflow Template — full demo](https://youtu.be/oxiBNyUlh7c)
+
 ## Import into your repo
 
 Open Claude Code in the repo you want to standardise, and paste:
