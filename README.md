@@ -84,6 +84,7 @@ docs/
 | ------------------------------- | --------------------------------------------------------------------------------------------------------- |
 | `/pickup <ticket-id>`           | Assign the ticket, read it fully, brief the work, create the branch, start PROGRESS.md                    |
 | `/refine <ticket-id>`           | Pre-implementation refinement: clarifying questions, ranked approaches, posted back to the ticket         |
+| `/briefing <ticket-id>`         | Read-only context build: the ticket, its comment trail, epic chain, and every PR raised against it        |
 | `/pr`                           | The full ship workflow: verify → commit → push → PR from template → AI self-review against 8 lenses       |
 | `/push`                         | Verify, commit, push — no PR                                                                              |
 | `/pr-action-review <pr>`        | Fetch every review comment, triage (auto-fix / discuss / informational), action them, merge when eligible |

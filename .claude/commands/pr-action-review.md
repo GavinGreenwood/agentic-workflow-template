@@ -250,8 +250,16 @@ The PR is ready. Ask the user **two questions before merging**:
 > "After merging, what should happen to the Jira ticket?
 >
 > 1. Move to **Done** (no QA required)
-> 2. Move to **Ready for Testing** and assign to Carol (needs QA first)
+> 2. Move to **Ready for Testing** and assign to the QA owner (needs QA first)
 > 3. Leave ticket as-is (dependency bump, part of a larger epic, etc.)"
+
+Name the QA owner in the question rather than saying "the QA owner". Quoting the raw
+`QA_ASSIGNEE_QUERY` value doesn't identify anyone when it's an account ID, so resolve it to a person
+first, using the same lookup as **Post-merge Jira action** below (account-ID vs. search branch), and
+name their `displayName`. If it's unset, empty, or resolves to zero or multiple plausible people, say
+"the QA owner (couldn't resolve `QA_ASSIGNEE_QUERY` to one person)" and let the user confirm who it
+should be. Keep the resolved account ID handy — reuse it in the post-merge step rather than
+re-resolving.
 
 Record the user's answer to Q2 — it drives the post-merge Jira action.
 
@@ -291,18 +299,52 @@ curl -s -u "$JIRA_EMAIL:$JIRA_API_TOKEN" "$JIRA_BASE_URL/rest/api/3/issue/<ticke
 
 **If Ready for Testing (option 2):**
 
+The QA owner comes from **`QA_ASSIGNEE_QUERY` in `.env`**, never from a name hardcoded here and never
+from a name remembered from a previous session. The value may be either form:
+
+- an **account ID** (contains a `:`, or is a 24-char hex string) — use it directly
+- anything else — treat it as a **user-search query** (display name, partial name, or email)
+
+If `QA_ASSIGNEE_QUERY` is unset or empty, apply the transition but **stop before assigning** and ask who
+QA should go to. Do not guess.
+
+**Always confirm who the value resolves to before assigning**, and name that person back to the user.
+The variable is easy to leave stale when QA ownership changes, and a wrong assignment sends a ticket to
+someone who is not expecting it.
+
 ```bash
-# 1. Fetch transitions, find "Ready for Testing" by name, apply it
-# 2. Assign to Carol — look up Carol's accountId first:
-curl -s -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
-  "$JIRA_BASE_URL/rest/api/3/user/search?query=carol" \
-  | # extract accountId for the Carol on this project
+# 1. Fetch transitions, find "Ready for Testing" by name, apply it (as above)
+
+# 2. Resolve the QA owner
+source .env
+: "${QA_ASSIGNEE_QUERY:?QA_ASSIGNEE_QUERY not set in .env — ask the user who QA should go to}"
+
+# Atlassian account IDs come in two shapes: the newer `<numeric-prefix>:<uuid>` form and the older
+# bare 24-char hex form. Matching only on ':' would send the latter to the search endpoint, which
+# looks up a name and finds nothing.
+if printf '%s' "$QA_ASSIGNEE_QUERY" | grep -Eq '(:|^[0-9a-fA-F]{24}$)'; then
+  # Already an account ID — confirm who it belongs to before using it.
+  curl -s -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
+    --get --data-urlencode "accountId=$QA_ASSIGNEE_QUERY" \
+    "$JIRA_BASE_URL/rest/api/3/user"
+else
+  # A name or email — search for it.
+  curl -s -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
+    --get --data-urlencode "query=$QA_ASSIGNEE_QUERY" \
+    "$JIRA_BASE_URL/rest/api/3/user/search"
+fi
+# Pick the active account whose displayName matches. If a search returns several plausible people,
+# or none, ask the user rather than assigning to a guess.
+
 # 3. PUT the assignee
 curl -s -X PUT -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{"accountId": "<carol-account-id>"}' \
+  -d '{"accountId": "<resolved-account-id>"}' \
   "$JIRA_BASE_URL/rest/api/3/issue/<ticket>/assignee"
 ```
+
+`--data-urlencode` matters in both branches: an account ID contains a `:` and a name contains a space,
+either of which produces an invalid URL and a confusing 400 if interpolated raw.
 
 ### If the PR is not mergeable
 
