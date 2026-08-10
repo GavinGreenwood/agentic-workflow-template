@@ -17,7 +17,7 @@
   },
   "devDependencies": {
     "@template/tsconfig": "*",
-    "typescript": "^5.8.0"
+    "typescript": "^7.0.2"
   },
   "dependencies": {
     "zod": "^4.4.3"
