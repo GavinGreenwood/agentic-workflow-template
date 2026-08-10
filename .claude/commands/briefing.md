@@ -54,9 +54,12 @@ gh pr list --state all --search "$TICKET_KEY" \
 Also check for PRs whose title/branch don't mention the key but whose commits do (this happens when a branch got renamed or stacked):
 
 ```bash
-gh api repos/{owner}/{repo}/pulls -f state=all --paginate \
+gh api "repos/{owner}/{repo}/pulls?state=all" --paginate \
   --jq ".[] | select(.title | test(\"$TICKET_KEY\"; \"i\")) | {number, title, state}"
 ```
+
+Pass `state` in the query string, not as `-f state=all` — `gh api` switches to POST as soon as a field
+is supplied, which would attempt to open a pull request instead of listing them.
 
 Build the full list of PR numbers touching this ticket before moving on — don't process them one at a time as you find them, since a later search may surface one you'd already started summarising without it.
 
