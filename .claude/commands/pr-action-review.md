@@ -319,9 +319,9 @@ someone who is not expecting it.
 source .env
 : "${QA_ASSIGNEE_QUERY:?QA_ASSIGNEE_QUERY not set in .env — ask the user who QA should go to}"
 
-# Account IDs come in both shapes Atlassian issues: the newer `<numeric-prefix>:<uuid>` form and the
-# older bare 24-char hex form. Matching only on ':' would send the latter to the search endpoint,
-# which looks up a name and finds nothing.
+# Atlassian account IDs come in two shapes: the newer `<numeric-prefix>:<uuid>` form and the older
+# bare 24-char hex form. Matching only on ':' would send the latter to the search endpoint, which
+# looks up a name and finds nothing.
 if printf '%s' "$QA_ASSIGNEE_QUERY" | grep -Eq '(:|^[0-9a-fA-F]{24}$)'; then
   # Already an account ID — confirm who it belongs to before using it.
   curl -s -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \

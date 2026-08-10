@@ -23,14 +23,25 @@ source .env && curl -s -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
   "$JIRA_BASE_URL/rest/api/3/issue/$TICKET_KEY?expand=renderedFields"
 ```
 
-Extract `fields.summary`, `fields.description`, `fields.status.name`, `fields.issuetype.name`, `fields.parent`, `fields.customfield_10014` (epic link), `fields.subtasks`, `fields.issuelinks`, `fields.labels`.
+Extract `fields.summary`, `fields.status.name`, `fields.issuetype.name`, `fields.parent`,
+`fields.customfield_10014` (epic link), `fields.subtasks`, `fields.issuelinks`, `fields.labels`.
+
+For the description, read **`renderedFields.description`** — that's the HTML the `expand=renderedFields`
+above returns. On API v3 `fields.description` is Atlassian Document Format (a nested JSON node tree),
+which is why the expand is there: it saves you walking ADF to recover the prose.
 
 ```bash
 source .env && curl -s -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
-  "$JIRA_BASE_URL/rest/api/3/issue/$TICKET_KEY/comment?orderBy=created"
+  "$JIRA_BASE_URL/rest/api/3/issue/$TICKET_KEY/comment?orderBy=created&expand=renderedBody"
 ```
 
-Read every comment oldest-first — `author.displayName`, `created`, plain-text body. This is the decision trail: who asked what, who answered, what changed direction mid-ticket. Distinguish an agent's own progress summary from genuine human input — the former restates what was done, the latter is a decision.
+Comment bodies are ADF too, so `expand=renderedBody` is what makes `renderedBody` (HTML) available
+alongside the raw `body` — read the rendered form. The endpoint is paginated: compare `total` against
+`startAt + maxResults` and re-request with a higher `startAt` until you have them all. A long-running
+ticket is exactly the case where the early comments matter most, and they're the ones a single
+unpaginated call drops.
+
+Read every comment oldest-first — `author.displayName`, `created`, rendered body. This is the decision trail: who asked what, who answered, what changed direction mid-ticket. Distinguish an agent's own progress summary from genuine human input — the former restates what was done, the latter is a decision.
 
 ## Step 3 — Walk the epic/parent chain
 
@@ -51,15 +62,23 @@ gh pr list --state all --search "$TICKET_KEY" \
   --json number,title,state,url,body,mergedAt,author,createdAt
 ```
 
-Also check for PRs whose title/branch don't mention the key but whose commits do (this happens when a branch got renamed or stacked):
+`--search` only covers what GitHub indexes for the PR itself, so sweep the full PR list directly as a
+second pass — matching the key against the title, the head branch name, and the body:
 
 ```bash
 gh api "repos/{owner}/{repo}/pulls?state=all" --paginate \
-  --jq ".[] | select(.title | test(\"$TICKET_KEY\"; \"i\")) | {number, title, state}"
+  --jq ".[] | select((.title, .head.ref, (.body // \"\")) | test(\"$TICKET_KEY\"; \"i\")) | {number, title, state}"
 ```
 
 Pass `state` in the query string, not as `-f state=all` — `gh api` switches to POST as soon as a field
 is supplied, which would attempt to open a pull request instead of listing them.
+
+Neither pass sees inside commit messages. If you suspect a PR carries the ticket only in its commits —
+a renamed or stacked branch is the usual cause — check the candidates explicitly:
+
+```bash
+gh pr view <number> --json commits --jq '.commits[].messageHeadline'
+```
 
 Build the full list of PR numbers touching this ticket before moving on — don't process them one at a time as you find them, since a later search may surface one you'd already started summarising without it.
 
