@@ -1,6 +1,6 @@
 ---
 name: pr-action-review-mine-loop
-description: "User-invoked only. Action reviews on every open pull request raised by the current user until each is merged or blocked."
+description: "User-invoked only. Action reviews on all of _your_ open PRs, looping until everything is merged or blocked"
 disable-model-invocation: true
 ---
 
@@ -258,7 +258,7 @@ Jira transitions are never applied per-PR in this loop. If this PR merged, its t
 
 ### Step 12 — Return to main
 
-If this PR's branch was checked out during this iteration, read and follow `.agents/skills/main/SKILL.md` now. This switches back to main, pulls latest, and deletes the local branch — housekeeping before moving to the next PR. Do not narrate the steps.
+If this PR's branch was checked out during this iteration, read and follow `.agents/skills/main/SKILL.md` now. This switches back to main, pulls latest, and deletes the local branch — housekeeping before moving to the next PR. Do not explain what `main` does or narrate the steps; just follow it.
 
 ---
 

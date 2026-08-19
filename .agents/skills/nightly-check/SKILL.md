@@ -1,6 +1,6 @@
 ---
 name: nightly-check
-description: "User-invoked only. Inspect recent scheduled CI runs, classify failures, and take the matching recovery action."
+description: "User-invoked only. Triage scheduled CI runs: flake vs regression vs config vs infra"
 disable-model-invocation: true
 ---
 

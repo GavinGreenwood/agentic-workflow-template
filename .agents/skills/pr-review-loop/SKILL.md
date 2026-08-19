@@ -1,6 +1,6 @@
 ---
 name: pr-review-loop
-description: "User-invoked only. Review teammates' open pull requests while respecting previous discussion and formal review rules."
+description: "User-invoked only. Review all teammates' open PRs — respecting prior discussion, never re-raising pushed-back findings"
 disable-model-invocation: true
 ---
 

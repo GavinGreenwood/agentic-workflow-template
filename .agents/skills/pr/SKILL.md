@@ -1,6 +1,6 @@
 ---
 name: pr
-description: "User-invoked only. Run the full shipping workflow from verification through pull request and self-review."
+description: "User-invoked only. The full ship workflow: verify → commit → push → PR from template → AI self-review against 8 lenses"
 disable-model-invocation: true
 ---
 

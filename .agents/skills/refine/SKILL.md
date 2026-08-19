@@ -1,6 +1,6 @@
 ---
 name: refine
-description: "User-invoked only. Refine a Jira ticket before implementation by resolving questions and comparing approaches."
+description: "User-invoked only. Pre-implementation refinement: clarifying questions, ranked approaches, posted back to the ticket"
 disable-model-invocation: true
 ---
 

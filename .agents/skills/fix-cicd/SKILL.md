@@ -1,6 +1,6 @@
 ---
 name: fix-cicd
-description: "User-invoked only. Diagnose and fix failing GitHub Actions jobs on the current branch."
+description: "User-invoked only. Read the failing CI logs on this branch, diagnose flake vs real, fix or re-run"
 disable-model-invocation: true
 ---
 

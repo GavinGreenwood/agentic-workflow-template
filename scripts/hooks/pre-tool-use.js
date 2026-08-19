@@ -1,7 +1,10 @@
 #!/usr/bin/env node
 /**
- * Shared PreToolUse policy for Claude Code, Codex, and GitHub Copilot.
+ * PreToolUse hook — deterministic pattern matching to block catastrophic actions.
  *
+ * No LLM judgement. Just regex against known dangerous patterns.
+ * Receives JSON on stdin with the runtime's tool name and tool input fields.
+ * Outputs the runtime's block or confirmation decision shape.
  * Usage: node scripts/hooks/pre-tool-use.js <claude|codex|copilot>
  */
 

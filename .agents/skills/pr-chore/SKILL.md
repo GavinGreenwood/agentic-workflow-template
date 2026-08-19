@@ -1,6 +1,6 @@
 ---
 name: pr-chore
-description: "User-invoked only. Create a focused no-ticket chore pull request for the files agreed in the current session."
+description: "User-invoked only. Raise a small no-ticket chore PR from a worktree without touching your feature branch"
 disable-model-invocation: true
 ---
 

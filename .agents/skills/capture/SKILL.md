@@ -1,6 +1,6 @@
 ---
 name: capture
-description: "User-invoked only. Capture the current conversation as a Jira ticket, assign its epic, and commit the capture."
+description: "User-invoked only. Turn the current conversation into a tracked ticket + commit"
 disable-model-invocation: true
 ---
 

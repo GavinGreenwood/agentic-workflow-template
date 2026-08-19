@@ -1,6 +1,6 @@
 ---
 name: sync
-description: "User-invoked only. Check local environment keys, install dependencies, and build after pulling changes."
+description: "User-invoked only. Post-pull sync — checks for missing .env vars, installs dependencies, and builds."
 disable-model-invocation: true
 allowed-tools: Bash(cat:*), Bash(npm install:*), Bash(npm run build:*)
 ---

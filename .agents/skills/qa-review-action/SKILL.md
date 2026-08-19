@@ -1,6 +1,6 @@
 ---
 name: qa-review-action
-description: "User-invoked only. Classify and action Jira QA feedback for a ticket, fixing real bugs and responding to the rest."
+description: "User-invoked only. Classify QA feedback: genuine bug / intended behaviour / out of scope — fix or push back accordingly"
 disable-model-invocation: true
 ---
 

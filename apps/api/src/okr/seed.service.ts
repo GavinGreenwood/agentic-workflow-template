@@ -71,7 +71,7 @@ export class SeedService implements OnModuleInit {
 
     // ── Objective 2 ────────────────────────────────────────────────────────
     const masterWorkflows = this.objectives.create({
-      title: "Master agentic development",
+      title: "Master agentic development with a coding agent",
       description:
         "Become fluent in the full workflow loop: pickup → branch → code → gates → PR → merge, using the configured coding agent.",
       ownerId: "demo-user",
@@ -80,7 +80,7 @@ export class SeedService implements OnModuleInit {
 
     const commands = this.keyResults.create({
       objectiveId: masterWorkflows.id,
-      title: "Core agent workflows in daily use",
+      title: "Core agent skills in daily use",
       unit: "number",
       startValue: 0,
       targetValue: 10,

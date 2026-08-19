@@ -1,6 +1,6 @@
 ---
 name: log-time
-description: "User-invoked only. Derive unlogged work from Git activity and record it in Tempo."
+description: "User-invoked only. Log time to Tempo automatically, derived from git activity since your last logged entry"
 disable-model-invocation: true
 ---
 

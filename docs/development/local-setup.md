@@ -2,7 +2,7 @@
 
 ## Required Reading
 
-Before picking up your first ticket, read these. They explain the engineering philosophy behind how this project is built and how we work with coding agents.
+Before picking up your first ticket, read these. They explain the engineering philosophy behind how this project is built and how we work with Claude Code, Codex, and GitHub Copilot.
 
 | Resource                                                                                                                                   | What it covers                                                                                                        |
 | ------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------- |
@@ -13,7 +13,7 @@ Before picking up your first ticket, read these. They explain the engineering ph
 
 - Node.js (see `.nvmrc` for version)
 
-## Coding agent setup
+## Coding Agent Setup
 
 Use Claude Code, Codex, or GitHub Copilot CLI. All three read `AGENTS.md` and the canonical skills in `.agents/skills/` through their repository adapters.
 
@@ -56,7 +56,7 @@ Invoke the `pickup` skill with `PROJ-42`. Claude Code and GitHub Copilot CLI use
 
 The agent reads the ticket, creates the branch, implements the work, runs verification, and raises the PR.
 
-> **Important:** Make sure the ticket is complete before starting. Define the acceptance criteria, link relevant designs, and agree the scope. The agent implements exactly what the ticket says.
+> **Important:** Make sure the ticket is complete before pointing the agent at it — acceptance criteria defined, relevant designs linked, scope agreed. The agent implements exactly what the ticket says.
 
 ## Installation
 

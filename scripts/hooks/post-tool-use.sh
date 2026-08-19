@@ -11,12 +11,14 @@ while IFS= read -r FILE_PATH; do
   [ -z "$FILE_PATH" ] && continue
   [ ! -f "$FILE_PATH" ] && continue
 
+  # Format all supported file types with Prettier
   if [[ "$FILE_PATH" =~ \.(ts|tsx|js|jsx|json|md|css|yml|yaml|html)$ ]]; then
-    npx prettier --write -- "$FILE_PATH" 2>/dev/null || true
+    npx prettier --write "$FILE_PATH" 2>/dev/null || true
   fi
 
+  # Additionally run ESLint with auto-fix on code files
   if [[ "$FILE_PATH" =~ \.(ts|tsx|js|jsx)$ ]]; then
-    npx eslint --fix -- "$FILE_PATH" 2>/dev/null || true
+    npx eslint --fix "$FILE_PATH" 2>/dev/null || true
   fi
 done < <(printf '%s' "$INPUT" | node -e '
   const chunks = [];

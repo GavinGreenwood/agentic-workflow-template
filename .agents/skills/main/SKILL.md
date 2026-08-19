@@ -1,6 +1,6 @@
 ---
 name: main
-description: "User-invoked only. Switch safely to main, update it, and remove a finished feature branch only when its work is preserved."
+description: "User-invoked only. Switch to main and pull latest. If on a feature branch, checks for uncommitted changes and whether the branch was pushed before deleting it."
 disable-model-invocation: true
 allowed-tools: Bash(git status:*), Bash(git branch:*), Bash(git checkout:*), Bash(git switch:*), Bash(git pull:*), Bash(git log:*), Bash(git rev-parse:*)
 ---

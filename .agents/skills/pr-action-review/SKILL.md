@@ -1,12 +1,12 @@
 ---
 name: pr-action-review
-description: "User-invoked only. Fetch and action all reviews for a pull request, then merge when eligible."
+description: "User-invoked only. Fetch every review comment, triage (auto-fix / discuss / informational), action them, merge when eligible"
 disable-model-invocation: true
 ---
 
 Fetch all review comments on the given PR and action them.
 
-Arguments: `<pr-number> [--watch]`. Pass the PR number, for example `101`. Pass `--watch` to skip the poll and auto-merge confirmation and proceed automatically.
+Usage: `pr-action-review <pr-number> [--watch]` — pass the PR number as the argument (e.g. `101`). Pass `--watch` to skip the poll/auto-merge confirmation and proceed automatically.
 
 ## Step 1 — Find the PR and check out the branch
 

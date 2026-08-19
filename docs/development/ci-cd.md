@@ -34,13 +34,13 @@ push / PR
 
 ## Workflows
 
-| File                                     | Trigger                                 | Purpose                     |
-| ---------------------------------------- | --------------------------------------- | --------------------------- |
-| `.github/workflows/ci.yml`               | PR, push to `main`, `workflow_dispatch` | Full pipeline               |
-| `.github/workflows/security.yml`         | `workflow_call`, `workflow_dispatch`    | Reusable security job       |
-| `.github/workflows/nightly-security.yml` | Daily 06:00 UTC                         | Calls `security.yml`        |
-| `.github/workflows/nightly-mutation.yml` | Weekdays 02:00 UTC                      | Stryker mutation testing    |
-| `.github/workflows/morlock.yml`          | Manual; nightly schedule currently off  | Claude-backed Morlock probe |
+| File                                     | Trigger                                 | Purpose                  |
+| ---------------------------------------- | --------------------------------------- | ------------------------ |
+| `.github/workflows/ci.yml`               | PR, push to `main`, `workflow_dispatch` | Full pipeline            |
+| `.github/workflows/security.yml`         | `workflow_call`, `workflow_dispatch`    | Reusable security job    |
+| `.github/workflows/nightly-security.yml` | Daily 06:00 UTC                         | Calls `security.yml`     |
+| `.github/workflows/nightly-mutation.yml` | Weekdays 02:00 UTC                      | Stryker mutation testing |
+| `.github/workflows/morlock.yml`          | Nightly 01:00 UTC                       | Morlock security probe   |
 
 ## Versioning
 
@@ -127,10 +127,9 @@ current-state doc to update by adding `[skip-adr-sync: reason]` to a commit mess
 
 ## Morlock
 
-`morlock.yml` is the existing Claude-backed scheduled adapter for the provider-neutral Morlock role.
-Its schedule is currently disabled, so it runs only through manual dispatch. It seeds the Claude Code
-action from `.agents/skills/morlock/SKILL.md`. The same role is available interactively through the
-Claude, Codex, and GitHub Copilot role adapters. The scheduled job:
+`morlock.yml` runs nightly at 01:00 UTC. It invokes the Claude Code action seeded with the provider-neutral
+Morlock security-probe persona (`.agents/skills/morlock/SKILL.md`). The same role is available through
+the Claude Code, Codex, and GitHub Copilot adapters. The agent:
 
 1. Reads and analyses the codebase for security weaknesses.
 2. Writes proving tests under `apps/api/integration/security/`.

@@ -1,6 +1,6 @@
 ---
 name: dependabot-review
-description: "User-invoked only. Review open Dependabot pull requests, merge safe green updates, and diagnose or escalate the rest."
+description: "User-invoked only. Merge green minor/patch bumps, diagnose failing ones, escalate majors"
 disable-model-invocation: true
 ---
 

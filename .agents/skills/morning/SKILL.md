@@ -1,6 +1,6 @@
 ---
 name: morning
-description: "User-invoked only. Run the daily main-branch, nightly CI, and Dependabot maintenance sequence."
+description: "User-invoked only. Daily routine: main-branch health, nightly CI triage, Dependabot review"
 disable-model-invocation: true
 ---
 

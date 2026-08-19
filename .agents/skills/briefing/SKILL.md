@@ -1,6 +1,6 @@
 ---
 name: briefing
-description: "User-invoked only. Build read-only Jira and pull-request context for a ticket before implementation or review."
+description: "User-invoked only. Read-only context build: the ticket, its comment trail, epic chain, and every PR raised against it"
 disable-model-invocation: true
 ---
 
@@ -8,7 +8,7 @@ Build full context on a Jira ticket before follow-on work: the ticket, its comme
 
 **Ticket input:** use the value supplied with the skill invocation.
 
-Arguments: `<ticket-id>`
+Usage: `briefing <ticket-id>`
 
 Read-only. Does not assign, transition, comment on, or otherwise modify the ticket or any PR — this is purely for getting the human up to speed.
 

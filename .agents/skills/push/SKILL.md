@@ -1,6 +1,6 @@
 ---
 name: push
-description: "User-invoked only. Verify, commit, and push the current branch without opening a pull request."
+description: "User-invoked only. Verify, commit, push — no PR"
 disable-model-invocation: true
 ---
 

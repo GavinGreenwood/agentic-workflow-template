@@ -1,6 +1,6 @@
 ---
 name: pickup
-description: "User-invoked only. Pick up a Jira ticket, prepare its branch and context, and start the implementation scratchpad."
+description: "User-invoked only. Assign the ticket, read it fully, brief the work, create the branch, start PROGRESS.md"
 disable-model-invocation: true
 ---
 
@@ -8,7 +8,7 @@ Pick up a Jira ticket: assign it to me, move it to In Progress, read it fully wi
 
 **Ticket input:** use the value and flags supplied with the skill invocation.
 
-Arguments: `<ticket-id> [--stay] [--qa]`
+Usage: `pickup <ticket-id> [--stay] [--qa]`
 
 - `--stay` — do **not** create a new branch. Stay on the current branch and do the work there. Use this when stacking multiple tickets on one branch.
 - `--qa` — **QA-rework mode.** Work is already done and merged to `main`; the ticket is back from QA with comments. Runs the normal Jira front-door (assign, In Progress, board) — which `qa-review-action` doesn't — then hands off to `qa-review-action` for the feedback itself. Branch behaves like a normal pickup (fresh fix branch off `main`); add `--stay` to rework on the current branch with latest `main` merged in first.
