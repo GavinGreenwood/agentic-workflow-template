@@ -30,5 +30,5 @@ hash=$(printf '%s' "$changed" | git hash-object --stdin 2>/dev/null)
 [ -f "$marker" ] && [ "$(cat "$marker" 2>/dev/null)" = "$hash" ] && exit 0
 
 printf '%s' "$hash" > "$marker"
-echo "DOCS SYNC: re-read CLAUDE.md § Documentation Sync before stopping if this turn changed code, added a pattern, modified source or config, or introduced a new behaviour. Update PROGRESS.md and any affected docs/ files in the same change." >&2
+echo "DOCS SYNC: re-read AGENTS.md § Documentation Sync before stopping if this turn changed code, added a pattern, modified source or config, or introduced a new behaviour. Update PROGRESS.md and any affected docs/ files in the same change." >&2
 exit 2

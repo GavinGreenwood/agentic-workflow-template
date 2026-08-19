@@ -23,13 +23,15 @@ finished Phase 2 and the human has approved the plan in Phase 3.**
 1. **Read this template.** Fetch and read these files from this repo (use the
    raw GitHub URLs, `https://raw.githubusercontent.com/GavinGreenwood/agentic-workflow-template/main/<path>`,
    or clone it to a temp dir):
-   - `CLAUDE.md` — the agent contract
+   - `AGENTS.md` and the `CLAUDE.md` import stub — the shared agent contract
    - `CONTRIBUTING.md` — branching, commits, PRs
    - `docs/philosophy.md` — the _why_; this is the part that must survive translation
-   - `.claude/settings.json` and `scripts/hooks/` — the hook layer
+   - `.claude/settings.json`, `.codex/hooks.json`, `.github/hooks/`, and `scripts/hooks/` — the shared hook behaviour and runtime adapters
    - `scripts/verify.sh` and `.husky/` — the gate layer
-   - `.claude/commands/` — the slash-command workflow loop
-   - `README.md` § "The commands" — a one-line summary of each command
+   - `.agents/skills/` — the canonical workflow loop and reusable roles
+   - `.claude/agents/`, `.codex/agents/`, and `.github/agents/` — thin role adapters
+   - `.mcp.json` and `.codex/config.toml` — Playwright MCP configuration
+   - `README.md` § "User-invoked workflows" — a one-line summary of each workflow
 
 2. **Read the target repo** (the one you are running in). Do not assume —
    inspect. Establish, with evidence from actual files:
@@ -41,7 +43,7 @@ finished Phase 2 and the human has approved the plan in Phase 3.**
    - **Issue tracker** (Jira? GitHub Issues? Linear? none?).
    - **Git host** (GitHub? GitLab? Azure DevOps?) and how PRs/reviews happen.
    - **Branching model** (trunk/`main`-only? GitHub flow? Gitflow with `develop`? release branches?).
-   - **Existing Claude Code setup** — any `.claude/` directory, `CLAUDE.md`, or hooks/commands already present to build on or reconcile with.
+   - **Existing agent setup** — any `AGENTS.md`, `CLAUDE.md`, `.agents/`, `.claude/`, `.codex/`, `.github/agents/`, `.github/hooks/`, MCP config, or agent hooks already present to build on or reconcile with.
 
 ---
 
@@ -59,9 +61,9 @@ actually found):
 | ESLint + Prettier               | e.g. `ruff` / `gofmt`                     | one gate, target's formatter              |
 | Prisma schema/migration check   | (target's migration tool, or **drop**)    | drop if no DB/migrations                  |
 | `npm run typecheck`             | (target's type checker, or **drop**)      | drop for dynamically-typed-only repos     |
-| Jira REST calls in commands     | target tracker API, or GitHub Issues      | rewrite the `curl`/API calls              |
+| Jira REST calls in skills       | target tracker API, or GitHub Issues      | rewrite the `curl`/API calls              |
 | GitHub Actions CI               | target's CI, or **defer** (record an ADR) | don't invent a pipeline they don't use    |
-| `.claude/commands/`             | target repo's `.claude/commands/`         | keep the workflow loop under Claude's dir |
+| `.agents/skills/`               | target repo's `.agents/skills/`           | keep one provider-neutral workflow source |
 
 Anything in the "no equivalent" column is a **drop candidate** — call it out
 explicitly rather than porting it dead.
@@ -120,12 +122,15 @@ different strictness).
    gate. Recommended: don't create a GitHub Actions pipeline for a repo whose
    CI lives on another platform — document the decision instead.
 
-8. **Which slash commands.**
-   Full workflow loop (`/capture`, `/refine`, `/pickup`, `/pr`,
-   `/pr-action-review`, review loops…) or a minimal subset? Recommended: the
-   full loop — the commands _are_ the workflow. They live in the target repo's
-   `.claude/commands/`, with the Jira/CI calls rewritten for the target's
-   tools.
+8. **Which user-invoked workflows.**
+   Full workflow loop (`capture`, `refine`, `pickup`, `pr`,
+   `pr-action-review`, review loops…) or a minimal subset? Recommended: the
+   full loop because the skills define the workflow. They live once in the
+   target repo's `.agents/skills/`, with the Jira and CI calls rewritten for
+   the target's tools. Keep command-origin skills user-only with Claude's
+   `disable-model-invocation: true`, Codex's
+   `policy.allow_implicit_invocation: false`, and the same rule in each skill
+   description for Copilot.
 
 9. **Hook framework + secret scanning.**
    Pick the target ecosystem's standard hook manager (pre-commit for Python,
@@ -143,9 +148,12 @@ audit trail for _why this adoption looks the way it does_.
 Synthesise the answers into a concrete, phased plan and **wait for explicit
 approval before writing anything.** A good plan separates:
 
-- **Phase A — the stack-agnostic core**: the `CLAUDE.md` contract, `verify`
-  task, git hooks, PR template, dependency automation.
-- **Phase B — the Claude layer**: hooks wired to scripts, slash commands.
+- **Phase A — the stack-agnostic core**: `AGENTS.md`, `.agents/skills/`, the
+  `verify` task, git hooks, PR template, and dependency automation.
+- **Phase B — runtime adapters**: the `CLAUDE.md` import stub, Claude skill
+  symlink, Claude/Codex/Copilot role files, hook configs, and Playwright MCP
+  configs. Do not add `.copilot` or `.github/copilot-instructions.md` when
+  GitHub.com Copilot Chat is not in scope.
 - **Phase C — docs**: philosophy (carried across near-verbatim; it is
   stack-agnostic), engineering standards + quality strategy rewritten for the
   target language, ADR scaffolding, an "adoption decisions" note recording the

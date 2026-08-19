@@ -22,6 +22,7 @@
     "test": "turbo test",
     "test:integration": "turbo test:integration --continue",
     "test:e2e": "playwright test --pass-with-no-tests",
+    "verify:agents": "node scripts/verify-agent-workflow.mjs",
     "clean": "turbo clean",
     "prepare": "husky"
   },

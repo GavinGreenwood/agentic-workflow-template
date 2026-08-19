@@ -5,7 +5,7 @@
 
 ## Context
 
-Architectural decisions get made in conversations, PRs, and heads — and then forgotten. When an AI agent is doing much of the implementation, the _why_ behind decisions must be written down, because the agent reads docs, not memories. The `/qa-review-action` command, for example, can only classify behaviour as "intended" by citing a documented decision.
+Architectural decisions get made in conversations, PRs, and heads — and then forgotten. When an AI agent is doing much of the implementation, the _why_ behind decisions must be written down, because the agent reads docs, not memories. The `qa-review-action` workflow, for example, can only classify behaviour as "intended" by citing a documented decision.
 
 ## Decision
 

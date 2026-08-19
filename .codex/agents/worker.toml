@@ -1,0 +1,6 @@
+name = "worker"
+description = "Complete well-scoped repository work on a lighter model."
+model = "gpt-5.6-luna"
+model_reasoning_effort = "low"
+sandbox_mode = "workspace-write"
+developer_instructions = "Read and follow .agents/skills/worker/SKILL.md and the root AGENTS.md contract."

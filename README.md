@@ -1,8 +1,8 @@
 # Agentic Workflow Template
 
-A complete, battle-tested workflow for running a software project with **Claude Code as the primary development agent** — agent contract, slash commands, layered guardrail hooks, and deterministic quality gates.
+A complete, battle-tested workflow for running a software project with Claude Code, Codex, or GitHub Copilot as the coding agent. It provides one shared contract, one skill source, layered guardrail hooks, Playwright MCP, and deterministic quality gates.
 
-Everything in this repo was developed and refined on a real production client project (a Next.js + NestJS monorepo on AWS), where it ran the full delivery loop for months: tickets picked up, features built test-first, PRs raised, reviews actioned, CI fixed, dependencies maintained — with humans steering and machines enforcing quality.
+Everything in this repo was refined on a production Next.js and NestJS monorepo. It ran the full delivery loop for months: tickets picked up, features built test-first, pull requests raised, reviews actioned, CI fixed, and dependencies maintained, with humans steering and machines enforcing quality.
 
 <p align="center">
   <a href="https://youtu.be/oxiBNyUlh7c" target="_blank" rel="noopener noreferrer">
@@ -14,113 +14,129 @@ Everything in this repo was developed and refined on a real production client pr
 
 ## Import into your repo
 
-Open Claude Code in the repo you want to standardise, and paste:
+Open your coding agent in the repo you want to standardise, and paste:
 
-```
+```text
 Import the agentic workflow standards from
-https://github.com/GavinGreenwood/agentic-workflow-template — read its ADOPT.md
+https://github.com/GavinGreenwood/agentic-workflow-template, read its ADOPT.md
 and follow it.
 ```
 
-The agent reads **[ADOPT.md](ADOPT.md)**, which is a playbook, not a copy script. It inspects your repo's actual stack (language, package manager, test runner, CI, tracker, branching model), maps every part of this template to your equivalents (dropping anything that has none), then **asks you the decisions that matter** — how strict the ticket rule is, coverage floor vs ratchet, mandatory vs recommended TDD, which quality layers and slash commands to bring, who owns CI — with a recommended default for each. Only after you approve the plan does it write anything. The goal is an adoption that fits _your_ repo, in _your_ language, not a TypeScript template pasted on top.
+The agent reads [ADOPT.md](ADOPT.md), inspects the target repo, maps the workflow to its real stack, asks only the decisions that matter, and waits for the plan to be accepted before changing files.
 
-Prefer to drive it yourself? Read [ADOPT.md](ADOPT.md) directly — it doubles as a manual checklist.
+## One source of truth
+
+- `AGENTS.md` is the shared agent contract.
+- `.agents/skills/` owns every workflow and reusable role.
+- `scripts/hooks/` owns the shared hook behaviour.
+- `.mcp.json` owns the Playwright MCP command used by Claude Code and GitHub Copilot CLI.
+- `.codex/config.toml` points Codex at the same Playwright package.
+
+Provider folders contain only the small adapters their runtimes require:
+
+| Runtime                             | Instructions                    | Skills                                     | Roles             | Hooks                   | Playwright                                        |
+| ----------------------------------- | ------------------------------- | ------------------------------------------ | ----------------- | ----------------------- | ------------------------------------------------- |
+| Claude Code                         | `CLAUDE.md` imports `AGENTS.md` | `.claude/skills` symlinks `.agents/skills` | `.claude/agents/` | `.claude/settings.json` | `.mcp.json`                                       |
+| Codex                               | `AGENTS.md`                     | `.agents/skills/`                          | `.codex/agents/`  | `.codex/hooks.json`     | `.codex/config.toml`                              |
+| GitHub Copilot CLI and coding agent | `AGENTS.md`                     | `.agents/skills/`                          | `.github/agents/` | `.github/hooks/`        | `.mcp.json` in CLI, built in for the coding agent |
+
+GitHub Copilot repository files belong in `.github`, not `.copilot`. GitHub.com Copilot Chat is outside this template's target, so there is no `.github/copilot-instructions.md`.
 
 ## The philosophy
 
-This workflow is built on the engineering philosophy from two Mark Ridley articles — read these first:
+The workflow follows two Mark Ridley articles:
 
-1. [**Augmented Engineering for Grown-Ups**](https://www.linkedin.com/pulse/augmented-engineering-grown-ups-mark-ridley-llkve/) — the learning loop, planning in git, deterministic quality gates, Swiss cheese defence, end-to-end traceability.
-2. [**Implementing Augmented Engineering**](https://mark-ridley.medium.com/implementing-augmented-engineering-d0ab1943082f) (Medium, member-only) — layered hooks (PreToolUse, PostToolUse, pre-commit, pre-push), CI pipeline structure, mutation testing, health checks.
+1. [Augmented Engineering for Grown-Ups](https://www.linkedin.com/pulse/augmented-engineering-grown-ups-mark-ridley-llkve/)
+2. [Implementing Augmented Engineering](https://mark-ridley.medium.com/implementing-augmented-engineering-d0ab1943082f)
 
-The core idea:
+The core idea is simple:
 
-> The guardrails (tests, standards, CI checks) give us confidence in the output.
-> Code review is spot-checking, not line-by-line. If something slips through, we tighten the system.
+> The guardrails, tests, standards, and CI checks give us confidence in the output. Code review is spot-checking. When something slips through, improve the system that should have caught it.
 
-The agent is fast and tireless but fallible. Instead of reviewing every line it writes, you build **layers of deterministic checks** — each imperfect, but together nearly impossible to slip through (the Swiss cheese model):
+The layers are:
 
+```text
+PreToolUse hook      blocks dangerous actions before they run
+PostToolUse hook     formats and lint-fixes files the agent touches
+Stop hook            reminds the agent to sync docs
+pre-commit hook      checks branches, staged files, and secrets
+pre-push hook        runs the local quality gates
+verify.sh            runs the full CI-equivalent suite
+CI pipeline          repeats deterministic gates on every push
+AI self-review       checks the pull request against eight lenses
+Human review         spot-checks the result
 ```
-PreToolUse hook      blocks catastrophic commands before they run
-PostToolUse hook     auto-formats + lint-fixes every file the agent touches
-Stop hook            reminds the agent to sync docs before ending a turn
-pre-commit hook      branch protection, lint-staged, secret detection
-pre-push hook        format, lint, typecheck, tests, schema/migration parity
-verify.sh            the full CI suite, runnable locally before any PR
-CI pipeline          the same gates, deterministically, on every push
-AI self-review       the agent reviews its own PR against 8 lenses
-Human review         spot-checking — the last slice, not the only one
-```
 
-And **end-to-end traceability**: every change starts from a ticket, the ticket ID is in the branch name and every commit, the PR links the ticket with test evidence and a rollback plan, and the ticket closes when the PR merges. Machine-enforced, not remembered.
+Every change starts from a ticket. The ticket ID appears in the branch and commits, the pull request links the ticket and includes proof, and the ticket closes when the pull request merges.
 
 ## What's inside
 
-```
-ADOPT.md                  Playbook an agent follows to import this into your repo
-CLAUDE.md                 The agent contract — rules, workflow, golden rules
-CONTRIBUTING.md           Branch, commit, and PR conventions
-.claude/
-  settings.json           Hook wiring (PreToolUse / PostToolUse / Stop)
-  commands/               Slash commands (Jira flavour — ticket lifecycle + PR workflow)
-  agents/morlock.md       Internal adversarial security agent
-  agents/advisor.md       On-demand strategic advisor (heavier model, no edits)
-  agents/worker.md        Cheap delegate for well-specified grunt work (lighter model)
-scripts/
-  verify.sh               Full verification suite — same checks as CI
-  hooks/                  The guardrail hook scripts
-.husky/                   pre-commit and pre-push quality gates
-.github/
-  pull_request_template.md
-docs/
-  philosophy.md           The engineering philosophy, expanded
-  development/            Engineering standards the agent codes against
-  adr/                    Architecture Decision Records (immutable)
+```text
+ADOPT.md                  Adoption playbook
+AGENTS.md                 Canonical agent contract
+CLAUDE.md                 One-line Claude import stub
+CONTRIBUTING.md           Branch, commit, and pull request conventions
+.agents/skills/           Canonical workflows and roles
+.claude/                  Claude adapters
+.codex/                   Codex adapters
+.github/agents/           GitHub Copilot role adapters
+.github/hooks/            GitHub Copilot hook adapter
+.mcp.json                 Shared Playwright MCP config
+scripts/verify.sh         Full verification suite
+scripts/hooks/            Shared guardrail implementation
+.husky/                   Git hooks
+docs/                     Philosophy, standards, architecture, and ADRs
 ```
 
-### The commands
+## User-invoked workflows
 
-| Command                         | What it does                                                                                              |
-| ------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| `/pickup <ticket-id>`           | Assign the ticket, read it fully, brief the work, create the branch, start PROGRESS.md                    |
-| `/refine <ticket-id>`           | Pre-implementation refinement: clarifying questions, ranked approaches, posted back to the ticket         |
-| `/briefing <ticket-id>`         | Read-only context build: the ticket, its comment trail, epic chain, and every PR raised against it        |
-| `/pr`                           | The full ship workflow: verify → commit → push → PR from template → AI self-review against 8 lenses       |
-| `/push`                         | Verify, commit, push — no PR                                                                              |
-| `/pr-action-review <pr>`        | Fetch every review comment, triage (auto-fix / discuss / informational), action them, merge when eligible |
-| `/pr-review-loop`               | Review all teammates' open PRs — respecting prior discussion, never re-raising pushed-back findings       |
-| `/pr-action-review-mine-loop`   | Action reviews on all of _your_ open PRs, looping until everything is merged or blocked                   |
-| `/qa-review-action <ticket-id>` | Classify QA feedback: genuine bug / intended behaviour / out of scope — fix or push back accordingly      |
-| `/morning`                      | Daily routine: main-branch health, nightly CI triage, Dependabot review                                   |
-| `/nightly-check`                | Triage scheduled CI runs: flake vs regression vs config vs infra                                          |
-| `/fix-cicd`                     | Read the failing CI logs on this branch, diagnose flake vs real, fix or re-run                            |
-| `/dependabot-review`            | Merge green minor/patch bumps, diagnose failing ones, escalate majors                                     |
-| `/capture`                      | Turn the current conversation into a tracked ticket + commit                                              |
-| `/main`                         | Safely return to main: checks uncommitted/unpushed work before deleting the branch                        |
-| `/sync`                         | Post-pull sync: missing env vars, install, generate, build                                                |
-| `/pr-chore`                     | Raise a small no-ticket chore PR from a worktree without touching your feature branch                     |
-| `/multi-repo`                   | Manage parallel development slots — several clones, isolated ports, one agent each                        |
-| `/bump-version`                 | Bump main's semver tag by one minor version and push it — a tag-only operation, no code change            |
-| `/log-time`                     | Log time to Tempo automatically, derived from git activity since your last logged entry                   |
+| Workflow                       | What it does                                                                  |
+| ------------------------------ | ----------------------------------------------------------------------------- |
+| `pickup <ticket-id>`           | Assign, read, brief, branch, and start `PROGRESS.md`                          |
+| `refine <ticket-id>`           | Resolve questions and compare approaches before implementation                |
+| `briefing <ticket-id>`         | Build read-only ticket, epic, comment, and pull request context               |
+| `pr`                           | Verify, commit, push, open a pull request, and self-review                    |
+| `push`                         | Verify, commit, and push without opening a pull request                       |
+| `pr-action-review <pr>`        | Triage and action every review, then merge when eligible                      |
+| `pr-review-loop`               | Review teammates' open pull requests                                          |
+| `pr-action-review-mine-loop`   | Action reviews across your open pull requests until each is merged or blocked |
+| `qa-review-action <ticket-id>` | Classify QA feedback, fix real bugs, and respond to the rest                  |
+| `morning`                      | Check main, nightly CI, and Dependabot                                        |
+| `nightly-check`                | Triage scheduled CI runs                                                      |
+| `fix-cicd`                     | Diagnose and fix failing CI on the current branch                             |
+| `dependabot-review`            | Merge safe updates and diagnose or escalate the rest                          |
+| `capture`                      | Turn the current conversation into a ticket and commit                        |
+| `main`                         | Return safely to an up-to-date main branch                                    |
+| `sync`                         | Check environment keys, install dependencies, and build                       |
+| `pr-chore`                     | Raise a no-ticket chore pull request in a separate worktree                   |
+| `multi-repo`                   | Manage isolated clones for parallel work                                      |
+| `bump-version`                 | Bump and push main's minor version tag                                        |
+| `log-time`                     | Record unlogged Git work in Tempo                                             |
 
-These commands use the **Jira REST API** directly (no MCP server required). Ticket lifecycle commands keep the Jira board in sync: `/capture` files into **Backlog**, `/pickup` moves to **In Progress**, `/pr` to **In Review**, and `/pr-action-review` to **Done** on merge. Configure via `.env` — see CONTRIBUTING.md § Jira setup.
+The 20 workflows above are manual-only. Claude Code and GitHub Copilot CLI use the shared `disable-model-invocation: true` frontmatter. Codex uses `allow_implicit_invocation: false` in each workflow's `agents/openai.yaml`. Their descriptions also say user-invoked only. `assign-epic` and `run` remain available to agents because the workflow calls them automatically.
+
+Use the runtime's skill interface to invoke a workflow:
+
+- Claude Code: `/pickup PROJ-1`
+- Codex: `$pickup PROJ-1`
+- GitHub Copilot CLI: `/pickup PROJ-1`
+
+The Jira workflows use the Jira REST API directly. Configure them through `.env`; see the Jira setup in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Quickstart
 
-1. **Use this template** (GitHub → "Use this template") or copy `.claude/`, `scripts/`, `.husky/`, `CLAUDE.md` into your existing repo.
-2. **Authenticate the GitHub CLI** — run `gh auth login`. The commands use `gh` for PRs and CI; Jira tickets are handled via the REST API, not the CLI.
-3. Edit `CLAUDE.md`: fill in your project overview, repo map, and stack-specific rules. Delete what doesn't apply — the contract only works if it's true.
-4. Wire your package scripts: the gates expect `npm run lint`, `typecheck`, `test`, `build` (and optionally `format:check`, `test:integration`). Adjust `scripts/verify.sh` and `.husky/*` to match your stack.
-5. **Configure Jira** — copy `.env.example` to `.env` and set `JIRA_BASE_URL`, `JIRA_EMAIL`, `JIRA_API_TOKEN`, `JIRA_ACCOUNT_ID`, and `JIRA_PROJECT_KEY`. These are config, not secrets — `.env.example` documents them and your real `.env` stays uncommitted.
-6. Create a well-written Jira ticket (acceptance criteria included — the agent implements exactly what the ticket says).
-7. Open Claude Code and type `/pickup PROJ-1`.
+1. Use this GitHub template, or follow [ADOPT.md](ADOPT.md) to fit it to an existing repo.
+2. Run `gh auth login`.
+3. Edit `AGENTS.md` for the real project. Leave `CLAUDE.md` as `@AGENTS.md`.
+4. Adjust `scripts/verify.sh` and `.husky/*` to match the stack.
+5. Copy `.env.example` to `.env` and set the Jira values if you use Jira.
+6. Confirm the `playwright` MCP server is connected in the chosen runtime.
+7. Create a ticket and invoke `pickup`.
 
-## Adapting it
-
-Different tracker, CI, or stack? That's exactly what **[ADOPT.md](ADOPT.md)** handles — it maps every part of this template (the Jira `curl` calls, the `gh run` CI commands, the npm scripts and Prisma migration check) to your equivalents and drops anything with none. Point an agent at it, or work through it yourself as a checklist.
+Different tracker, CI provider, or stack? [ADOPT.md](ADOPT.md) maps the intent to the target repo and drops anything that has no real equivalent.
 
 ## Licence
 
-MIT — take it, adapt it, ship with it.
+MIT. Take it, adapt it, and ship with it.
 
-Built by [Gavin Greenwood](https://github.com/GavinGreenwood). If you adapt this into your own repo and land a general improvement to the workflow itself, [PRs back to this repo](https://github.com/GavinGreenwood/agentic-workflow-template) are welcome — everyone downstream benefits.
+Built by [Gavin Greenwood](https://github.com/GavinGreenwood). General improvements are welcome as [pull requests](https://github.com/GavinGreenwood/agentic-workflow-template).

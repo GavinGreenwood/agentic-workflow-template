@@ -2,7 +2,7 @@
 
 ## Required Reading
 
-Before picking up your first ticket, read these. They explain the engineering philosophy behind how this project is built and how we work with Claude Code.
+Before picking up your first ticket, read these. They explain the engineering philosophy behind how this project is built and how we work with coding agents.
 
 | Resource                                                                                                                                   | What it covers                                                                                                        |
 | ------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------- |
@@ -13,13 +13,25 @@ Before picking up your first ticket, read these. They explain the engineering ph
 
 - Node.js (see `.nvmrc` for version)
 
-## Claude Code Setup
+## Coding agent setup
 
-This repo uses Claude Code as the primary development agent. Install it and configure the Jira integration before picking up tickets.
+Use Claude Code, Codex, or GitHub Copilot CLI. All three read `AGENTS.md` and the canonical skills in `.agents/skills/` through their repository adapters.
 
-### Install Claude Code
+Install the runtime you intend to use from its current vendor documentation. Then confirm its repository configuration:
 
-Follow the installation instructions at [claude.ai/code](https://claude.ai/code).
+- Claude Code: `CLAUDE.md` imports `AGENTS.md`, and `.claude/skills` resolves to `.agents/skills`.
+- Codex: `.codex/config.toml`, `.codex/hooks.json`, and `.codex/agents/` are detected.
+- GitHub Copilot CLI: `.github/hooks/`, `.github/agents/`, and `.agents/skills/` are detected. Do not create a repo `.copilot` folder.
+
+Confirm that the `playwright` MCP server is available before visual work. Claude Code and Copilot CLI use `.mcp.json`; Codex uses `.codex/config.toml`; GitHub Copilot coding agent provides Playwright in its hosted environment.
+
+GitHub Copilot CLI keeps repository hooks and workspace MCP servers off in an untrusted non-interactive `-p` session. Opt into both for that process when the folder has not already been trusted:
+
+```bash
+GITHUB_COPILOT_PROMPT_MODE_REPO_HOOKS=true \
+GITHUB_COPILOT_PROMPT_MODE_WORKSPACE_MCP=true \
+copilot -p "your prompt"
+```
 
 ### Environment variables
 
@@ -40,13 +52,11 @@ The required variables and how to find them are documented inline in `.env.examp
 
 ### Starting a ticket
 
-```
-/pickup PROJ-42
-```
+Invoke the `pickup` skill with `PROJ-42`. Claude Code and GitHub Copilot CLI use `/pickup PROJ-42`; Codex uses `$pickup PROJ-42`.
 
-Claude reads the ticket, creates the branch, implements the work, runs verification, and raises the PR.
+The agent reads the ticket, creates the branch, implements the work, runs verification, and raises the PR.
 
-> **Important:** Make sure the ticket is complete before pointing Claude at it — acceptance criteria defined, relevant designs linked, scope agreed. Claude implements exactly what the ticket says.
+> **Important:** Make sure the ticket is complete before starting. Define the acceptance criteria, link relevant designs, and agree the scope. The agent implements exactly what the ticket says.
 
 ## Installation
 

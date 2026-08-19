@@ -37,7 +37,7 @@ jobs:
       - name: Read Morlock persona
         id: persona
         run: |
-          persona=$(cat .claude/agents/morlock.md)
+          persona=$(cat .agents/skills/morlock/SKILL.md)
           echo "content<<EOF" >> $GITHUB_OUTPUT
           echo "$persona" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT

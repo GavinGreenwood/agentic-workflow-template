@@ -71,16 +71,16 @@ export class SeedService implements OnModuleInit {
 
     // ── Objective 2 ────────────────────────────────────────────────────────
     const masterWorkflows = this.objectives.create({
-      title: "Master agentic development with Claude Code",
+      title: "Master agentic development",
       description:
-        "Become fluent in the full workflow loop: pickup → branch → code → gates → PR → merge, using Claude as the primary development agent.",
+        "Become fluent in the full workflow loop: pickup → branch → code → gates → PR → merge, using the configured coding agent.",
       ownerId: "demo-user",
       cycleId: "2026-Q2",
     });
 
     const commands = this.keyResults.create({
       objectiveId: masterWorkflows.id,
-      title: "Core slash commands in daily use",
+      title: "Core agent workflows in daily use",
       unit: "number",
       startValue: 0,
       targetValue: 10,
@@ -182,7 +182,7 @@ export class SeedService implements OnModuleInit {
     this.checkIns.create({
       keyResultId: onboarding.id,
       value: 60,
-      note: "CLAUDE.md and CONTRIBUTING.md drafted.",
+      note: "AGENTS.md and CONTRIBUTING.md drafted.",
     });
     this.checkIns.create({
       keyResultId: onboarding.id,

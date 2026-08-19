@@ -5,20 +5,32 @@
 
 set -euo pipefail
 
-# Read tool input from stdin
+# Read tool input from stdin and normalise provider-specific path fields.
 INPUT=$(cat)
-FILE_PATH=$(echo "$INPUT" | node -e "const d=[];process.stdin.on('data',c=>d.push(c));process.stdin.on('end',()=>{try{const j=JSON.parse(Buffer.concat(d));process.stdout.write(j.tool_input?.file_path||'')}catch{}})" 2>/dev/null || echo "")
+while IFS= read -r FILE_PATH; do
+  [ -z "$FILE_PATH" ] && continue
+  [ ! -f "$FILE_PATH" ] && continue
 
-if [ -z "$FILE_PATH" ] || [ ! -f "$FILE_PATH" ]; then
-  exit 0
-fi
+  if [[ "$FILE_PATH" =~ \.(ts|tsx|js|jsx|json|md|css|yml|yaml|html)$ ]]; then
+    npx prettier --write -- "$FILE_PATH" 2>/dev/null || true
+  fi
 
-# Format all supported file types with Prettier
-if [[ "$FILE_PATH" =~ \.(ts|tsx|js|jsx|json|md|css|yml|yaml|html)$ ]]; then
-  npx prettier --write "$FILE_PATH" 2>/dev/null || true
-fi
-
-# Additionally run ESLint with auto-fix on code files
-if [[ "$FILE_PATH" =~ \.(ts|tsx|js|jsx)$ ]]; then
-  npx eslint --fix "$FILE_PATH" 2>/dev/null || true
-fi
+  if [[ "$FILE_PATH" =~ \.(ts|tsx|js|jsx)$ ]]; then
+    npx eslint --fix -- "$FILE_PATH" 2>/dev/null || true
+  fi
+done < <(printf '%s' "$INPUT" | node -e '
+  const chunks = [];
+  process.stdin.on("data", chunk => chunks.push(chunk));
+  process.stdin.on("end", () => {
+    try {
+      const payload = JSON.parse(Buffer.concat(chunks));
+      const input = payload.tool_input || payload.toolInput || payload.toolArgs || {};
+      const directPath = input.file_path || input.filePath || input.path;
+      if (directPath) process.stdout.write(`${directPath}\n`);
+      const patch = input.command || input.patch || "";
+      for (const match of patch.matchAll(/^\*\*\* (?:Add|Update|Delete) File: (.+)$/gm)) {
+        process.stdout.write(`${match[1].trim()}\n`);
+      }
+    } catch {}
+  });
+' 2>/dev/null || true)

@@ -1,10 +1,8 @@
 #!/usr/bin/env node
 /**
- * PreToolUse hook — deterministic pattern matching to block catastrophic actions.
+ * Shared PreToolUse policy for Claude Code, Codex, and GitHub Copilot.
  *
- * No LLM judgement. Just regex against known dangerous patterns.
- * Receives JSON on stdin with tool_name and tool_input.
- * Outputs JSON with decision: "approve", "block", or "ask" (requires user confirmation).
+ * Usage: node scripts/hooks/pre-tool-use.js <claude|codex|copilot>
  */
 
 function checkBashCommand(command) {
@@ -108,6 +106,40 @@ function checkWriteOrEdit(filePath) {
   return null;
 }
 
+function patchPaths(toolInput) {
+  const patch = toolInput.command || toolInput.patch || "";
+  return [...patch.matchAll(/^\*\*\* (?:Add|Update|Delete) File: (.+)$/gm)].map(
+    ([, filePath]) => filePath.trim(),
+  );
+}
+
+function formatDecision(runtime, result) {
+  const requestedDecision = result.decision === "block" ? "deny" : "ask";
+  const decision =
+    runtime === "codex" && requestedDecision === "ask"
+      ? "deny"
+      : requestedDecision;
+  const reason =
+    runtime === "codex" && requestedDecision === "ask"
+      ? `${result.reason} Codex project hooks cannot pause for confirmation, so this run is blocked.`
+      : result.reason;
+
+  if (runtime === "copilot") {
+    return {
+      permissionDecision: decision,
+      permissionDecisionReason: reason,
+    };
+  }
+
+  return {
+    hookSpecificOutput: {
+      hookEventName: "PreToolUse",
+      permissionDecision: decision,
+      permissionDecisionReason: reason,
+    },
+  };
+}
+
 function main() {
   let inputData = "";
 
@@ -124,19 +156,33 @@ function main() {
       process.exit(0);
     }
 
-    const toolName = parsed.tool_name || "";
-    const toolInput = parsed.tool_input || {};
+    const runtime = process.argv[2] || "claude";
+    const toolName = parsed.tool_name || parsed.toolName || "";
+    const toolInput =
+      parsed.tool_input || parsed.toolInput || parsed.toolArgs || {};
+    const normalisedToolName = toolName.toLowerCase();
 
     let result = null;
 
-    if (toolName === "Bash") {
-      result = checkBashCommand(toolInput.command || "");
-    } else if (toolName === "Write" || toolName === "Edit") {
-      result = checkWriteOrEdit(toolInput.file_path || "");
+    if (
+      ["bash", "shell", "execute", "exec_command", "run_in_terminal"].includes(
+        normalisedToolName,
+      )
+    ) {
+      result = checkBashCommand(toolInput.command || toolInput.cmd || "");
+    } else if (["write", "edit", "create"].includes(normalisedToolName)) {
+      result = checkWriteOrEdit(
+        toolInput.file_path || toolInput.filePath || toolInput.path || "",
+      );
+    } else if (normalisedToolName === "apply_patch") {
+      for (const filePath of patchPaths(toolInput)) {
+        result = checkWriteOrEdit(filePath);
+        if (result) break;
+      }
     }
 
     if (result) {
-      process.stdout.write(JSON.stringify(result));
+      process.stdout.write(JSON.stringify(formatDecision(runtime, result)));
     }
     // No output = approve (implicit)
   });

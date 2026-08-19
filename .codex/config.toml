@@ -1,0 +1,7 @@
+[features]
+hooks = true
+
+[mcp_servers.playwright]
+command = "npx"
+args = ["-y", "@playwright/mcp@latest"]
+required = true

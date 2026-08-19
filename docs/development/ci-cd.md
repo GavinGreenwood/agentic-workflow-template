@@ -34,13 +34,13 @@ push / PR
 
 ## Workflows
 
-| File                                     | Trigger                                 | Purpose                  |
-| ---------------------------------------- | --------------------------------------- | ------------------------ |
-| `.github/workflows/ci.yml`               | PR, push to `main`, `workflow_dispatch` | Full pipeline            |
-| `.github/workflows/security.yml`         | `workflow_call`, `workflow_dispatch`    | Reusable security job    |
-| `.github/workflows/nightly-security.yml` | Daily 06:00 UTC                         | Calls `security.yml`     |
-| `.github/workflows/nightly-mutation.yml` | Weekdays 02:00 UTC                      | Stryker mutation testing |
-| `.github/workflows/morlock.yml`          | Nightly 01:00 UTC                       | Claude security probe    |
+| File                                     | Trigger                                 | Purpose                     |
+| ---------------------------------------- | --------------------------------------- | --------------------------- |
+| `.github/workflows/ci.yml`               | PR, push to `main`, `workflow_dispatch` | Full pipeline               |
+| `.github/workflows/security.yml`         | `workflow_call`, `workflow_dispatch`    | Reusable security job       |
+| `.github/workflows/nightly-security.yml` | Daily 06:00 UTC                         | Calls `security.yml`        |
+| `.github/workflows/nightly-mutation.yml` | Weekdays 02:00 UTC                      | Stryker mutation testing    |
+| `.github/workflows/morlock.yml`          | Manual; nightly schedule currently off  | Claude-backed Morlock probe |
 
 ## Versioning
 
@@ -121,14 +121,16 @@ Trivy runs separately per image in Stage 5 with two passes: blocking on fixable 
 ## ADR sync check
 
 `adr-sync` (Stage 1) runs `scripts/check-adr-sync.sh`, which fails the build if a diff touches
-`docs/adr/*.md` without also touching `docs/architecture/*.md` in the same diff — see CLAUDE.md §
+`docs/adr/*.md` without also touching `docs/architecture/*.md` in the same diff — see AGENTS.md §
 ADR reading policy. It no-ops until `docs/architecture/` exists. Skip it for a specific ADR with no
 current-state doc to update by adding `[skip-adr-sync: reason]` to a commit message on the branch.
 
 ## Morlock
 
-`morlock.yml` runs nightly at 01:00 UTC. It invokes the Claude Code action seeded with the Morlock
-security-probe persona (`.claude/agents/morlock.md`). The agent:
+`morlock.yml` is the existing Claude-backed scheduled adapter for the provider-neutral Morlock role.
+Its schedule is currently disabled, so it runs only through manual dispatch. It seeds the Claude Code
+action from `.agents/skills/morlock/SKILL.md`. The same role is available interactively through the
+Claude, Codex, and GitHub Copilot role adapters. The scheduled job:
 
 1. Reads and analyses the codebase for security weaknesses.
 2. Writes proving tests under `apps/api/integration/security/`.

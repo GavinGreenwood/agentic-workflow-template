@@ -9,7 +9,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node scripts/hooks/pre-tool-use.js"
+            "command": "node scripts/hooks/pre-tool-use.js claude"
           }
         ]
       },
@@ -18,7 +18,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node scripts/hooks/pre-tool-use.js"
+            "command": "node scripts/hooks/pre-tool-use.js claude"
           }
         ]
       },
@@ -27,7 +27,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node scripts/hooks/pre-tool-use.js"
+            "command": "node scripts/hooks/pre-tool-use.js claude"
           }
         ]
       }
