@@ -7,7 +7,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node scripts/hooks/pre-tool-use.js copilot"
+            "command": "node scripts/hooks/pre-tool-use.js copilot",
+            "cwd": "."
           }
         ]
       }
@@ -17,7 +18,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash scripts/hooks/stop-docs-sync.sh"
+            "command": "bash scripts/hooks/stop-docs-sync.sh copilot",
+            "cwd": "."
           }
         ]
       }
@@ -28,7 +30,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash scripts/hooks/post-tool-use.sh"
+            "command": "bash scripts/hooks/post-tool-use.sh",
+            "cwd": "."
           }
         ]
       }

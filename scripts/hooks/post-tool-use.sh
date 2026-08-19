@@ -30,7 +30,7 @@ done < <(printf '%s' "$INPUT" | node -e '
       const directPath = input.file_path || input.filePath || input.path;
       if (directPath) process.stdout.write(`${directPath}\n`);
       const patch = input.command || input.patch || "";
-      for (const match of patch.matchAll(/^\*\*\* (?:Add|Update|Delete) File: (.+)$/gm)) {
+      for (const match of patch.matchAll(/^\*\*\* (?:(?:Add|Update|Delete) File|Move to): (.+)$/gm)) {
         process.stdout.write(`${match[1].trim()}\n`);
       }
     } catch {}

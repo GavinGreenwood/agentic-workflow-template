@@ -195,7 +195,7 @@ Slots ready:
 Next steps for each slot:
   1. Open the slot directory in your editor.
   2. docker compose up -d && npm run dev
-  3. /pickup <TICKET-ID>  (to pick up a Jira ticket and create the feature branch)
+  3. Invoke the `pickup` skill for `<TICKET-ID>` to pick up a Jira ticket and create the feature branch.
 ```
 
 ---

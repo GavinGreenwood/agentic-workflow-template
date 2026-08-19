@@ -76,7 +76,7 @@ Before navigating, confirm that the current runtime exposes tools from the `play
 - Codex uses `.codex/config.toml`.
 - GitHub Copilot coding agent provides its built-in Playwright MCP server.
 
-If the server is disconnected, unapproved, or missing, stop and report that exact setup problem. Do not use another browser tool as a fallback.
+If the server is disconnected, unapproved, or missing, report that exact setup problem before continuing.
 
 ---
 

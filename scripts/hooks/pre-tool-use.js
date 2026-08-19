@@ -111,9 +111,11 @@ function checkWriteOrEdit(filePath) {
 
 function patchPaths(toolInput) {
   const patch = toolInput.command || toolInput.patch || "";
-  return [...patch.matchAll(/^\*\*\* (?:Add|Update|Delete) File: (.+)$/gm)].map(
-    ([, filePath]) => filePath.trim(),
-  );
+  return [
+    ...patch.matchAll(
+      /^\*\*\* (?:(?:Add|Update|Delete) File|Move to): (.+)$/gm,
+    ),
+  ].map(([, filePath]) => filePath.trim());
 }
 
 function formatDecision(runtime, result) {

@@ -31,7 +31,7 @@ finished Phase 2 and the human has approved the plan in Phase 3.**
    - `.agents/skills/` — the canonical workflow loop and reusable roles
    - `.claude/agents/`, `.codex/agents/`, and `.github/agents/` — thin role adapters
    - `.mcp.json` and `.codex/config.toml` — Playwright MCP configuration
-   - `README.md` § "User-invoked workflows" — a one-line summary of each workflow
+   - `README.md` § "The skills" — a one-line summary of each workflow
 
 2. **Read the target repo** (the one you are running in). Do not assume —
    inspect. Establish, with evidence from actual files:
@@ -127,10 +127,11 @@ different strictness).
    `pr-action-review`, review loops…) or a minimal subset? Recommended: the
    full loop because the skills define the workflow. They live once in the
    target repo's `.agents/skills/`, with the Jira and CI calls rewritten for
-   the target's tools. Keep command-origin skills user-only with Claude's
-   `disable-model-invocation: true`, Codex's
-   `policy.allow_implicit_invocation: false`, and the same rule in each skill
-   description for Copilot.
+   the target's tools. Keep command-origin skills user-only with the shared
+   `disable-model-invocation: true` field for Claude Code and Copilot CLI,
+   Codex's `policy.allow_implicit_invocation: false`, and the `User-invoked
+only.` description plus `AGENTS.md` routing rule for the Copilot coding
+   agent.
 
 9. **Hook framework + secret scanning.**
    Pick the target ecosystem's standard hook manager (pre-commit for Python,

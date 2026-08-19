@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node scripts/hooks/pre-tool-use.js codex"
+            "command": "unset $(git rev-parse --local-env-vars); node \"$(git rev-parse --show-toplevel)/scripts/hooks/pre-tool-use.js\" codex"
           }
         ]
       }
@@ -16,7 +16,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash scripts/hooks/stop-docs-sync.sh"
+            "command": "unset $(git rev-parse --local-env-vars); bash \"$(git rev-parse --show-toplevel)/scripts/hooks/stop-docs-sync.sh\""
           }
         ]
       }
@@ -27,7 +27,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash scripts/hooks/post-tool-use.sh"
+            "command": "unset $(git rev-parse --local-env-vars); bash \"$(git rev-parse --show-toplevel)/scripts/hooks/post-tool-use.sh\""
           }
         ]
       }

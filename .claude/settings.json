@@ -9,7 +9,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node scripts/hooks/pre-tool-use.js claude"
+            "command": "node",
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/scripts/hooks/pre-tool-use.js",
+              "claude"
+            ]
           }
         ]
       },
@@ -18,7 +22,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node scripts/hooks/pre-tool-use.js claude"
+            "command": "node",
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/scripts/hooks/pre-tool-use.js",
+              "claude"
+            ]
           }
         ]
       },
@@ -27,7 +35,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node scripts/hooks/pre-tool-use.js claude"
+            "command": "node",
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/scripts/hooks/pre-tool-use.js",
+              "claude"
+            ]
           }
         ]
       }
@@ -37,7 +49,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash scripts/hooks/stop-docs-sync.sh"
+            "command": "bash",
+            "args": ["${CLAUDE_PROJECT_DIR}/scripts/hooks/stop-docs-sync.sh"]
           }
         ]
       }
@@ -48,7 +61,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash scripts/hooks/post-tool-use.sh"
+            "command": "bash",
+            "args": ["${CLAUDE_PROJECT_DIR}/scripts/hooks/post-tool-use.sh"]
           }
         ]
       },
@@ -57,7 +71,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash scripts/hooks/post-tool-use.sh"
+            "command": "bash",
+            "args": ["${CLAUDE_PROJECT_DIR}/scripts/hooks/post-tool-use.sh"]
           }
         ]
       }

@@ -34,7 +34,7 @@ Proposal -> Plan -> Tickets -> Branch -> Code -> Gates -> Deploy -> Monitor -> T
 - The active coding agent can pick up tickets from the backlog and execute them with the `pickup` skill for `PROJ-1`.
 - Fast feedback loops (tests, lint, typecheck) catch problems early.
 - CI pipeline and repo hooks act as deterministic guardrails.
-- The active coding agent must browse, test, and verify the running app through the Playwright MCP server as part of the build experience.
+- The active coding agent should browse, test, and verify the running app as part of the build experience (e.g. via the Playwright MCP server), not just write code blindly.
 
 The Jira board mirrors this loop, and keeping it in sync is **required, not optional**. Tickets move forward through four statuses — **Backlog** (`capture`) → **In Progress** (`pickup`) → **In Review** (`pr`) → **Done** (`pr-action-review` on merge).
 
@@ -44,7 +44,7 @@ The Jira board mirrors this loop, and keeping it in sync is **required, not opti
 
 ## MCP Servers
 
-`.mcp.json` configures the shared `playwright` MCP server (`@playwright/mcp`) for Claude Code and GitHub Copilot CLI. `.codex/config.toml` configures the same server for Codex. The `run` skill in `.agents/skills/run/SKILL.md` owns browser verification. Playwright is required. If it is unavailable, stop and report the runtime-specific setup problem instead of using another browser tool.
+`.mcp.json` configures the shared `playwright` MCP server (`@playwright/mcp`) for Claude Code and GitHub Copilot CLI. `.codex/config.toml` configures the same server for Codex. The `run` skill in `.agents/skills/run/SKILL.md` owns browser verification and uses Playwright to browse, click through, and screenshot the running app when it is available. Add further MCP servers to these shared runtime configurations as the project grows (e.g. a design-source server for Figma/Storybook, a CI-status server).
 
 ## Required Context — Read Before Every Task
 
