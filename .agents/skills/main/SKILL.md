@@ -2,16 +2,18 @@
 name: main
 description: "User-invoked only. Switch to main and pull latest. If on a feature branch, checks for uncommitted changes and whether the branch was pushed before deleting it."
 disable-model-invocation: true
-allowed-tools: Bash(git status:*), Bash(git branch:*), Bash(git checkout:*), Bash(git switch:*), Bash(git pull:*), Bash(git log:*), Bash(git rev-parse:*)
+allowed-tools: Bash(echo:*), Bash(git status:*), Bash(git branch:*), Bash(git checkout:*), Bash(git switch:*), Bash(git pull:*), Bash(git log:*), Bash(git rev-parse:*)
 ---
 
-## Context
+## Step 0 — Context (required first)
 
-Run these probes before continuing:
+Run this before anything else, and do not act on any later step until you have its output. If a probe fails, stop and tell the user. Never assume these values.
 
-- Current branch: run `git branch --show-current`
-- Git status (uncommitted changes): run `git status --porcelain`
-- Branches and their remote tracking status: run `git branch -v`
+```bash
+echo "Current branch: $(git branch --show-current)"
+echo "Git status (uncommitted changes):"; git status --porcelain
+echo "Branches and their remote tracking status:"; git branch -v
+```
 
 ## Your Task
 

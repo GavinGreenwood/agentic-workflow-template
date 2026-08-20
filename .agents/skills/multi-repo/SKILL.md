@@ -2,21 +2,27 @@
 name: multi-repo
 description: "User-invoked only. Manage parallel development slots — multiple independent clones of this repo, each on its own ports, so several agents can work different issues simultaneously. Modes — setup: one-time clone setup; status: slot health + Jira ticket status; free: reset a slot to main when its ticket is in QA/Done; sync: propagate .env changes across slots without overwriting port config."
 disable-model-invocation: true
-allowed-tools: Bash(git:*), Bash(lsof:*), Bash(curl:*), Bash(docker:*), Bash(npm install:*), Bash(npm run:*), Bash(openssl rand:*), Bash(cp:*), Bash(grep:*), Bash(ls:*), Bash(find:*), Bash(sed:*), Bash(node:*), Bash(jq:*), Bash(dirname:*), Bash(basename:*), Bash(pwd:*), Bash(test:*), Bash(printf:*), Bash(source:*), Bash(ps:*)
+allowed-tools: Bash(echo:*), Bash(git:*), Bash(lsof:*), Bash(curl:*), Bash(docker:*), Bash(npm install:*), Bash(npm run:*), Bash(openssl rand:*), Bash(cp:*), Bash(grep:*), Bash(ls:*), Bash(find:*), Bash(sed:*), Bash(node:*), Bash(jq:*), Bash(dirname:*), Bash(basename:*), Bash(pwd:*), Bash(test:*), Bash(printf:*), Bash(source:*), Bash(ps:*)
 ---
 
-## Context
+## Step 0 — Context (required first)
 
-Run every probe before choosing a mode:
+Run this before choosing a mode, and do not act on any mode until you have its output. If a probe fails, stop and tell the user. Never assume these values.
 
-- Current directory: run `pwd`
-- Parent (slot root): run `dirname "$(pwd)"`
-- Slot 3400 — exists/branch: run `d="$(dirname "$(pwd)")/$(basename "$(pwd)")-3400"; if [ -d "$d" ]; then b=$(git -C "$d" branch --show-current 2>/dev/null); [ -n "$b" ] && echo "$b" || echo "(detached)"; else echo "(slot not found)"; fi`
-- Slot 3410 — exists/branch: run `d="$(dirname "$(pwd)")/$(basename "$(pwd)")-3410"; if [ -d "$d" ]; then b=$(git -C "$d" branch --show-current 2>/dev/null); [ -n "$b" ] && echo "$b" || echo "(detached)"; else echo "(slot not found)"; fi`
-- Slot 3420 — exists/branch: run `d="$(dirname "$(pwd)")/$(basename "$(pwd)")-3420"; if [ -d "$d" ]; then b=$(git -C "$d" branch --show-current 2>/dev/null); [ -n "$b" ] && echo "$b" || echo "(detached)"; else echo "(slot not found)"; fi`
-- Port status (web/api/db/redis for all slots): run `for p in 3400 3401 3410 3411 3420 3421 15432 15433 15434 16379 16380 16381; do pid=$(lsof -ti :"$p" 2>/dev/null | head -1); if [ -n "$pid" ]; then cmd=$(ps -p "$pid" -o comm= 2>/dev/null || echo "?"); printf ":%s IN USE pid=%s (%s)\n" "$p" "$pid" "$cmd"; else printf ":%s free\n" "$p"; fi; done`
-- Jira credentials present: run `if [ -f .env ]; then ( grep -q "^JIRA_BASE_URL=https" .env && grep -q "^JIRA_EMAIL=." .env && grep -q "^JIRA_API_TOKEN=." .env ) && echo "yes" || echo "no — one or more of JIRA_BASE_URL/JIRA_EMAIL/JIRA_API_TOKEN missing in .env"; else echo "no — no .env found in current directory"; fi`
-- Docker running: run `docker info >/dev/null 2>&1 && echo "yes" || echo "no — Docker not available"`
+```bash
+echo "Current directory: $(pwd)"
+echo "Parent (slot root): $(dirname "$(pwd)")"
+for slot in 3400 3410 3420; do
+  d="$(dirname "$(pwd)")/$(basename "$(pwd)")-$slot"
+  if [ -d "$d" ]; then b=$(git -C "$d" branch --show-current 2>/dev/null); printf 'Slot %s — branch: %s\n' "$slot" "${b:-(detached)}"; else printf 'Slot %s — (slot not found)\n' "$slot"; fi
+done
+echo "Port status (web/api/db/redis for all slots):"
+for p in 3400 3401 3410 3411 3420 3421 15432 15433 15434 16379 16380 16381; do pid=$(lsof -ti :"$p" 2>/dev/null | head -1); if [ -n "$pid" ]; then cmd=$(ps -p "$pid" -o comm= 2>/dev/null || echo "?"); printf ":%s IN USE pid=%s (%s)\n" "$p" "$pid" "$cmd"; else printf ":%s free\n" "$p"; fi; done
+printf 'Jira credentials present: '
+if [ -f .env ]; then ( grep -q "^JIRA_BASE_URL=https" .env && grep -q "^JIRA_EMAIL=." .env && grep -q "^JIRA_API_TOKEN=." .env ) && echo "yes" || echo "no — one or more of JIRA_BASE_URL/JIRA_EMAIL/JIRA_API_TOKEN missing in .env"; else echo "no — no .env found in current directory"; fi
+printf 'Docker running: '
+docker info >/dev/null 2>&1 && echo "yes" || echo "no — Docker not available"
+```
 
 ## Helpers
 

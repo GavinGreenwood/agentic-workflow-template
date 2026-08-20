@@ -2,16 +2,18 @@
 name: bump-version
 description: "User-invoked only. Bump main's semver tag by one minor version and push the new tag."
 disable-model-invocation: true
-allowed-tools: Bash(git status:*), Bash(git branch:*), Bash(git checkout:*), Bash(git pull:*), Bash(git fetch:*), Bash(git tag:*), Bash(git push:*), Bash(git log:*), Bash(grep:*), Bash(sort:*), Bash(tail:*)
+allowed-tools: Bash(echo:*), Bash(git status:*), Bash(git branch:*), Bash(git checkout:*), Bash(git pull:*), Bash(git fetch:*), Bash(git tag:*), Bash(git push:*), Bash(git log:*), Bash(grep:*), Bash(sort:*), Bash(tail:*)
 ---
 
-## Context
+## Step 0 — Context (required first)
 
-Run these probes before continuing:
+Run this before anything else, and do not act on any later step until you have its output. If a probe fails, stop and tell the user. Never assume these values.
 
-- Current branch: run `git branch --show-current`
-- Uncommitted changes: run `git status --porcelain`
-- Latest semver tags reachable from main: run `git tag --list --merged main | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -5`
+```bash
+echo "Current branch: $(git branch --show-current)"
+echo "Uncommitted changes:"; git status --porcelain
+echo "Latest semver tags reachable from main:"; git tag --list --merged main | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -5
+```
 
 ## Your Task
 
