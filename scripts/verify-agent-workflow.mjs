@@ -357,9 +357,13 @@ const shellKeywords = new Set([
 ]);
 for (const name of [...manualSkills, ...automaticSkills]) {
   const markdown = read(`.agents/skills/${name}/SKILL.md`);
-  const step0 = markdown.match(
-    /## Step 0 — Context \(required first\)[\s\S]*?```bash\n([\s\S]*?)```/,
+  // Bound the match to the section: an unbounded scan reaches past the heading
+  // and attributes a later step's block to Step 0.
+  const section = markdown.match(
+    /## Step 0 — Context \(required first\)([\s\S]*?)(?=\n## |$)/,
   );
+  if (!section) continue;
+  const step0 = section[1].match(/```bash\n([\s\S]*?)```/);
   if (!step0) continue;
   const allowed = new Set(
     [
