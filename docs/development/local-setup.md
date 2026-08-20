@@ -12,6 +12,40 @@ Before picking up your first ticket, read these. They explain the engineering ph
 ## Prerequisites
 
 - Node.js (see `.nvmrc` for version)
+- Bash — the hooks in `scripts/hooks/` and the parity check shell out to it. On Windows, Git Bash (bundled with Git for Windows) is sufficient.
+- On Windows only: symlink support enabled, so `.claude/skills` materialises as a link. See below.
+
+### Windows: the `.claude/skills` link
+
+`.claude/skills` is committed as a symlink to the canonical `.agents/skills` tree. Git on Windows defaults to `core.symlinks=false`, and in that state checkout writes a **17-byte text file** containing the link target instead of a link. Claude Code then finds **zero skills**, and `npm run verify:agents` fails with `.claude/skills must be a link to .agents/skills`.
+
+Enable symlinks before cloning, or re-materialise the path afterwards:
+
+```bash
+# Requires Windows Developer Mode (Settings -> Privacy & security -> For developers)
+git config core.symlinks true
+rm -f .claude/skills && git checkout -- .claude/skills
+```
+
+Verify it took:
+
+```bash
+git ls-files -s .claude/skills   # mode must be 120000
+npm run verify:agents
+```
+
+If Developer Mode is unavailable — some managed devices block it — create a directory junction instead, which needs no elevation:
+
+```cmd
+rmdir .claude\skills 2>nul & del .claude\skills 2>nul
+mklink /J .claude\skills "%CD%\.agents\skills"
+```
+
+Run that from the repository root. `mklink /J` resolves a relative target against the
+current directory rather than the link's parent, so a relative `..\.agents\skills`
+produces a link that exists but points nowhere — hence the absolute `%CD%` form.
+
+The parity check accepts a junction: it records an absolute target rather than the relative `../.agents/skills`, so the check verifies that the path resolves to the canonical tree rather than string-matching the target. Do not replace the link with a copied directory — the two trees would drift and nothing would catch it.
 
 ## Coding Agent Setup
 

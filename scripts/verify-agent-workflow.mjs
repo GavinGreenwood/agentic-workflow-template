@@ -11,6 +11,43 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const at = (...parts) => path.join(root, ...parts);
 const read = (...parts) => fs.readFileSync(at(...parts), "utf8");
 
+// The hooks and hook commands in this repo are POSIX shell. Two things go wrong
+// on Windows if that is left implicit: `shell: true` runs them under cmd.exe,
+// which has no `unset` or `$(...)`, and a bare "bash" can resolve to
+// System32\bash.exe — the WSL launcher, which fails with
+// `execvpe(/bin/bash) failed` unless a distro is installed. Resolve Git Bash
+// explicitly instead of depending on PATH order.
+function resolvePosixShell() {
+  if (process.platform !== "win32") return "bash";
+  const candidates = [];
+  const gitExecPath = spawnSync("git", ["--exec-path"], { encoding: "utf8" });
+  if (gitExecPath.status === 0) {
+    // .../Git/mingw64/libexec/git-core -> .../Git/bin/bash.exe
+    let dir = gitExecPath.stdout.trim();
+    while (dir && path.dirname(dir) !== dir) {
+      candidates.push(path.join(dir, "bin", "bash.exe"));
+      dir = path.dirname(dir);
+    }
+  }
+  for (const base of [
+    process.env.ProgramFiles,
+    process.env["ProgramFiles(x86)"],
+    process.env.LOCALAPPDATA,
+  ]) {
+    if (base) candidates.push(path.join(base, "Git", "bin", "bash.exe"));
+  }
+  const system32 = path
+    .join(process.env.SystemRoot ?? "C:\Windows", "System32")
+    .toLowerCase();
+  for (const candidate of candidates) {
+    const resolved = path.resolve(candidate);
+    if (resolved.toLowerCase().startsWith(system32)) continue;
+    if (fs.existsSync(resolved)) return resolved;
+  }
+  return "bash";
+}
+const POSIX_SHELL = resolvePosixShell();
+
 const manualSkills = [
   "briefing",
   "bump-version",
@@ -78,12 +115,25 @@ const claudeSkills = at(".claude", "skills");
 assert.equal(
   fs.lstatSync(claudeSkills).isSymbolicLink(),
   true,
-  ".claude/skills must be a symlink",
+  ".claude/skills must be a link to .agents/skills. On Windows, Git only writes a real link when symlink support is enabled — see docs/development/local-setup.md § Windows: the .claude/skills link.",
 );
-assert.equal(
-  fs.readlinkSync(claudeSkills),
-  "../.agents/skills",
-  ".claude/skills has the wrong target",
+// Node reports both POSIX symlinks and Windows directory junctions as symlinks,
+// but readlink returns platform separators, and a junction records an absolute
+// path. Normalise separators, then require relative links to use the portable
+// target; junctions are accepted on the realpath check below, which is the
+// invariant that actually matters.
+const skillLinkTarget = fs.readlinkSync(claudeSkills).split(path.sep).join("/");
+assert(
+  skillLinkTarget === "../.agents/skills" || path.isAbsolute(skillLinkTarget),
+  `.claude/skills must point at ../.agents/skills (found ${skillLinkTarget})`,
+);
+// A junction created with a relative target resolves it against the creating
+// process's working directory, not the link's parent, so it is easy to end up
+// with a link that exists but points nowhere. Catch that before realpathSync
+// throws a bare ENOENT.
+assert(
+  fs.existsSync(claudeSkills),
+  `.claude/skills is a link but its target does not exist (points at ${skillLinkTarget}). Recreate it with an absolute target — see docs/development/local-setup.md § Windows: the .claude/skills link.`,
 );
 assert.equal(
   fs.realpathSync(claudeSkills),
@@ -164,12 +214,13 @@ for (const name of roleSkills) {
   ]) {
     assert(fs.existsSync(at(file)), `${file} is missing`);
     const adapter = read(file);
+    // Require the explicit skill path in every adapter. A bare `skills:` key is
+    // unverifiable — the persona silently fails to load and the role's model and
+    // sandbox guarantees become false.
     assert.match(
       adapter,
-      new RegExp(
-        `\\.agents/skills/${name}/SKILL\\.md|skills:\\s*\\n\\s*- ${name}`,
-      ),
-      `${file} must load ${name}`,
+      new RegExp(`\\.agents/skills/${name}/SKILL\\.md`),
+      `${file} must name .agents/skills/${name}/SKILL.md so the persona loads`,
     );
     if (expectedDescription) {
       assert(
@@ -322,13 +373,22 @@ for (const handler of commandHandlers(copilotHooks)) {
   );
 }
 
+// Any nested directory proves the hook resolves paths from the Git root rather
+// than the working directory. Do not hard-code one an adopter may have deleted.
+const nestedProbeDir = ["apps/api", "apps/web", "packages/shared"].find((dir) =>
+  fs.existsSync(at(dir)),
+);
+assert(
+  nestedProbeDir,
+  "no nested workspace directory found to probe hook path resolution from",
+);
 const nestedCodexHook = spawnSync(
   commandHandlers(codexHooks).find((handler) =>
     handler.command.includes("pre-tool-use.js"),
   ).command,
   {
-    cwd: at("apps/api"),
-    shell: true,
+    cwd: at(nestedProbeDir),
+    shell: POSIX_SHELL,
     input: JSON.stringify({
       tool_name: "exec_command",
       tool_input: { cmd: "git status" },
@@ -339,7 +399,7 @@ const nestedCodexHook = spawnSync(
 assert.equal(
   nestedCodexHook.status,
   0,
-  `Codex hook failed from apps/api: ${nestedCodexHook.stderr}`,
+  `Codex hook failed from ${nestedProbeDir}: ${nestedCodexHook.stderr}`,
 );
 
 function runStopHook(runtime) {
@@ -362,7 +422,7 @@ function runStopHook(runtime) {
     );
     fs.writeFileSync(path.join(fixture, "source.js"), "export {};\n");
     return spawnSync(
-      "bash",
+      POSIX_SHELL,
       ["scripts/hooks/stop-docs-sync.sh", ...(runtime ? [runtime] : [])],
       { cwd: fixture, encoding: "utf8" },
     );
@@ -497,28 +557,32 @@ try {
     '#!/usr/bin/env bash\nprintf \'%s\\n\' "$*" >> "$HOOK_LOG"\n',
   );
   fs.chmodSync(fakeNpx, 0o755);
-  const result = spawnSync("bash", [at("scripts/hooks/post-tool-use.sh")], {
-    cwd: formatterFixture,
-    input: JSON.stringify({
-      tool_name: "apply_patch",
-      tool_input: {
-        command:
-          "*** Begin Patch\n*** Update File: old.js\n*** Move to: moved.js\n*** End Patch",
+  const result = spawnSync(
+    POSIX_SHELL,
+    [at("scripts/hooks/post-tool-use.sh")],
+    {
+      cwd: formatterFixture,
+      input: JSON.stringify({
+        tool_name: "apply_patch",
+        tool_input: {
+          command:
+            "*** Begin Patch\n*** Update File: old.js\n*** Move to: moved.js\n*** End Patch",
+        },
+      }),
+      encoding: "utf8",
+      env: {
+        ...process.env,
+        PATH: `${binDir}:${process.env.PATH}`,
+        HOOK_LOG: callLog,
       },
-    }),
-    encoding: "utf8",
-    env: {
-      ...process.env,
-      PATH: `${binDir}:${process.env.PATH}`,
-      HOOK_LOG: callLog,
     },
-  });
+  );
   assert.equal(result.status, 0, `PostToolUse move failed: ${result.stderr}`);
   assert.match(fs.readFileSync(callLog, "utf8"), /prettier --write moved\.js/);
 
   fs.writeFileSync(path.join(formatterFixture, "styled.ts"), "const y = 2;\n");
   const copilotFormat = spawnSync(
-    "bash",
+    POSIX_SHELL,
     [at("scripts/hooks/post-tool-use.sh")],
     {
       cwd: formatterFixture,
@@ -543,7 +607,7 @@ try {
 
   fs.writeFileSync(path.join(formatterFixture, "patched.ts"), "const z = 3;\n");
   const copilotPatch = spawnSync(
-    "bash",
+    POSIX_SHELL,
     [at("scripts/hooks/post-tool-use.sh")],
     {
       cwd: formatterFixture,
