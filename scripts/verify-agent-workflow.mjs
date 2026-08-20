@@ -418,6 +418,24 @@ for (const forbidden of [
   );
 }
 
+// Codex runs a project hook only once its handler is recorded as trusted, so an
+// unreviewed .codex/hooks.json leaves the safety policy, the formatter, and the
+// docs reminder silently inert. The trust check must stay wired into verify.sh.
+assert(
+  fs.existsSync(at("scripts/check-codex-hook-trust.mjs")),
+  "scripts/check-codex-hook-trust.mjs is missing: without it an untrusted .codex/hooks.json disables every Codex hook with no warning",
+);
+assert.match(
+  read("package.json"),
+  /"verify:codex-hooks": "node scripts\/check-codex-hook-trust\.mjs"/,
+  "package.json must expose verify:codex-hooks",
+);
+assert.match(
+  read("scripts/verify.sh"),
+  /npm run verify:codex-hooks/,
+  "scripts/verify.sh must run verify:codex-hooks, or an untrusted Codex hook set goes unnoticed",
+);
+
 const sharedMcp = JSON.parse(read(".mcp.json"));
 assert.deepEqual(sharedMcp.mcpServers?.playwright, {
   type: "stdio",

@@ -55,6 +55,31 @@ Install the runtime you intend to use from its current vendor documentation. The
 
 - Claude Code: `CLAUDE.md` imports `AGENTS.md`, and `.claude/skills` resolves to `.agents/skills`.
 - Codex: `.codex/config.toml`, `.codex/hooks.json`, and `.codex/agents/` are detected.
+
+### Codex: trusting the repository hooks
+
+**Codex will not run this repository's hooks until you approve them, and it does not warn you that it isn't.**
+
+Codex stores consent per hook handler as a `trusted_hash` under `[hooks.state."…"]` in `$CODEX_HOME/config.toml` (default `~/.codex/config.toml`), keyed by the absolute path of `.codex/hooks.json`. A handler runs only when its status is `Managed` or `Trusted`. Until then it is `Untrusted` and skipped — so the PreToolUse safety policy blocks nothing, the PostToolUse formatter never runs, and the Stop docs reminder never fires. A session still prints `hook:` lines for any hooks you have trusted globally, which makes the gap easy to miss.
+
+Approve them once per machine, per clone:
+
+```bash
+codex
+```
+
+Run it interactively in the repository root and approve the hooks when Codex asks you to review them. Then confirm:
+
+```bash
+npm run verify:codex-hooks
+```
+
+That check is part of `scripts/verify.sh`. It fails and names each handler that has never been trusted, and it skips cleanly when Codex is not installed.
+
+> **Editing `.codex/hooks.json` revokes trust.** The hash covers each handler's normalised config, so any change flips it to `Modified` and Codex stops running it until you review the hooks again. Re-run `codex` interactively after touching that file. `verify:codex-hooks` cannot detect this case — it cannot recompute Codex's hash — so treat a hooks edit as requiring a re-approval.
+
+For automation that already vets the hook source, `codex exec --dangerously-bypass-hook-trust …` runs enabled hooks without persisted trust for that invocation. It is not a substitute for reviewing them on a workstation.
+
 - GitHub Copilot CLI: `.github/hooks/`, `.github/agents/`, and `.agents/skills/` are detected. Do not create a repo `.copilot` folder.
 
 Confirm that the `playwright` MCP server is available before visual work. Claude Code and Copilot CLI use `.mcp.json`; Codex uses `.codex/config.toml`; GitHub Copilot coding agent provides Playwright in its hosted environment.
