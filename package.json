@@ -45,7 +45,7 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.61.1",
-    "@secretlint/secretlint-rule-preset-recommend": "^9.3.0",
+    "@secretlint/secretlint-rule-preset-recommend": "^13.0.4",
     "eslint": "^10.8.1",
     "husky": "^9.1.7",
     "lint-staged": "^17.3.0",
