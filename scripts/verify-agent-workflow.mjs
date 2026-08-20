@@ -37,7 +37,7 @@ function resolvePosixShell() {
     if (base) candidates.push(path.join(base, "Git", "bin", "bash.exe"));
   }
   const system32 = path
-    .join(process.env.SystemRoot ?? "C:\Windows", "System32")
+    .join(process.env.SystemRoot ?? String.raw`C:\Windows`, "System32")
     .toLowerCase();
   for (const candidate of candidates) {
     const resolved = path.resolve(candidate);
