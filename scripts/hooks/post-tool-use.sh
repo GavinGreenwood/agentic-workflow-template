@@ -26,7 +26,11 @@ done < <(printf '%s' "$INPUT" | node -e '
   process.stdin.on("end", () => {
     try {
       const payload = JSON.parse(Buffer.concat(chunks));
-      const input = payload.tool_input || payload.toolInput || payload.toolArgs || {};
+      let input = payload.tool_input || payload.toolInput || payload.toolArgs || {};
+      // Copilot CLI sends toolArgs as a JSON-encoded string.
+      if (typeof input === "string") {
+        try { input = JSON.parse(input); } catch { input = {}; }
+      }
       const directPath = input.file_path || input.filePath || input.path;
       if (directPath) process.stdout.write(`${directPath}\n`);
       const patch = input.command || input.patch || "";

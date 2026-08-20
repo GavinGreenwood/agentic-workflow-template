@@ -1,39 +1,25 @@
 {
   "version": 1,
   "hooks": {
-    "PreToolUse": [
+    "preToolUse": [
       {
-        "matcher": "Bash|bash|shell|execute|Write|write|Edit|edit|create|apply_patch",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node scripts/hooks/pre-tool-use.js copilot",
-            "cwd": "."
-          }
-        ]
+        "type": "command",
+        "bash": "node \"$(git rev-parse --show-toplevel)/scripts/hooks/pre-tool-use.js\" copilot",
+        "timeoutSec": 30
       }
     ],
-    "Stop": [
+    "postToolUse": [
       {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash scripts/hooks/stop-docs-sync.sh copilot",
-            "cwd": "."
-          }
-        ]
+        "type": "command",
+        "bash": "bash \"$(git rev-parse --show-toplevel)/scripts/hooks/post-tool-use.sh\"",
+        "timeoutSec": 60
       }
     ],
-    "PostToolUse": [
+    "agentStop": [
       {
-        "matcher": "Write|write|Edit|edit|create|apply_patch",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash scripts/hooks/post-tool-use.sh",
-            "cwd": "."
-          }
-        ]
+        "type": "command",
+        "bash": "bash \"$(git rev-parse --show-toplevel)/scripts/hooks/stop-docs-sync.sh\" copilot",
+        "timeoutSec": 10
       }
     ]
   }

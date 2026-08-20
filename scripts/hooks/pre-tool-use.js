@@ -163,8 +163,16 @@ function main() {
 
     const runtime = process.argv[2] || "claude";
     const toolName = parsed.tool_name || parsed.toolName || "";
-    const toolInput =
+    let toolInput =
       parsed.tool_input || parsed.toolInput || parsed.toolArgs || {};
+    if (typeof toolInput === "string") {
+      // Copilot CLI sends toolArgs as a JSON-encoded string.
+      try {
+        toolInput = JSON.parse(toolInput);
+      } catch {
+        toolInput = {};
+      }
+    }
     const normalisedToolName = toolName.toLowerCase();
 
     let result = null;

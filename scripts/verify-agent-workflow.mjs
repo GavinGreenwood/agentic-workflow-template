@@ -273,13 +273,13 @@ function commandHandlers(hooks) {
     .filter((handler) => handler.type === "command");
 }
 
-for (const [runtime, hooks] of [
-  ["claude", claudeHooks],
-  ["codex", codexHooks],
-  ["copilot", copilotHooks],
+for (const [runtime, hooks, events] of [
+  ["claude", claudeHooks, ["PreToolUse", "PostToolUse", "Stop"]],
+  ["codex", codexHooks, ["PreToolUse", "PostToolUse", "Stop"]],
+  ["copilot", copilotHooks, ["preToolUse", "postToolUse", "agentStop"]],
 ]) {
   const serialised = JSON.stringify(hooks);
-  for (const event of ["PreToolUse", "PostToolUse", "Stop"]) {
+  for (const event of events) {
     assert(hooks.hooks?.[event], `${runtime} is missing ${event}`);
   }
   assert(
@@ -310,10 +310,10 @@ for (const handler of commandHandlers(codexHooks)) {
   );
 }
 for (const handler of commandHandlers(copilotHooks)) {
-  assert.equal(
-    handler.cwd,
-    ".",
-    "Copilot hooks must run from the repository root",
+  assert(
+    typeof handler.bash === "string" &&
+      handler.bash.includes("$(git rev-parse --show-toplevel)"),
+    "Copilot hooks must use the documented bash key and resolve from the Git root",
   );
 }
 
@@ -428,6 +428,13 @@ assert.equal(
   "ask",
 );
 assert.equal(
+  runPolicy("copilot", {
+    toolName: "bash",
+    toolArgs: '{"command":"git push --no-verify"}',
+  }).permissionDecision,
+  "ask",
+);
+assert.equal(
   runPolicy("codex", {
     tool_name: "apply_patch",
     tool_input: {
@@ -495,6 +502,31 @@ try {
   });
   assert.equal(result.status, 0, `PostToolUse move failed: ${result.stderr}`);
   assert.match(fs.readFileSync(callLog, "utf8"), /prettier --write moved\.js/);
+
+  fs.writeFileSync(path.join(formatterFixture, "styled.ts"), "const y = 2;\n");
+  const copilotFormat = spawnSync(
+    "bash",
+    [at("scripts/hooks/post-tool-use.sh")],
+    {
+      cwd: formatterFixture,
+      input: JSON.stringify({
+        toolName: "create",
+        toolArgs: JSON.stringify({ filePath: "styled.ts" }),
+      }),
+      encoding: "utf8",
+      env: {
+        ...process.env,
+        PATH: `${binDir}:${process.env.PATH}`,
+        HOOK_LOG: callLog,
+      },
+    },
+  );
+  assert.equal(
+    copilotFormat.status,
+    0,
+    `PostToolUse copilot payload failed: ${copilotFormat.stderr}`,
+  );
+  assert.match(fs.readFileSync(callLog, "utf8"), /prettier --write styled\.ts/);
 } finally {
   fs.rmSync(formatterFixture, { recursive: true, force: true });
 }
