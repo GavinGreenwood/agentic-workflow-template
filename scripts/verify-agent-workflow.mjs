@@ -276,6 +276,26 @@ for (const name of roleSkills) {
   }
 }
 
+// Every role must pin a model on every runtime. morlock previously pinned one
+// only on Codex, so the same role ran on the session model elsewhere.
+for (const name of roleSkills) {
+  assert.match(
+    read(`.claude/agents/${name}.md`),
+    /^model: \S+$/m,
+    `.claude/agents/${name}.md must pin a model`,
+  );
+  assert.match(
+    read(`.codex/agents/${name}.toml`),
+    /^model = "\S+"$/m,
+    `.codex/agents/${name}.toml must pin a model`,
+  );
+  assert.match(
+    read(`.github/agents/${name}.agent.md`),
+    /^model: \S+$/m,
+    `.github/agents/${name}.agent.md must pin a model`,
+  );
+}
+
 assert.match(
   read(".github/agents/advisor.agent.md"),
   /^model: gpt-5\.6-sol$/m,
@@ -443,6 +463,21 @@ assert.deepEqual(sharedMcp.mcpServers?.playwright, {
   args: ["-y", "@playwright/mcp@latest"],
 });
 const codexConfig = read(".codex/config.toml");
+// A `.codex/agents/<role>.toml` file is inert unless config.toml declares the
+// role: without the declaration Codex cannot spawn it, so the model and sandbox
+// guarantees in the role description simply do not exist on that runtime.
+// Verified by A/B test -- undeclared, Codex reports no spawnable roles.
+for (const name of roleSkills) {
+  assert.match(
+    codexConfig,
+    new RegExp(
+      `^\\[agents\\.${name}\\]\\nconfig_file = "agents/${name}\\.toml"$`,
+      "m",
+    ),
+    `.codex/config.toml must declare [agents.${name}] with config_file = "agents/${name}.toml", or Codex never sees .codex/agents/${name}.toml`,
+  );
+}
+
 assert.match(codexConfig, /^\[features\]\nhooks = true$/m);
 assert.match(codexConfig, /^\[mcp_servers\.playwright\]$/m);
 assert.match(codexConfig, /^command = "npx"$/m);
