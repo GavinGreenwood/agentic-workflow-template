@@ -145,6 +145,16 @@ function formatDecision(runtime, result) {
   };
 }
 
+function parseStringToolArgs(raw) {
+  try {
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === "object") return parsed;
+  } catch {
+    /* not JSON — fall through to the raw-patch reading */
+  }
+  return { patch: raw };
+}
+
 function main() {
   let inputData = "";
 
@@ -166,12 +176,9 @@ function main() {
     let toolInput =
       parsed.tool_input || parsed.toolInput || parsed.toolArgs || {};
     if (typeof toolInput === "string") {
-      // Copilot CLI sends toolArgs as a JSON-encoded string.
-      try {
-        toolInput = JSON.parse(toolInput);
-      } catch {
-        toolInput = {};
-      }
+      // Copilot CLI sends toolArgs JSON-encoded, except apply_patch, which
+      // arrives as the raw patch text.
+      toolInput = parseStringToolArgs(toolInput);
     }
     const normalisedToolName = toolName.toLowerCase();
 

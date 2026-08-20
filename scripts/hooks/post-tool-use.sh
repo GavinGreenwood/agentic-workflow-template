@@ -27,9 +27,14 @@ done < <(printf '%s' "$INPUT" | node -e '
     try {
       const payload = JSON.parse(Buffer.concat(chunks));
       let input = payload.tool_input || payload.toolInput || payload.toolArgs || {};
-      // Copilot CLI sends toolArgs as a JSON-encoded string.
+      // Copilot CLI sends toolArgs JSON-encoded, except apply_patch, which
+      // arrives as the raw patch text.
       if (typeof input === "string") {
-        try { input = JSON.parse(input); } catch { input = {}; }
+        const raw = input;
+        try {
+          const decoded = JSON.parse(raw);
+          input = decoded && typeof decoded === "object" ? decoded : { patch: raw };
+        } catch { input = { patch: raw }; }
       }
       const directPath = input.file_path || input.filePath || input.path;
       if (directPath) process.stdout.write(`${directPath}\n`);

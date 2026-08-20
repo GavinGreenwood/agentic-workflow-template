@@ -435,6 +435,14 @@ assert.equal(
   "ask",
 );
 assert.equal(
+  runPolicy("copilot", {
+    toolName: "apply_patch",
+    toolArgs:
+      "*** Begin Patch\n*** Update File: .github/workflows/ci.yml\n*** End Patch\n",
+  }).permissionDecision,
+  "ask",
+);
+assert.equal(
   runPolicy("codex", {
     tool_name: "apply_patch",
     tool_input: {
@@ -527,6 +535,28 @@ try {
     `PostToolUse copilot payload failed: ${copilotFormat.stderr}`,
   );
   assert.match(fs.readFileSync(callLog, "utf8"), /prettier --write styled\.ts/);
+
+  fs.writeFileSync(path.join(formatterFixture, "patched.ts"), "const z = 3;\n");
+  const copilotPatch = spawnSync("bash", [at("scripts/hooks/post-tool-use.sh")], {
+    cwd: formatterFixture,
+    input: JSON.stringify({
+      toolName: "apply_patch",
+      toolArgs:
+        "*** Begin Patch\n*** Add File: patched.ts\n+const z = 3;\n*** End Patch\n",
+    }),
+    encoding: "utf8",
+    env: {
+      ...process.env,
+      PATH: `${binDir}:${process.env.PATH}`,
+      HOOK_LOG: callLog,
+    },
+  });
+  assert.equal(
+    copilotPatch.status,
+    0,
+    `PostToolUse copilot apply_patch failed: ${copilotPatch.stderr}`,
+  );
+  assert.match(fs.readFileSync(callLog, "utf8"), /prettier --write patched\.ts/);
 } finally {
   fs.rmSync(formatterFixture, { recursive: true, force: true });
 }
