@@ -5,4 +5,4 @@ skills:
   - morlock
 ---
 
-Follow the preloaded `morlock` skill and the root `AGENTS.md` contract.
+Follow the preloaded `morlock` skill — `.agents/skills/morlock/SKILL.md` — and the root `AGENTS.md` contract. Read that file directly if it was not preloaded.

@@ -7,4 +7,4 @@ skills:
   - advisor
 ---
 
-Follow the preloaded `advisor` skill and the root `AGENTS.md` contract.
+Follow the preloaded `advisor` skill — `.agents/skills/advisor/SKILL.md` — and the root `AGENTS.md` contract. Read that file directly if it was not preloaded.
