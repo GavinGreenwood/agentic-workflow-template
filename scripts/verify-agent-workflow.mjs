@@ -301,6 +301,20 @@ assert.match(
   /^model: gpt-5\.6-sol$/m,
   "Copilot advisor must use the more capable model it promises",
 );
+
+// The advisor "advises; it does not edit" promise is only hard where the adapter
+// withholds write tools. Codex cannot enforce it -- a role file's sandbox_mode
+// does not constrain the spawned agent -- so the two runtimes that can, must.
+assert.doesNotMatch(
+  read(".claude/agents/advisor.md").match(/^tools: .*$/m)?.[0] ?? "",
+  /\b(Write|Edit|Bash|NotebookEdit)\b/,
+  ".claude/agents/advisor.md must not grant a write tool: the read-only promise is enforced by the tool list, not by the role body",
+);
+assert.doesNotMatch(
+  read(".github/agents/advisor.agent.md").match(/^tools: .*$/m)?.[0] ?? "",
+  /\b(edit|execute|write)\b/,
+  ".github/agents/advisor.agent.md must not grant a write tool: the read-only promise is enforced by the tool list, not by the role body",
+);
 assert.match(
   read(".github/agents/worker.agent.md"),
   /^model: gpt-5\.6-luna$/m,

@@ -142,7 +142,9 @@ The three roles — `advisor`, `worker`, `morlock` — are guarded the same way,
 config_file = "agents/advisor.toml"
 ```
 
-Without that block Codex reports no spawnable roles at all, so the model and sandbox guarantees in the role description do not exist on that runtime. `verify:agents` asserts the declaration for every role. Each role is reached only through its adapter in `.claude/agents/`, `.codex/agents/`, or `.github/agents/`, which is what supplies the model, tool, and sandbox guarantees its description promises — loading the body directly would give an agent the instructions without any of them.
+Without that block Codex reports no spawnable roles at all, so the model and sandbox guarantees in the role description do not exist on that runtime. `verify:agents` asserts the declaration for every role.
+
+**How hard each guarantee actually is.** A role's `model` binds on all three runtimes — a spawned Codex advisor runs on `gpt-5.6-sol` per its own session record, and the Claude and Copilot morlock adapters report `claude-opus-5` and `gpt-5.6-sol`. The advisor's _read-only_ property is a hard tool restriction on Claude (`tools: Read, Grep, Glob`) and Copilot (`tools: [read, search, playwright/*]`), and `verify:agents` asserts neither grants a write tool. On Codex it is **instruction-level only**: a role file's `sandbox_mode` is accepted by the parser but does not constrain the spawned agent — the parent session's sandbox governs. Verified both directions: a `read-only` role wrote outside the repo under a permissive parent, and a `danger-full-access` role was refused under `--sandbox read-only`. If you need that boundary enforced on Codex, set the sandbox on the session (`codex --sandbox read-only`); there is no per-role mechanism. Each role is reached only through its adapter in `.claude/agents/`, `.codex/agents/`, or `.github/agents/`, which is what supplies the model, tool, and sandbox guarantees its description promises — loading the body directly would give an agent the instructions without any of them.
 
 Use the runtime's skill interface to invoke a skill:
 
