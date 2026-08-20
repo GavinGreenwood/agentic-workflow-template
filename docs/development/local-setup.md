@@ -17,7 +17,7 @@ Before picking up your first ticket, read these. They explain the engineering ph
 
 ### Windows: the `.claude/skills` link
 
-`.claude/skills` is committed as a symlink to the canonical `.agents/skills` tree. Git on Windows defaults to `core.symlinks=false`, and in that state checkout writes a **17-byte text file** containing the link target instead of a link. Claude Code then finds **zero skills**, and `npm run verify:agents` fails with `.claude/skills must be a link to .agents/skills`.
+`.claude/skills` is committed as a symlink to the canonical `.agents/skills` tree. That is deliberate: every agent reads the same skill files, so there is one copy to edit and no way for the trees to drift. Windows needs a little setup to honour it. Git on Windows defaults to `core.symlinks=false`, and in that state checkout writes a **17-byte text file** containing the link target instead of a link. Claude Code then finds **zero skills**, and `npm run verify:agents` fails with `.claude/skills must be a link to .agents/skills`.
 
 Enable symlinks before cloning, or re-materialise the path afterwards:
 
