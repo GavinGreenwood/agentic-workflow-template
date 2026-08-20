@@ -10,9 +10,15 @@
  * The hash covers the handler's normalised config, so editing `.codex/hooks.json`
  * flips trust to Modified and stops the hooks again until they are re-reviewed.
  *
- * This check fails when a handler has never been trusted on this machine. It
- * cannot recompute Codex's hash, so it cannot distinguish Trusted from Modified —
- * see the reminder it prints.
+ * This check fails when a handler has never been trusted on this machine. It does
+ * not distinguish Trusted from Modified: doing so means reproducing Codex's hash
+ * (sha256 over key-sorted canonical JSON of the normalised handler identity),
+ * which would report false Modified results whenever that internal shape changes.
+ * Codex does expose the authoritative status — Trusted, Modified, Untrusted or
+ * Managed — through the app-server `hooks/list` request, so this is an upgrade
+ * path rather than an impossibility; it is not used here because `codex
+ * app-server` is experimental and a gate that must also run where Codex is
+ * absent should not depend on it.
  */
 
 import fs from "node:fs";
