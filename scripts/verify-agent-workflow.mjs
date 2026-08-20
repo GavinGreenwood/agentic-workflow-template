@@ -110,6 +110,11 @@ assert.match(
   /A skill whose description starts with `User-invoked only\.` may start only when the user names it/,
   "AGENTS.md must give Copilot the manual-only routing rule",
 );
+assert.match(
+  agentContract,
+  /A skill whose description starts with `Role adapter only\.` is a \*\*role body, not a workflow\*\*/,
+  "AGENTS.md must exclude role bodies from normal skill routing",
+);
 
 const claudeSkills = at(".claude", "skills");
 assert.equal(
@@ -139,6 +144,17 @@ assert.equal(
   fs.realpathSync(claudeSkills),
   fs.realpathSync(at(".agents", "skills")),
   ".claude/skills must resolve to the canonical skill tree",
+);
+
+const onDiskSkills = fs
+  .readdirSync(at(".agents", "skills"), { withFileTypes: true })
+  .filter((entry) => entry.isDirectory())
+  .map((entry) => entry.name)
+  .sort();
+assert.deepEqual(
+  onDiskSkills,
+  [...manualSkills, ...automaticSkills, ...roleSkills].sort(),
+  "every .agents/skills entry must be classified as manual, automatic, or role: an unclassified skill skips every guard below and stays silently model-selectable",
 );
 
 for (const name of manualSkills) {
@@ -200,6 +216,28 @@ for (const name of automaticSkills) {
 
 for (const name of roleSkills) {
   const metadata = assertSkill(name);
+  assert.match(
+    metadata,
+    /^disable-model-invocation: true$/m,
+    `${name} is a role body: Claude Code and Copilot CLI must not route to it as a skill`,
+  );
+  assert.match(
+    metadata,
+    /^user-invocable: false$/m,
+    `${name} is a role body: it must not be invocable from the slash menu either, or the adapter's model and sandbox guarantees are bypassed`,
+  );
+  assert.match(
+    metadata,
+    /^description: "Role adapter only\./m,
+    `${name} must tell the Copilot coding agent it is a role body, not a selectable skill`,
+  );
+  const roleOpenai = `.agents/skills/${name}/agents/openai.yaml`;
+  assert(fs.existsSync(at(roleOpenai)), `${roleOpenai} is missing`);
+  assert.match(
+    read(roleOpenai),
+    /^  allow_implicit_invocation: false$/m,
+    `${name} is a role body: Codex must not invoke it implicitly`,
+  );
   const expectedDescription = roleDescriptions[name];
   if (expectedDescription) {
     assert(
@@ -221,6 +259,11 @@ for (const name of roleSkills) {
       adapter,
       new RegExp(`\\.agents/skills/${name}/SKILL\\.md`),
       `${file} must name .agents/skills/${name}/SKILL.md so the persona loads`,
+    );
+    assert.doesNotMatch(
+      adapter,
+      new RegExp(`skills:\\s*\\n\\s*- ${name}`),
+      `${file} must not declare a skills: preload for ${name}: disable-model-invocation blocks skill preloading, so the key can never fire and only misleads`,
     );
     if (expectedDescription) {
       assert(
@@ -270,6 +313,76 @@ for (const name of [...manualSkills, ...automaticSkills, ...roleSkills]) {
   );
 }
 
+// The shared hooks are executed by all three runtimes, so their text must not
+// name a workflow with one runtime's invocation syntax.
+for (const dir of [".husky", "scripts/hooks"]) {
+  for (const entry of fs.readdirSync(at(dir), { withFileTypes: true })) {
+    if (!entry.isFile()) continue;
+    const file = path.join(dir, entry.name);
+    assert.doesNotMatch(
+      read(file),
+      new RegExp(
+        `(?<![A-Za-z0-9_.-])/(?:${manualSkills.join("|")})(?=[\\s<\`.,)])`,
+      ),
+      `${file} names a workflow with Claude Code slash syntax: the hooks are shared by all three runtimes, and Codex uses $name`,
+    );
+  }
+}
+
+// A required Step 0 block must run start to finish without a permission prompt,
+// so every command it invokes has to be pre-approved in allowed-tools.
+const shellKeywords = new Set([
+  "if",
+  "then",
+  "else",
+  "elif",
+  "fi",
+  "for",
+  "do",
+  "done",
+  "in",
+  "while",
+  "until",
+  "case",
+  "esac",
+  "local",
+  "return",
+  "exit",
+  "set",
+  "unset",
+  "break",
+  "continue",
+  "function",
+  "time",
+]);
+for (const name of [...manualSkills, ...automaticSkills]) {
+  const markdown = read(`.agents/skills/${name}/SKILL.md`);
+  const step0 = markdown.match(
+    /## Step 0 — Context \(required first\)[\s\S]*?```bash\n([\s\S]*?)```/,
+  );
+  if (!step0) continue;
+  const allowed = new Set(
+    [
+      ...(markdown.match(/^allowed-tools: (.*)$/m)?.[1] ?? "").matchAll(
+        /Bash\(([a-z0-9_.-]+)/g,
+      ),
+    ].map((entry) => entry[1]),
+  );
+  for (const line of step0[1].split("\n")) {
+    for (const match of line.matchAll(
+      /(?:^|[|;&]|\$\(|&&|\|\||\bthen\b|\bdo\b|\belse\b)\s*([a-z][a-z0-9_-]*)/g,
+    )) {
+      const command = match[1];
+      if (shellKeywords.has(command)) continue;
+      if (line[match.index + match[0].length] === "=") continue;
+      assert(
+        allowed.has(command),
+        `.agents/skills/${name}/SKILL.md runs \`${command}\` in its "Step 0 — Context (required first)" block but does not allow-list it: the runtime stops for permission part-way through the context gate`,
+      );
+    }
+  }
+}
+
 const runSkill = read(".agents/skills/run/SKILL.md");
 assert.match(
   agentContract,
@@ -310,7 +423,16 @@ assert.match(codexConfig, /^\[features\]\nhooks = true$/m);
 assert.match(codexConfig, /^\[mcp_servers\.playwright\]$/m);
 assert.match(codexConfig, /^command = "npx"$/m);
 assert.match(codexConfig, /^args = \["-y", "@playwright\/mcp@latest"\]$/m);
-assert.match(codexConfig, /^required = true$/m);
+assert.match(
+  codexConfig,
+  /^required = false$/m,
+  "Codex must treat Playwright as optional: required = true fails session startup when the MCP server cannot initialise, turning the documented recommendation into a hard prerequisite",
+);
+assert.doesNotMatch(
+  codexConfig,
+  /^required = true$/m,
+  "no .codex/config.toml MCP server may set required = true",
+);
 
 const claudeHooks = JSON.parse(read(".claude/settings.json"));
 const codexHooks = JSON.parse(read(".codex/hooks.json"));

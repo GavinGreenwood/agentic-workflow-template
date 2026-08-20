@@ -42,6 +42,8 @@ The Jira board mirrors this loop, and keeping it in sync is **required, not opti
 
 `.agents/skills/` is the canonical skill source. A skill whose description starts with `User-invoked only.` may start only when the user names it, or when an already user-invoked workflow explicitly routes to its `SKILL.md`. Never select one merely because its description matches the task. `assign-epic` and `run` are automatic skills and may be selected when their descriptions match.
 
+A skill whose description starts with `Role adapter only.` is a **role body, not a workflow**. It exists to be loaded by its role adapter in `.claude/agents/`, `.codex/agents/`, or `.github/agents/` — never as a skill in the main loop, and never on a user's behalf. The model, tool, and sandbox guarantees stated in a role description are supplied by the adapter, not by the `SKILL.md`; loading the body on its own gives you the instructions without the guarantees and makes the description false. To consult a role, delegate to its adapter.
+
 ## MCP Servers
 
 `.mcp.json` configures the shared `playwright` MCP server (`@playwright/mcp`) for Claude Code and GitHub Copilot CLI. `.codex/config.toml` configures the same server for Codex. The `run` skill in `.agents/skills/run/SKILL.md` owns browser verification and uses Playwright to browse, click through, and screenshot the running app when it is available. Add further MCP servers to these shared runtime configurations as the project grows (e.g. a design-source server for Figma/Storybook, a CI-status server).

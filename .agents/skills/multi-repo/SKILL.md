@@ -2,7 +2,7 @@
 name: multi-repo
 description: "User-invoked only. Manage parallel development slots — multiple independent clones of this repo, each on its own ports, so several agents can work different issues simultaneously. Modes — setup: one-time clone setup; status: slot health + Jira ticket status; free: reset a slot to main when its ticket is in QA/Done; sync: propagate .env changes across slots without overwriting port config."
 disable-model-invocation: true
-allowed-tools: Bash(echo:*), Bash(git:*), Bash(lsof:*), Bash(curl:*), Bash(docker:*), Bash(npm install:*), Bash(npm run:*), Bash(openssl rand:*), Bash(cp:*), Bash(grep:*), Bash(ls:*), Bash(find:*), Bash(sed:*), Bash(node:*), Bash(jq:*), Bash(dirname:*), Bash(basename:*), Bash(pwd:*), Bash(test:*), Bash(printf:*), Bash(source:*), Bash(ps:*)
+allowed-tools: Bash(echo:*), Bash(git:*), Bash(lsof:*), Bash(curl:*), Bash(docker:*), Bash(npm install:*), Bash(npm run:*), Bash(openssl rand:*), Bash(cp:*), Bash(grep:*), Bash(head:*), Bash(ls:*), Bash(find:*), Bash(sed:*), Bash(node:*), Bash(jq:*), Bash(dirname:*), Bash(basename:*), Bash(pwd:*), Bash(test:*), Bash(printf:*), Bash(source:*), Bash(ps:*)
 ---
 
 ## Step 0 — Context (required first)
