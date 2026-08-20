@@ -611,6 +611,71 @@ assert.equal(
   }).hookSpecificOutput.permissionDecision,
   "deny",
 );
+// Codex dispatches shell work as a tool named `exec` carrying a JavaScript
+// snippet, and also uses local_shell, shell_command, and container.exec.
+// Reading only `command`/`cmd` from a short name list left all of these
+// unchecked, so `rm -rf /` was allowed through.
+for (const [label, payload] of [
+  [
+    "exec with a JS snippet",
+    {
+      tool_name: "exec",
+      tool_input: {
+        input: 'const r = await tools.exec_command({cmd:"rm -rf /"});',
+      },
+    },
+  ],
+  [
+    "exec with a raw string payload",
+    {
+      tool_name: "exec",
+      tool_input: 'const r = await tools.exec_command({cmd:"rm -rf /"});',
+    },
+  ],
+  [
+    "local_shell with an argv array",
+    {
+      tool_name: "local_shell",
+      tool_input: { command: ["/bin/zsh", "-lc", "rm -rf /"] },
+    },
+  ],
+  [
+    "container.exec with an argv array",
+    {
+      tool_name: "container.exec",
+      tool_input: { command: ["bash", "-lc", "rm -rf /"] },
+    },
+  ],
+  [
+    "shell_command",
+    { tool_name: "shell_command", tool_input: { command: "rm -rf /" } },
+  ],
+]) {
+  assert.equal(
+    runPolicy("codex", payload)?.hookSpecificOutput?.permissionDecision,
+    "deny",
+    `the Codex safety policy must inspect ${label}`,
+  );
+}
+assert.equal(
+  runPolicy("codex", {
+    tool_name: "exec",
+    tool_input: {
+      input: 'const r = await tools.exec_command({cmd:"git status"});',
+    },
+  }),
+  null,
+  "a safe Codex exec payload must still be allowed",
+);
+// The Codex PreToolUse matcher must name the tool Codex actually uses.
+const codexPreMatchers = codexHooks.hooks.PreToolUse.map(
+  (group) => group.matcher ?? "",
+).join("|");
+assert.match(
+  codexPreMatchers,
+  /(?<![a-z_])exec(?![a-z_])/,
+  "the Codex PreToolUse matcher must include `exec`: matching only exec_command misses the tool name Codex dispatches shell work under, so the policy never runs",
+);
 assert.equal(
   runPolicy("copilot", {
     toolName: "bash",

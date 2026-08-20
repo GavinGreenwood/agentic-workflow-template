@@ -184,12 +184,35 @@ function main() {
 
     let result = null;
 
+    // Codex dispatches shell work as a tool named `exec` whose payload carries a
+    // JavaScript snippet (`tools.exec_command({cmd:"..."})`) rather than a plain
+    // command field, and its other transports are named local_shell,
+    // shell_command, and container.exec. Reading only `command`/`cmd` from a
+    // fixed name list left every one of those unchecked. The patterns match on
+    // substrings, so scanning the whole payload is correct and strictly safer.
     if (
-      ["bash", "shell", "execute", "exec_command", "run_in_terminal"].includes(
-        normalisedToolName,
-      )
+      [
+        "bash",
+        "shell",
+        "execute",
+        "exec",
+        "exec_command",
+        "local_shell",
+        "shell_command",
+        "container.exec",
+        "run_in_terminal",
+      ].includes(normalisedToolName)
     ) {
-      result = checkBashCommand(toolInput.command || toolInput.cmd || "");
+      const command =
+        toolInput.command ||
+        toolInput.cmd ||
+        toolInput.input ||
+        toolInput.script ||
+        toolInput.patch ||
+        "";
+      result = checkBashCommand(
+        typeof command === "string" ? command : JSON.stringify(command),
+      );
     } else if (["write", "edit", "create"].includes(normalisedToolName)) {
       result = checkWriteOrEdit(
         toolInput.file_path || toolInput.filePath || toolInput.path || "",
