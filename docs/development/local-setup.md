@@ -60,6 +60,15 @@ Install the runtime you intend to use from its current vendor documentation. The
 
 **Codex will not run this repository's hooks until you approve them, and it does not warn you that it isn't.**
 
+**Trusting the folder is not the same as trusting the hooks.** The prompt Codex shows the first time you open a directory grants _folder_ trust and is recorded under `[projects."<path>"] trust_level`. Hook approval is a separate record under `[hooks.state."…"]`. A repository can be fully trusted as a folder while every one of its hooks is still skipped, which is the state most people land in — folder trust is the prompt you remember answering.
+
+Check both:
+
+```bash
+grep -A1 '\[projects."'"$PWD"'"\]' ~/.codex/config.toml   # folder trust
+grep -c "$PWD/.codex/hooks.json" ~/.codex/config.toml        # hook trust: 0 means none
+```
+
 Codex stores consent per hook handler as a `trusted_hash` under `[hooks.state."…"]` in `$CODEX_HOME/config.toml` (default `~/.codex/config.toml`), keyed by the absolute path of `.codex/hooks.json`. A handler runs only when its status is `Managed` or `Trusted`. Until then it is `Untrusted` and skipped — so the PreToolUse safety policy blocks nothing, the PostToolUse formatter never runs, and the Stop docs reminder never fires. A session still prints `hook:` lines for any hooks you have trusted globally, which makes the gap easy to miss.
 
 Approve them once per machine, per clone:
