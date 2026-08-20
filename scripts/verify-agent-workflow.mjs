@@ -631,10 +631,13 @@ assert.equal(
   }).hookSpecificOutput.permissionDecision,
   "deny",
 );
-// Codex dispatches shell work as a tool named `exec` carrying a JavaScript
-// snippet, and also uses local_shell, shell_command, and container.exec.
-// Reading only `command`/`cmd` from a short name list left all of these
-// unchecked, so `rm -rf /` was allowed through.
+// Defence in depth, not a fix for an observed gap: Codex currently hands the
+// hook `exec_command` with a `cmd` field (verified by A/B test -- the narrower
+// pre-existing policy blocks correctly), but its model-facing transcript names
+// the tool `exec` and carries the command inside a JavaScript snippet, and its
+// own global matcher also lists local_shell, shell_command, and container.exec.
+// Codex has reshaped tool payloads before, and a rename here would silently
+// disable the policy rather than fail loudly, so these shapes are covered too.
 for (const [label, payload] of [
   [
     "exec with a JS snippet",
