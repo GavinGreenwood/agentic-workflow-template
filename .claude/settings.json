@@ -9,11 +9,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node",
-            "args": [
-              "${CLAUDE_PROJECT_DIR}/scripts/hooks/pre-tool-use.js",
-              "claude"
-            ]
+            "command": "node \"${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel)}/scripts/hooks/pre-tool-use.js\" claude"
           }
         ]
       },
@@ -22,11 +18,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node",
-            "args": [
-              "${CLAUDE_PROJECT_DIR}/scripts/hooks/pre-tool-use.js",
-              "claude"
-            ]
+            "command": "node \"${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel)}/scripts/hooks/pre-tool-use.js\" claude"
           }
         ]
       },
@@ -35,11 +27,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node",
-            "args": [
-              "${CLAUDE_PROJECT_DIR}/scripts/hooks/pre-tool-use.js",
-              "claude"
-            ]
+            "command": "node \"${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel)}/scripts/hooks/pre-tool-use.js\" claude"
           }
         ]
       }
@@ -49,8 +37,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash",
-            "args": ["${CLAUDE_PROJECT_DIR}/scripts/hooks/stop-docs-sync.sh"]
+            "command": "bash \"${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel)}/scripts/hooks/stop-docs-sync.sh\""
           }
         ]
       }
@@ -61,8 +48,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash",
-            "args": ["${CLAUDE_PROJECT_DIR}/scripts/hooks/post-tool-use.sh"]
+            "command": "bash \"${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel)}/scripts/hooks/post-tool-use.sh\""
           }
         ]
       },
@@ -71,8 +57,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash",
-            "args": ["${CLAUDE_PROJECT_DIR}/scripts/hooks/post-tool-use.sh"]
+            "command": "bash \"${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel)}/scripts/hooks/post-tool-use.sh\""
           }
         ]
       }

@@ -297,10 +297,15 @@ for (const [runtime, hooks, events] of [
 }
 
 for (const handler of commandHandlers(claudeHooks)) {
-  assert(Array.isArray(handler.args), "Claude hooks must use exec form");
   assert(
-    handler.args.some((argument) => argument.includes("${CLAUDE_PROJECT_DIR}")),
-    "Claude hook scripts must resolve from CLAUDE_PROJECT_DIR",
+    handler.args === undefined,
+    "Claude hooks must be one command string: other runtimes read this file and run only the command field",
+  );
+  assert(
+    handler.command.includes(
+      "${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel)}",
+    ),
+    "Claude hook scripts must resolve from CLAUDE_PROJECT_DIR, falling back to the Git root",
   );
 }
 for (const handler of commandHandlers(codexHooks)) {
