@@ -17,7 +17,7 @@
 ## Standards
 
 - **Coverage floor:** 70% unit coverage. Never reduce it.
-- **TDD by default:** the failing test is written before the implementation (see `AGENTS.md`).
+- **Observed red:** every test is seen failing for the right reason before it counts (see `AGENTS.md` § TDD Workflow).
 - **Tests assert behaviour, not implementation** — a test that breaks on refactor without a behaviour change is a bad test.
 - **Mutation testing keeps the tests honest:** coverage proves code was executed; mutants prove the assertions actually constrain it. Surviving mutants are a warning locally and a gate nightly.
 - **Flakes are defects:** a test that fails non-deterministically more than twice in 7 days gets a ticket (see `nightly-check`).

@@ -122,17 +122,22 @@ PROGRESS.md serves three purposes:
 
 - End with a concise unresolved questions list.
 
-## TDD Workflow (Red-Green-Refactor)
+## TDD Workflow (Observed Red)
 
-Follow test-driven development where possible:
+Every test must be observed failing for the right reason before it counts. A test never seen red carries no evidence that it is wired to the behaviour it claims to cover — a confident assertion against a mocked collaborator goes green against an empty implementation.
 
-1. **RED**: Write a failing test first that defines the expected behaviour.
-2. **GREEN**: Write the minimum implementation to make the test pass.
-3. **REFACTOR**: Clean up the code while all tests stay green.
+Two orders satisfy this:
 
-**Exploratory-first exception**: When proving out an unfamiliar approach, write the production code first to validate it works. Once validated, comment out the production code, write the failing tests (RED), then uncomment incrementally to make them pass (GREEN). This preserves TDD integrity while allowing necessary exploration.
+1. **Test first** (default): write the test, run it red, implement, run it green. Batch the suite — write the tests for the whole ticket's acceptance criteria, watch them all go red, then implement. One-test-at-a-time micro-loops are human working-memory scaffolding; they cost turns here and buy the same evidence.
+2. **Test after**: write the test, then break the implementation to prove the test goes red, and restore. Test-after risks deriving assertions from the code rather than the requirement — so write them from the acceptance criteria, not from the implementation.
 
-This cycle applies to unit, integration, and E2E tests. When picking up a ticket, start by writing the test that proves the acceptance criteria, then implement.
+**Exploratory-first is a path, not an exception.** When proving out an unfamiliar approach, write the production code first to validate it works, then comment it out and write the tests. The commented-out code is what produces the red run, so this satisfies the rule. Uncomment incrementally to green.
+
+**Report the output of both runs** — the red run's assertion message and the green run's result, not a bare "tests pass". A test derived from the implementation usually fails in a boring way (wrong field, null reference) rather than the way the requirement predicts, and only the message exposes that.
+
+**A failing test is a finding, not an obstacle.** When one blocks a change: fix the code, or say the test is wrong and why and let the human decide. Rewriting an assertion to reach green is the human's call.
+
+This applies to unit, integration, and E2E tests.
 
 ## Absolute Rules
 
@@ -155,7 +160,7 @@ These are non-negotiable. No exceptions, no workarounds.
 - **Keep docs in sync**: Update documentation in the same PR as code changes. Never let docs drift from reality.
 - **Flag deviations**: If implementation needs to differ from documented standards, flag it explicitly and discuss before proceeding.
 - **Docs before code**: Create or update documentation before coding when work is non-trivial.
-- **TDD by default**: Write failing tests first, then implement, then refactor.
+- **Observed red**: Every test is seen failing for the right reason before it counts (see TDD Workflow above).
 - **Small changes**: Keep changes small and focused. Prefer safe refactors.
 - **Tests with features**: Every feature or fix includes tests. Never reduce coverage.
 - **Strict TypeScript**: No `any` types. Use strict mode, proper generics, and type guards.

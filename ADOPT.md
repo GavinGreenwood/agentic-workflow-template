@@ -107,9 +107,10 @@ different strictness).
    low current coverage._
 
 5. **TDD strictness.**
-   Mandatory red-green-refactor, or recommended-with-exploratory-exception?
-   Recommended: recommended-not-mandatory, but always keep "every feature/fix
-   ships with tests." — _Trade-off: mandatory is purer but slows spikes._
+   Mandatory observed-red (every test seen failing for the right reason before
+   it counts), or recommended? Recommended: mandatory observed-red, but let the
+   agent batch a ticket's suite rather than looping one test at a time. —
+   _Trade-off: mandatory is purer but slows spikes._
 
 6. **Session scratchpad (PROGRESS.md).**
    Keep the PROGRESS.md recovery-point convention, or drop it? Recommended:
