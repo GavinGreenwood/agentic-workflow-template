@@ -5,6 +5,12 @@ set -euo pipefail
 # Run this before opening a PR. Adjust the script list to your project;
 # --if-present lets steps no-op until the matching npm script exists.
 
+echo "=== Agent Workflow Parity ==="
+npm run verify:agents
+
+echo "=== Codex Hook Trust ==="
+npm run verify:codex-hooks
+
 echo "=== Lint ==="
 npm run lint
 

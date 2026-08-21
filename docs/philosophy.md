@@ -13,7 +13,7 @@ Also recommended: [Claude Code in Action](https://anthropic.skilljar.com/claude-
 
 An AI agent's output cannot be trusted on vibes — it must be checked by machines, the same way every time. Quality is enforced by scripts and pipelines, not by reading every line.
 
-**In this repo:** `scripts/verify.sh` runs the identical suite locally that CI runs remotely. The agent is contractually required (CLAUDE.md) to run it before every PR. Hooks make bypassing it inconvenient by default and impossible without a human approving.
+**In this repo:** `scripts/verify.sh` runs the identical suite locally that CI runs remotely. The agent is contractually required by `AGENTS.md` to run it before every PR. Hooks make bypassing it inconvenient by default and impossible without a human approving.
 
 ### 2. Swiss cheese defence
 
@@ -46,7 +46,7 @@ Every change must be traceable in both directions: from the ticket to the deploy
 
 When something slips through, the response is never "review harder" — it's "which layer should have caught this, and how do we tighten it?" Every escaped defect becomes a new test, a new hook pattern, or a new line in the agent contract. The system compounds.
 
-**In this repo:** PROGRESS.md captures discoveries during a session; the end-of-feature ritual reads it back and folds the lessons into docs, gates, and CLAUDE.md. The Morlock agent (`.claude/agents/morlock.md`) institutionalises this for security: every vulnerability found becomes a permanent test.
+**In this repo:** PROGRESS.md captures discoveries during a session; the end-of-feature ritual reads it back and folds the lessons into docs, gates, and `AGENTS.md`. The canonical Morlock role (`.agents/skills/morlock/SKILL.md`) institutionalises this for security: every vulnerability found becomes a permanent test.
 
 ## The division of labour
 

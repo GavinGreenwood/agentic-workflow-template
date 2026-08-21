@@ -1,0 +1,6 @@
+interface:
+  display_name: "Sync"
+  short_description: "Synchronise environment, dependencies, and build"
+  default_prompt: "Use $sync with the arguments and repository context I provide."
+policy:
+  allow_implicit_invocation: false

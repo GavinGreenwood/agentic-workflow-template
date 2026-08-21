@@ -37,7 +37,7 @@ jobs:
       - name: Read Morlock persona
         id: persona
         run: |
-          persona=$(cat .claude/agents/morlock.md)
+          persona=$(awk 'NR==1 && $0=="---" {fm=1; next} fm && $0=="---" {fm=0; next} !fm { if (!started && $0 == "") next; started=1; print }' .agents/skills/morlock/SKILL.md)
           echo "content<<EOF" >> $GITHUB_OUTPUT
           echo "$persona" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT

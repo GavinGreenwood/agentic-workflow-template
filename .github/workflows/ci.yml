@@ -17,6 +17,14 @@ permissions:
 # ─── Stage 1: Fast checks (run in parallel) ──────────────────────────────────
 
 jobs:
+  agent-workflow-parity:
+    name: Agent workflow parity
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+      - run: npm run verify:agents
+
   lint:
     name: Lint
     runs-on: ubuntu-latest

@@ -11,11 +11,11 @@ echo "=== Pre-push checks ==="
 # on `git push`, and the check below is scoped to refs whose target is
 # refs/heads/main — so it blocks direct pushes / fast-forwards to main, not the
 # normal feature-branch pushes that create or update a PR. Feature-branch pushes
-# keep PROGRESS.md as the cross-session recovery point; the /pr command removes it
-# before a PR is raised. See CLAUDE.md § PROGRESS.md for the rationale.
+# keep PROGRESS.md as the cross-session recovery point; the `pr` workflow removes it
+# before a PR is raised. See AGENTS.md § PROGRESS.md for the rationale.
 while read -r local_ref local_sha remote_ref remote_sha; do
   if [[ "$remote_ref" == "refs/heads/main" ]] && [ -f "PROGRESS.md" ]; then
-    echo "BLOCKED: PROGRESS.md exists. Delete it before pushing to main (see CLAUDE.md)."
+    echo "BLOCKED: PROGRESS.md exists. Delete it before pushing to main (see AGENTS.md)."
     exit 1
   fi
 done

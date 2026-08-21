@@ -1,0 +1,6 @@
+interface:
+  display_name: "Fix CI/CD"
+  short_description: "Diagnose and fix failing GitHub Actions jobs"
+  default_prompt: "Use $fix-cicd with the arguments and repository context I provide."
+policy:
+  allow_implicit_invocation: false

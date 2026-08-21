@@ -3,8 +3,9 @@
  * PreToolUse hook — deterministic pattern matching to block catastrophic actions.
  *
  * No LLM judgement. Just regex against known dangerous patterns.
- * Receives JSON on stdin with tool_name and tool_input.
- * Outputs JSON with decision: "approve", "block", or "ask" (requires user confirmation).
+ * Receives JSON on stdin with the runtime's tool name and tool input fields.
+ * Outputs the runtime's block or confirmation decision shape.
+ * Usage: node scripts/hooks/pre-tool-use.js <claude|codex|copilot>
  */
 
 function checkBashCommand(command) {
@@ -108,6 +109,52 @@ function checkWriteOrEdit(filePath) {
   return null;
 }
 
+function patchPaths(toolInput) {
+  const patch = toolInput.command || toolInput.patch || "";
+  return [
+    ...patch.matchAll(
+      /^\*\*\* (?:(?:Add|Update|Delete) File|Move to): (.+)$/gm,
+    ),
+  ].map(([, filePath]) => filePath.trim());
+}
+
+function formatDecision(runtime, result) {
+  const requestedDecision = result.decision === "block" ? "deny" : "ask";
+  const decision =
+    runtime === "codex" && requestedDecision === "ask"
+      ? "deny"
+      : requestedDecision;
+  const reason =
+    runtime === "codex" && requestedDecision === "ask"
+      ? `${result.reason} Codex project hooks cannot pause for confirmation, so this run is blocked.`
+      : result.reason;
+
+  if (runtime === "copilot") {
+    return {
+      permissionDecision: decision,
+      permissionDecisionReason: reason,
+    };
+  }
+
+  return {
+    hookSpecificOutput: {
+      hookEventName: "PreToolUse",
+      permissionDecision: decision,
+      permissionDecisionReason: reason,
+    },
+  };
+}
+
+function parseStringToolArgs(raw) {
+  try {
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === "object") return parsed;
+  } catch {
+    /* not JSON — fall through to the raw-patch reading */
+  }
+  return { patch: raw };
+}
+
 function main() {
   let inputData = "";
 
@@ -124,19 +171,61 @@ function main() {
       process.exit(0);
     }
 
-    const toolName = parsed.tool_name || "";
-    const toolInput = parsed.tool_input || {};
+    const runtime = process.argv[2] || "claude";
+    const toolName = parsed.tool_name || parsed.toolName || "";
+    let toolInput =
+      parsed.tool_input || parsed.toolInput || parsed.toolArgs || {};
+    if (typeof toolInput === "string") {
+      // Copilot CLI sends toolArgs JSON-encoded, except apply_patch, which
+      // arrives as the raw patch text.
+      toolInput = parseStringToolArgs(toolInput);
+    }
+    const normalisedToolName = toolName.toLowerCase();
 
     let result = null;
 
-    if (toolName === "Bash") {
-      result = checkBashCommand(toolInput.command || "");
-    } else if (toolName === "Write" || toolName === "Edit") {
-      result = checkWriteOrEdit(toolInput.file_path || "");
+    // Codex dispatches shell work as a tool named `exec` whose payload carries a
+    // JavaScript snippet (`tools.exec_command({cmd:"..."})`) rather than a plain
+    // command field, and its other transports are named local_shell,
+    // shell_command, and container.exec. Reading only `command`/`cmd` from a
+    // fixed name list left every one of those unchecked. The patterns match on
+    // substrings, so scanning the whole payload is correct and strictly safer.
+    if (
+      [
+        "bash",
+        "shell",
+        "execute",
+        "exec",
+        "exec_command",
+        "local_shell",
+        "shell_command",
+        "container.exec",
+        "run_in_terminal",
+      ].includes(normalisedToolName)
+    ) {
+      const command =
+        toolInput.command ||
+        toolInput.cmd ||
+        toolInput.input ||
+        toolInput.script ||
+        toolInput.patch ||
+        "";
+      result = checkBashCommand(
+        typeof command === "string" ? command : JSON.stringify(command),
+      );
+    } else if (["write", "edit", "create"].includes(normalisedToolName)) {
+      result = checkWriteOrEdit(
+        toolInput.file_path || toolInput.filePath || toolInput.path || "",
+      );
+    } else if (normalisedToolName === "apply_patch") {
+      for (const filePath of patchPaths(toolInput)) {
+        result = checkWriteOrEdit(filePath);
+        if (result) break;
+      }
     }
 
     if (result) {
-      process.stdout.write(JSON.stringify(result));
+      process.stdout.write(JSON.stringify(formatDecision(runtime, result)));
     }
     // No output = approve (implicit)
   });

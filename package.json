@@ -22,8 +22,10 @@
     "test": "turbo test",
     "test:integration": "turbo test:integration --continue",
     "test:e2e": "playwright test --pass-with-no-tests",
+    "verify:agents": "node scripts/verify-agent-workflow.mjs",
     "clean": "turbo clean",
-    "prepare": "husky"
+    "prepare": "husky",
+    "verify:codex-hooks": "node scripts/check-codex-hook-trust.mjs"
   },
   "overrides": {
     "tmp": "0.2.7",

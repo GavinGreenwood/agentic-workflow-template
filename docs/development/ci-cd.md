@@ -40,7 +40,7 @@ push / PR
 | `.github/workflows/security.yml`         | `workflow_call`, `workflow_dispatch`    | Reusable security job    |
 | `.github/workflows/nightly-security.yml` | Daily 06:00 UTC                         | Calls `security.yml`     |
 | `.github/workflows/nightly-mutation.yml` | Weekdays 02:00 UTC                      | Stryker mutation testing |
-| `.github/workflows/morlock.yml`          | Nightly 01:00 UTC                       | Claude security probe    |
+| `.github/workflows/morlock.yml`          | Nightly 01:00 UTC                       | Morlock security probe   |
 
 ## Versioning
 
@@ -121,14 +121,15 @@ Trivy runs separately per image in Stage 5 with two passes: blocking on fixable 
 ## ADR sync check
 
 `adr-sync` (Stage 1) runs `scripts/check-adr-sync.sh`, which fails the build if a diff touches
-`docs/adr/*.md` without also touching `docs/architecture/*.md` in the same diff — see CLAUDE.md §
+`docs/adr/*.md` without also touching `docs/architecture/*.md` in the same diff — see AGENTS.md §
 ADR reading policy. It no-ops until `docs/architecture/` exists. Skip it for a specific ADR with no
 current-state doc to update by adding `[skip-adr-sync: reason]` to a commit message on the branch.
 
 ## Morlock
 
-`morlock.yml` runs nightly at 01:00 UTC. It invokes the Claude Code action seeded with the Morlock
-security-probe persona (`.claude/agents/morlock.md`). The agent:
+`morlock.yml` runs nightly at 01:00 UTC. It invokes the Claude Code action seeded with the provider-neutral
+Morlock security-probe persona (`.agents/skills/morlock/SKILL.md`). The same role is available through
+the Claude Code, Codex, and GitHub Copilot adapters. The agent:
 
 1. Reads and analyses the codebase for security weaknesses.
 2. Writes proving tests under `apps/api/integration/security/`.

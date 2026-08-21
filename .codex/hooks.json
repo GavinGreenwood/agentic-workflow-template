@@ -1,0 +1,36 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|shell|exec|Write|Edit|apply_patch",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "unset $(git rev-parse --local-env-vars); node \"$(git rev-parse --show-toplevel)/scripts/hooks/pre-tool-use.js\" codex"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "unset $(git rev-parse --local-env-vars); bash \"$(git rev-parse --show-toplevel)/scripts/hooks/stop-docs-sync.sh\""
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|apply_patch",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "unset $(git rev-parse --local-env-vars); bash \"$(git rev-parse --show-toplevel)/scripts/hooks/post-tool-use.sh\""
+          }
+        ]
+      }
+    ]
+  }
+}

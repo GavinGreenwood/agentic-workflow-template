@@ -1,0 +1,18 @@
+[features]
+hooks = true
+
+[mcp_servers.playwright]
+command = "npx"
+args = ["-y", "@playwright/mcp@latest"]
+required = false
+
+# Codex only knows a role exists if it is declared here; the files in
+# .codex/agents/ are inert on their own. `description` comes from each role file.
+[agents.advisor]
+config_file = "agents/advisor.toml"
+
+[agents.worker]
+config_file = "agents/worker.toml"
+
+[agents.morlock]
+config_file = "agents/morlock.toml"
