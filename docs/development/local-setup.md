@@ -12,7 +12,8 @@ Before picking up your first ticket, read these. They explain the engineering ph
 ## Prerequisites
 
 - Node.js (see `.nvmrc` for version)
-- Bash — the hooks in `scripts/hooks/` and the parity check shell out to it. On Windows, Git Bash (bundled with Git for Windows) is sufficient.
+- Bash — the POSIX hooks in `scripts/hooks/` and the parity check shell out to it. On Windows, Git Bash (bundled with Git for Windows) is sufficient.
+- On Windows only: PowerShell 7 (`pwsh`) for GitHub Copilot CLI hooks. Windows PowerShell 5.1 is not supported.
 - On Windows only: symlink support enabled, so `.claude/skills` materialises as a link. See below.
 
 ### Windows: the `.claude/skills` link
@@ -91,7 +92,8 @@ For automation that already vets the hook source, `codex exec --dangerously-bypa
 
 - GitHub Copilot CLI: `.github/hooks/`, `.github/agents/`, and `.agents/skills/` are detected. Do not create a repo `.copilot` folder.
 
-Confirm that the `playwright` MCP server is available before visual work. Claude Code and Copilot CLI use `.mcp.json`; Codex uses `.codex/config.toml`; GitHub Copilot coding agent provides Playwright in its hosted environment.
+  Copilot selects each handler’s `bash` command on POSIX/cloud and its `powershell` command on Windows. Both resolve scripts from the repository root and use the shared Node pre-tool policy. The POSIX formatter/reminder paths are `post-tool-use.sh` and `stop-docs-sync.sh`; Windows uses the native PowerShell 7 equivalents `post-tool-use.ps1` and `stop-docs-sync.ps1`.
+  Confirm that the `playwright` MCP server is available before visual work. Claude Code and Copilot CLI use `.mcp.json`; Codex uses `.codex/config.toml`; GitHub Copilot coding agent provides Playwright in its hosted environment.
 
 GitHub Copilot CLI keeps repository hooks and workspace MCP servers off in an untrusted non-interactive `-p` session. Opt into both for that process when the folder has not already been trusted:
 
