@@ -547,15 +547,18 @@ for (const [event, handlers] of Object.entries(copilotHooks.hooks)) {
   }
 }
 
-const copilotPrePowerShell = copilotHooks.hooks.preToolUse.find(
-  (handler) => handler.type === "command",
-).powershell;
-const copilotPostPowerShell = copilotHooks.hooks.postToolUse.find(
-  (handler) => handler.type === "command",
-).powershell;
-const copilotStopPowerShell = copilotHooks.hooks.agentStop.find(
-  (handler) => handler.type === "command",
-).powershell;
+function findCopilotCommandHandler(event) {
+  const handler = copilotHooks.hooks[event]?.find(
+    (candidate) => candidate.type === "command",
+  );
+  assert(handler, `Copilot ${event} is missing a "type": "command" handler`);
+  return handler;
+}
+
+const copilotPrePowerShell = findCopilotCommandHandler("preToolUse").powershell;
+const copilotPostPowerShell =
+  findCopilotCommandHandler("postToolUse").powershell;
+const copilotStopPowerShell = findCopilotCommandHandler("agentStop").powershell;
 assert.match(copilotPrePowerShell, /pre-tool-use\.js.*copilot/);
 assert.match(copilotPostPowerShell, /post-tool-use\.ps1/);
 assert.match(copilotStopPowerShell, /stop-docs-sync\.ps1.*copilot/);
@@ -907,9 +910,7 @@ if (process.platform === "win32") {
   const pwsh = powerShell7.path;
 
   function runCopilotPowerShell(event, payload, cwd, env = process.env) {
-    const handler = copilotHooks.hooks[event].find(
-      (candidate) => candidate.type === "command",
-    );
+    const handler = findCopilotCommandHandler(event);
     return spawnSync(
       pwsh,
       [
