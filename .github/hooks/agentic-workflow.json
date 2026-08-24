@@ -5,6 +5,7 @@
       {
         "type": "command",
         "bash": "node \"$(git rev-parse --show-toplevel)/scripts/hooks/pre-tool-use.js\" copilot",
+        "powershell": "$repoRoot = git rev-parse --show-toplevel; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; node (Join-Path $repoRoot 'scripts/hooks/pre-tool-use.js') copilot",
         "timeoutSec": 30
       }
     ],
@@ -12,6 +13,7 @@
       {
         "type": "command",
         "bash": "bash \"$(git rev-parse --show-toplevel)/scripts/hooks/post-tool-use.sh\"",
+        "powershell": "$repoRoot = git rev-parse --show-toplevel; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; & (Join-Path $repoRoot 'scripts/hooks/post-tool-use.ps1')",
         "timeoutSec": 60
       }
     ],
@@ -19,6 +21,7 @@
       {
         "type": "command",
         "bash": "bash \"$(git rev-parse --show-toplevel)/scripts/hooks/stop-docs-sync.sh\" copilot",
+        "powershell": "$repoRoot = git rev-parse --show-toplevel; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; & (Join-Path $repoRoot 'scripts/hooks/stop-docs-sync.ps1') copilot",
         "timeoutSec": 10
       }
     ]
