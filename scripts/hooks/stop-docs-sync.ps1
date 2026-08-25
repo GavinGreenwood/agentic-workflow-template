@@ -75,18 +75,17 @@ foreach ($changedPath in $orderedPaths) {
 }
 $changed = [string]::Join([char]10, $uniquePaths)
 
-$gitDirectoryResult = Invoke-GitWithInput @("rev-parse", "--git-dir")
-if ($gitDirectoryResult.ExitCode -ne 0) {
+$markerResult = Invoke-GitWithInput @("rev-parse", "--git-path", ".docs-sync-reminded")
+if ($markerResult.ExitCode -ne 0) {
     exit 0
 }
-$gitDirectory = $gitDirectoryResult.Output.TrimEnd([char[]]@(13, 10))
-if ([string]::IsNullOrEmpty($gitDirectory)) {
+$marker = $markerResult.Output.TrimEnd([char[]]@(13, 10))
+if ([string]::IsNullOrEmpty($marker)) {
     exit 0
 }
-if (-not [IO.Path]::IsPathRooted($gitDirectory)) {
-    $gitDirectory = Join-Path (Get-Location).Path $gitDirectory
+if (-not [IO.Path]::IsPathRooted($marker)) {
+    $marker = Join-Path (Get-Location).Path $marker
 }
-$marker = Join-Path $gitDirectory ".docs-sync-reminded"
 
 $hashResult = Invoke-GitWithInput @("hash-object", "--stdin") $changed
 $hash = if ($hashResult.ExitCode -eq 0) { $hashResult.Output.TrimEnd([char[]]@(13, 10)) } else { "" }
