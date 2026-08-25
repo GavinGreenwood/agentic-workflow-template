@@ -194,7 +194,6 @@ function main() {
       [
         "bash",
         "shell",
-        "powershell",
         "execute",
         "exec",
         "exec_command",
