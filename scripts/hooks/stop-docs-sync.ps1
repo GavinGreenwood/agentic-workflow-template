@@ -14,6 +14,7 @@ function Invoke-GitWithInput {
     try {
         $startInfo = [System.Diagnostics.ProcessStartInfo]::new()
         $startInfo.FileName = "git"
+        $startInfo.WorkingDirectory = (Get-Location).Path
         $startInfo.UseShellExecute = $false
         $startInfo.RedirectStandardInput = $true
         $startInfo.RedirectStandardOutput = $true
@@ -74,15 +75,17 @@ foreach ($changedPath in $orderedPaths) {
 }
 $changed = [string]::Join([char]10, $uniquePaths)
 
-$gitDirectoryResult = Invoke-GitWithInput @("rev-parse", "--git-dir")
-if ($gitDirectoryResult.ExitCode -ne 0) {
+$markerResult = Invoke-GitWithInput @("rev-parse", "--git-path", ".docs-sync-reminded")
+if ($markerResult.ExitCode -ne 0) {
     exit 0
 }
-$gitDirectory = $gitDirectoryResult.Output.TrimEnd([char[]]@(13, 10))
-if ([string]::IsNullOrEmpty($gitDirectory)) {
+$marker = $markerResult.Output.TrimEnd([char[]]@(13, 10))
+if ([string]::IsNullOrEmpty($marker)) {
     exit 0
 }
-$marker = Join-Path $gitDirectory ".docs-sync-reminded"
+if (-not [IO.Path]::IsPathRooted($marker)) {
+    $marker = Join-Path (Get-Location).Path $marker
+}
 
 $hashResult = Invoke-GitWithInput @("hash-object", "--stdin") $changed
 $hash = if ($hashResult.ExitCode -eq 0) { $hashResult.Output.TrimEnd([char[]]@(13, 10)) } else { "" }

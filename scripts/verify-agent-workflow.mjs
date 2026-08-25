@@ -523,30 +523,6 @@ for (const script of copilotPowerShellScripts) {
       " is missing: Windows Copilot hooks require native PowerShell 7 scripts",
   );
 }
-for (const [event, handlers] of Object.entries(copilotHooks.hooks)) {
-  for (const handler of handlers.filter(
-    (candidate) => candidate.type === "command",
-  )) {
-    assert.equal(
-      typeof handler.powershell,
-      "string",
-      "Copilot " + event + " command handler needs a PowerShell 7 command",
-    );
-    assert.match(
-      handler.powershell,
-      /\$repoRoot\s*=\s*git rev-parse --show-toplevel/,
-      "Copilot " +
-        event +
-        " PowerShell command must resolve scripts from the Git root",
-    );
-    assert.doesNotMatch(
-      handler.powershell,
-      /powershell\.exe|invoke-git-bash/i,
-      "Copilot Windows hooks must use native pwsh 7 commands, not Windows PowerShell or a Git Bash launcher",
-    );
-  }
-}
-
 function findCopilotCommandHandler(event) {
   const handler = copilotHooks.hooks[event]?.find(
     (candidate) => candidate.type === "command",
@@ -911,6 +887,10 @@ if (process.platform === "win32") {
 
   function runCopilotPowerShell(event, payload, cwd, env = process.env) {
     const handler = findCopilotCommandHandler(event);
+    const options = { cwd, encoding: "utf8", env };
+    if (payload !== undefined) {
+      options.input = JSON.stringify(payload);
+    }
     return spawnSync(
       pwsh,
       [
@@ -920,213 +900,359 @@ if (process.platform === "win32") {
         "-Command",
         handler.powershell,
       ],
-      { cwd, input: JSON.stringify(payload), encoding: "utf8", env },
+      options,
     );
   }
 
-  const nestedWindowsCwd = at(nestedProbeDir);
-  const benignWindowsPolicy = runCopilotPowerShell(
-    "preToolUse",
-    {
-      toolName: "powershell",
-      toolArgs: JSON.stringify({ command: "git status" }),
-    },
-    nestedWindowsCwd,
-  );
-  assert.equal(
-    benignWindowsPolicy.status,
-    0,
-    "Windows benign PreToolUse failed: " + benignWindowsPolicy.stderr,
-  );
-  assert.equal(
-    benignWindowsPolicy.stdout,
-    "",
-    "Windows benign PreToolUse must approve implicitly",
-  );
-  const deniedWindowsPolicy = runCopilotPowerShell(
-    "preToolUse",
-    {
-      toolName: "powershell",
-      toolArgs: JSON.stringify({ command: "rm -rf /" }),
-    },
-    nestedWindowsCwd,
-  );
-  assert.equal(
-    deniedWindowsPolicy.status,
-    0,
-    "Windows denied PreToolUse failed: " + deniedWindowsPolicy.stderr,
-  );
-  assert.equal(
-    JSON.parse(deniedWindowsPolicy.stdout).permissionDecision,
-    "deny",
-  );
-
-  const windowsFormatterFixture = fs.mkdtempSync(
-    path.join(os.tmpdir(), "agent-format-pwsh-hook-"),
-  );
-  try {
+  function initialiseGitFixture(prefix, script) {
+    const fixture = fs.mkdtempSync(path.join(os.tmpdir(), prefix));
     const init = spawnSync("git", ["init", "--quiet"], {
-      cwd: windowsFormatterFixture,
+      cwd: fixture,
       encoding: "utf8",
     });
     assert.equal(
       init.status,
       0,
-      "Could not create Windows formatter hook fixture: " + init.stderr,
+      "Could not create hook fixture: " + init.stderr,
     );
-    const hookDir = path.join(windowsFormatterFixture, "scripts", "hooks");
+    const hookDir = path.join(fixture, "scripts", "hooks");
     fs.mkdirSync(hookDir, { recursive: true });
-    fs.copyFileSync(
-      at("scripts/hooks/post-tool-use.ps1"),
-      path.join(hookDir, "post-tool-use.ps1"),
-    );
-    const binDir = path.join(windowsFormatterFixture, "bin");
-    const callLog = path.join(windowsFormatterFixture, "npx.log");
-    fs.mkdirSync(binDir);
-    fs.writeFileSync(
-      path.join(windowsFormatterFixture, "moved.js"),
-      "const value = 1;\n",
-    );
-    fs.writeFileSync(
-      path.join(windowsFormatterFixture, "styled.ts"),
-      "const value = 2;\n",
-    );
-    fs.writeFileSync(
-      path.join(binDir, "npx.cmd"),
-      "@echo off\r\necho %*>>%HOOK_LOG%\r\nexit /b 0\r\n",
-    );
-    const env = {
-      ...process.env,
-      PATH: binDir + path.delimiter + process.env.PATH,
-      HOOK_LOG: callLog,
-    };
-    const directFormat = runCopilotPowerShell(
-      "postToolUse",
-      {
-        toolName: "create",
-        toolArgs: JSON.stringify({ filePath: "styled.ts" }),
-      },
-      windowsFormatterFixture,
-      env,
-    );
-    assert.equal(
-      directFormat.status,
-      0,
-      "Windows direct PostToolUse failed: " + directFormat.stderr,
-    );
-    const patchFormat = runCopilotPowerShell(
-      "postToolUse",
-      {
-        toolName: "apply_patch",
-        toolArgs:
-          "*** Begin Patch\n*** Update File: old.js\n*** Move to: moved.js\n*** End Patch\n",
-      },
-      windowsFormatterFixture,
-      env,
-    );
-    assert.equal(
-      patchFormat.status,
-      0,
-      "Windows apply_patch PostToolUse failed: " + patchFormat.stderr,
-    );
-    const formatterCalls = fs.readFileSync(callLog, "utf8");
-    assert.match(formatterCalls, /prettier --write styled\.ts/);
-    assert.match(formatterCalls, /eslint --fix styled\.ts/);
-    assert.match(formatterCalls, /prettier --write moved\.js/);
-  } finally {
-    fs.rmSync(windowsFormatterFixture, { recursive: true, force: true });
+    fs.copyFileSync(at("scripts/hooks", script), path.join(hookDir, script));
+    return fixture;
   }
 
-  const windowsStopFixture = fs.mkdtempSync(
-    path.join(os.tmpdir(), "agent-stop-pwsh-hook-"),
-  );
-  try {
-    const init = spawnSync("git", ["init", "--quiet"], {
-      cwd: windowsStopFixture,
-      encoding: "utf8",
-    });
-    assert.equal(
-      init.status,
-      0,
-      "Could not create Windows Stop hook fixture: " + init.stderr,
-    );
-    const hookDir = path.join(windowsStopFixture, "scripts", "hooks");
-    fs.mkdirSync(hookDir, { recursive: true });
-    fs.copyFileSync(
-      at("scripts/hooks/stop-docs-sync.ps1"),
-      path.join(hookDir, "stop-docs-sync.ps1"),
-    );
-    fs.writeFileSync(
-      path.join(windowsStopFixture, "source.js"),
-      "export {};\n",
-    );
-    const firstStop = runCopilotPowerShell("agentStop", {}, windowsStopFixture);
-    assert.equal(
-      firstStop.status,
-      0,
-      "Windows agentStop block failed: " + firstStop.stderr,
-    );
-    assert.deepEqual(JSON.parse(firstStop.stdout), {
-      decision: "block",
-      reason:
-        "DOCS SYNC: re-read AGENTS.md § Documentation Sync before stopping if this turn changed code, added a pattern, modified source or config, or introduced a new behaviour. Update PROGRESS.md and any affected docs/ files in the same change.",
-    });
-    const expectedMarkerHash = spawnSync("git", ["hash-object", "--stdin"], {
-      cwd: windowsStopFixture,
-      input: "source.js",
-      encoding: "utf8",
-    });
-    assert.equal(
-      expectedMarkerHash.status,
-      0,
-      "Could not calculate the expected docs-sync marker hash",
-    );
-    assert.equal(
-      fs.readFileSync(
-        path.join(windowsStopFixture, ".git", ".docs-sync-reminded"),
-        "utf8",
+  function withoutWorkspacePath(environment = process.env) {
+    return Object.fromEntries(
+      Object.entries(environment).filter(
+        ([key]) => key.toUpperCase() !== "COPILOT_WORKSPACE_PATH",
       ),
-      expectedMarkerHash.stdout.trim(),
-      "Windows agentStop must hash the sorted source path set without a trailing newline",
     );
-    const repeatedStop = runCopilotPowerShell(
-      "agentStop",
-      {},
-      windowsStopFixture,
-    );
-    assert.equal(
-      repeatedStop.status,
+  }
+
+  const foreignWindowsCwd = fs.mkdtempSync(
+    path.join(os.tmpdir(), "agent-pwsh-foreign-cwd-"),
+  );
+  try {
+    const foreignGitProbe = spawnSync("git", ["rev-parse", "--show-toplevel"], {
+      cwd: foreignWindowsCwd,
+      encoding: "utf8",
+    });
+    assert.notEqual(
+      foreignGitProbe.status,
       0,
-      "Windows idempotent agentStop failed: " + repeatedStop.stderr,
+      "Windows hook foreign cwd must not be inside any Git repository",
+    );
+
+    const workspaceEnv = {
+      ...withoutWorkspacePath(),
+      COPILOT_WORKSPACE_PATH: root,
+    };
+    const benignWindowsPolicy = runCopilotPowerShell(
+      "preToolUse",
+      {
+        toolName: "powershell",
+        toolArgs: JSON.stringify({ command: "git status" }),
+      },
+      foreignWindowsCwd,
+      workspaceEnv,
     );
     assert.equal(
-      repeatedStop.stdout,
-      "",
-      "Windows agentStop must allow an unchanged source set after reminding once",
-    );
-    fs.rmSync(path.join(windowsStopFixture, "source.js"));
-    fs.mkdirSync(path.join(windowsStopFixture, "docs"));
-    fs.writeFileSync(
-      path.join(windowsStopFixture, "docs", "notes.md"),
-      "docs only\n",
-    );
-    const docsOnlyStop = runCopilotPowerShell(
-      "agentStop",
-      {},
-      windowsStopFixture,
-    );
-    assert.equal(
-      docsOnlyStop.status,
+      benignWindowsPolicy.status,
       0,
-      "Windows docs-only agentStop failed: " + docsOnlyStop.stderr,
+      "Windows benign PreToolUse failed: " + benignWindowsPolicy.stderr,
     );
     assert.equal(
-      docsOnlyStop.stdout,
+      benignWindowsPolicy.stdout,
       "",
-      "Windows agentStop must allow docs-only changes",
+      "Windows benign PreToolUse must approve implicitly",
     );
+    const deniedWindowsPolicy = runCopilotPowerShell(
+      "preToolUse",
+      {
+        toolName: "powershell",
+        toolArgs: JSON.stringify({ command: "rm -rf /" }),
+      },
+      foreignWindowsCwd,
+      workspaceEnv,
+    );
+    assert.equal(
+      deniedWindowsPolicy.status,
+      0,
+      "Windows denied PreToolUse failed: " + deniedWindowsPolicy.stderr,
+    );
+    assert.equal(
+      JSON.parse(deniedWindowsPolicy.stdout).permissionDecision,
+      "deny",
+    );
+
+    const envWithoutWorkspace = withoutWorkspacePath();
+    const missingWorkspacePolicy = runCopilotPowerShell(
+      "preToolUse",
+      {
+        toolName: "powershell",
+        toolArgs: JSON.stringify({ command: "git status" }),
+      },
+      foreignWindowsCwd,
+      envWithoutWorkspace,
+    );
+    assert.equal(
+      missingWorkspacePolicy.status,
+      0,
+      "Windows missing-workspace PreToolUse must fail open: " +
+        missingWorkspacePolicy.stderr,
+    );
+    assert.match(
+      missingWorkspacePolicy.stderr,
+      /could not locate the repository root; requesting confirmation/i,
+    );
+    assert.equal(
+      JSON.parse(missingWorkspacePolicy.stdout).permissionDecision,
+      "ask",
+    );
+
+    const invalidWorkspacePolicy = runCopilotPowerShell(
+      "preToolUse",
+      {
+        toolName: "powershell",
+        toolArgs: JSON.stringify({ command: "rm -rf /" }),
+      },
+      root,
+      {
+        ...withoutWorkspacePath(),
+        COPILOT_WORKSPACE_PATH: path.join(foreignWindowsCwd, "missing"),
+      },
+    );
+    assert.equal(
+      invalidWorkspacePolicy.status,
+      0,
+      "Windows PreToolUse Git fallback failed: " +
+        invalidWorkspacePolicy.stderr,
+    );
+    assert.equal(
+      JSON.parse(invalidWorkspacePolicy.stdout).permissionDecision,
+      "deny",
+      "Windows PreToolUse must fall back to the cwd Git root when the workspace path is invalid",
+    );
+
+    const windowsFormatterFixture = initialiseGitFixture(
+      "agent-format-pwsh-hook-",
+      "post-tool-use.ps1",
+    );
+    try {
+      const binDir = path.join(windowsFormatterFixture, "bin");
+      const callLog = path.join(windowsFormatterFixture, "npx.log");
+      fs.mkdirSync(binDir);
+      fs.writeFileSync(
+        path.join(windowsFormatterFixture, "moved.js"),
+        "const value = 1;\n",
+      );
+      fs.writeFileSync(
+        path.join(windowsFormatterFixture, "styled.ts"),
+        "const value = 2;\n",
+      );
+      fs.writeFileSync(
+        path.join(binDir, "npx.cmd"),
+        "@echo off\r\necho %*>>%HOOK_LOG%\r\nexit /b 0\r\n",
+      );
+      const env = {
+        ...withoutWorkspacePath(),
+        COPILOT_WORKSPACE_PATH: windowsFormatterFixture,
+        PATH: binDir + path.delimiter + (process.env.PATH ?? ""),
+        HOOK_LOG: callLog,
+      };
+      const directFormat = runCopilotPowerShell(
+        "postToolUse",
+        {
+          toolName: "create",
+          toolArgs: JSON.stringify({ filePath: "styled.ts" }),
+        },
+        foreignWindowsCwd,
+        env,
+      );
+      assert.equal(
+        directFormat.status,
+        0,
+        "Windows direct PostToolUse failed: " + directFormat.stderr,
+      );
+      const patchFormat = runCopilotPowerShell(
+        "postToolUse",
+        {
+          toolName: "apply_patch",
+          toolArgs:
+            "*** Begin Patch\n*** Update File: old.js\n*** Move to: moved.js\n*** End Patch\n",
+        },
+        foreignWindowsCwd,
+        env,
+      );
+      assert.equal(
+        patchFormat.status,
+        0,
+        "Windows apply_patch PostToolUse failed: " + patchFormat.stderr,
+      );
+      const formatterCalls = fs.readFileSync(callLog, "utf8");
+      assert.match(formatterCalls, /prettier --write styled\.ts/);
+      assert.match(formatterCalls, /eslint --fix styled\.ts/);
+      assert.match(formatterCalls, /prettier --write moved\.js/);
+    } finally {
+      fs.rmSync(windowsFormatterFixture, { recursive: true, force: true });
+    }
+
+    const stopForeignCwd = fs.mkdtempSync(
+      path.join(os.tmpdir(), "agent-stop-pwsh-foreign-cwd-"),
+    );
+    const windowsStopFixture = initialiseGitFixture(
+      "agent-stop-pwsh-hook-",
+      "stop-docs-sync.ps1",
+    );
+    try {
+      fs.writeFileSync(
+        path.join(windowsStopFixture, "source.js"),
+        "export {};\n",
+      );
+      const stageSource = spawnSync("git", ["add", "source.js"], {
+        cwd: windowsStopFixture,
+        encoding: "utf8",
+      });
+      assert.equal(
+        stageSource.status,
+        0,
+        "Could not stage the Windows AgentStop fixture source: " +
+          stageSource.stderr,
+      );
+      const stopEnv = {
+        ...withoutWorkspacePath(),
+        COPILOT_WORKSPACE_PATH: windowsStopFixture,
+      };
+      const firstStop = runCopilotPowerShell(
+        "agentStop",
+        undefined,
+        stopForeignCwd,
+        stopEnv,
+      );
+      assert.equal(
+        firstStop.status,
+        0,
+        "Windows agentStop from foreign cwd failed: " + firstStop.stderr,
+      );
+      assert(
+        fs.existsSync(
+          path.join(windowsStopFixture, ".git", ".docs-sync-reminded"),
+        ),
+        "Windows AgentStop must detect the fixture source change: " +
+          firstStop.stderr,
+      );
+      assert.deepEqual(JSON.parse(firstStop.stdout), {
+        decision: "block",
+        reason:
+          "DOCS SYNC: re-read AGENTS.md § Documentation Sync before stopping if this turn changed code, added a pattern, modified source or config, or introduced a new behaviour. Update PROGRESS.md and any affected docs/ files in the same change.",
+      });
+      const expectedMarkerHash = spawnSync("git", ["hash-object", "--stdin"], {
+        cwd: windowsStopFixture,
+        input: "source.js",
+        encoding: "utf8",
+      });
+      assert.equal(
+        expectedMarkerHash.status,
+        0,
+        "Could not calculate the expected docs-sync marker hash",
+      );
+      assert.equal(
+        fs.readFileSync(
+          path.join(windowsStopFixture, ".git", ".docs-sync-reminded"),
+          "utf8",
+        ),
+        expectedMarkerHash.stdout.trim(),
+        "Windows agentStop must hash the sorted source path set without a trailing newline",
+      );
+      const repeatedStop = runCopilotPowerShell(
+        "agentStop",
+        undefined,
+        stopForeignCwd,
+        stopEnv,
+      );
+      assert.equal(
+        repeatedStop.status,
+        0,
+        "Windows idempotent agentStop failed: " + repeatedStop.stderr,
+      );
+      assert.equal(
+        repeatedStop.stdout,
+        "",
+        "Windows agentStop must allow an unchanged source set after reminding once",
+      );
+      fs.rmSync(path.join(windowsStopFixture, "source.js"));
+      const unstageSource = spawnSync("git", ["reset", "--", "source.js"], {
+        cwd: windowsStopFixture,
+        encoding: "utf8",
+      });
+      assert.equal(
+        unstageSource.status,
+        0,
+        "Could not reset the AgentStop fixture",
+      );
+      fs.mkdirSync(path.join(windowsStopFixture, "docs"));
+      fs.writeFileSync(
+        path.join(windowsStopFixture, "docs", "notes.md"),
+        "docs only\n",
+      );
+      const docsOnlyStop = runCopilotPowerShell(
+        "agentStop",
+        undefined,
+        stopForeignCwd,
+        stopEnv,
+      );
+      assert.equal(
+        docsOnlyStop.status,
+        0,
+        "Windows docs-only agentStop failed: " + docsOnlyStop.stderr,
+      );
+      assert.equal(
+        docsOnlyStop.stdout,
+        "",
+        "Windows agentStop must allow docs-only changes",
+      );
+    } finally {
+      fs.rmSync(windowsStopFixture, { recursive: true, force: true });
+      fs.rmSync(stopForeignCwd, { recursive: true, force: true });
+    }
   } finally {
-    fs.rmSync(windowsStopFixture, { recursive: true, force: true });
+    fs.rmSync(foreignWindowsCwd, { recursive: true, force: true });
+  }
+}
+
+for (const [event, handlers] of Object.entries(copilotHooks.hooks)) {
+  for (const handler of handlers.filter(
+    (candidate) => candidate.type === "command",
+  )) {
+    assert.equal(
+      typeof handler.powershell,
+      "string",
+      "Copilot " + event + " command handler needs a PowerShell 7 command",
+    );
+    assert.match(
+      handler.powershell,
+      /\$env:COPILOT_WORKSPACE_PATH/,
+      "Copilot " +
+        event +
+        " PowerShell command must prefer COPILOT_WORKSPACE_PATH",
+    );
+    assert.match(
+      handler.powershell,
+      /rev-parse --show-toplevel/,
+      "Copilot " + event + " PowerShell command must fall back to the Git root",
+    );
+    assert.match(
+      handler.powershell,
+      /Set-Location -LiteralPath \$repoRoot/,
+      "Copilot " +
+        event +
+        " PowerShell command must run from the resolved repository root",
+    );
+    assert.doesNotMatch(
+      handler.powershell,
+      /powershell\.exe|invoke-git-bash/i,
+      "Copilot Windows hooks must use native pwsh 7 commands, not Windows PowerShell or a Git Bash launcher",
+    );
   }
 }
 

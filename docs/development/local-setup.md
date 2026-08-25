@@ -93,6 +93,8 @@ For automation that already vets the hook source, `codex exec --dangerously-bypa
 - GitHub Copilot CLI: `.github/hooks/`, `.github/agents/`, and `.agents/skills/` are detected. Do not create a repo `.copilot` folder.
 
   Copilot selects each handler’s `bash` command on POSIX/cloud and its `powershell` command on Windows. Both resolve scripts from the repository root and use the shared Node pre-tool policy. The POSIX formatter/reminder paths are `post-tool-use.sh` and `stop-docs-sync.sh`; Windows uses the native PowerShell 7 equivalents `post-tool-use.ps1` and `stop-docs-sync.ps1`.
+
+  On Windows, the PowerShell wrappers prefer `COPILOT_WORKSPACE_PATH`, validate that the expected hook script exists there, and change to that directory before invoking it. This keeps worktree hooks anchored to the active workspace even when Copilot starts the hook from a foreign working directory, and ensures relative formatter paths resolve inside that worktree. If the variable is missing or stale, the wrapper falls back to `git rev-parse --show-toplevel` from its current directory and validates the script again. If neither source yields a valid root, hooks fail open: PreToolUse emits a diagnostic and an `ask` decision so the user must confirm the tool call, while PostToolUse and AgentStop emit a diagnostic and skip their advisory work.
   Confirm that the `playwright` MCP server is available before visual work. Claude Code and Copilot CLI use `.mcp.json`; Codex uses `.codex/config.toml`; GitHub Copilot coding agent provides Playwright in its hosted environment.
 
 GitHub Copilot CLI keeps repository hooks and workspace MCP servers off in an untrusted non-interactive `-p` session. Opt into both for that process when the folder has not already been trusted:
