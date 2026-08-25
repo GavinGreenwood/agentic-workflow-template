@@ -14,6 +14,7 @@ function Invoke-GitWithInput {
     try {
         $startInfo = [System.Diagnostics.ProcessStartInfo]::new()
         $startInfo.FileName = "git"
+        $startInfo.WorkingDirectory = (Get-Location).Path
         $startInfo.UseShellExecute = $false
         $startInfo.RedirectStandardInput = $true
         $startInfo.RedirectStandardOutput = $true
@@ -81,6 +82,9 @@ if ($gitDirectoryResult.ExitCode -ne 0) {
 $gitDirectory = $gitDirectoryResult.Output.TrimEnd([char[]]@(13, 10))
 if ([string]::IsNullOrEmpty($gitDirectory)) {
     exit 0
+}
+if (-not [IO.Path]::IsPathRooted($gitDirectory)) {
+    $gitDirectory = Join-Path (Get-Location).Path $gitDirectory
 }
 $marker = Join-Path $gitDirectory ".docs-sync-reminded"
 
