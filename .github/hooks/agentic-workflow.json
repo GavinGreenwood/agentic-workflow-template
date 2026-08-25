@@ -4,7 +4,7 @@
     "preToolUse": [
       {
         "type": "command",
-        "bash": "node \"$(git rev-parse --show-toplevel)/scripts/hooks/pre-tool-use.js\" copilot",
+        "bash": "repoRoot=\"$COPILOT_WORKSPACE_PATH\"; if [ -z \"$repoRoot\" ] || [ ! -f \"$repoRoot/scripts/hooks/pre-tool-use.js\" ]; then repoRoot=\"$(git rev-parse --show-toplevel 2>/dev/null)\"; fi; if [ -z \"$repoRoot\" ] || [ ! -f \"$repoRoot/scripts/hooks/pre-tool-use.js\" ]; then echo 'Copilot PreToolUse hook could not locate the repository root; requesting confirmation.' >&2; echo '{\"permissionDecision\":\"ask\",\"permissionDecisionReason\":\"Copilot PreToolUse safety hook could not locate the repository root; confirm this tool call manually.\"}'; exit 0; fi; node \"$repoRoot/scripts/hooks/pre-tool-use.js\" copilot",
         "powershell": "$repoRoot = $env:COPILOT_WORKSPACE_PATH; if ([string]::IsNullOrWhiteSpace([string]$repoRoot) -or -not (Test-Path -LiteralPath (Join-Path $repoRoot 'scripts/hooks/pre-tool-use.js') -PathType Leaf)) { $repoRoot = $null; $git = Get-Command git -ErrorAction SilentlyContinue; if ($null -ne $git) { $candidateRoot = [string](& $git.Source rev-parse --show-toplevel 2>$null); if ($? -and -not [string]::IsNullOrWhiteSpace($candidateRoot)) { $repoRoot = $candidateRoot.Trim() } } }; if ([string]::IsNullOrWhiteSpace([string]$repoRoot) -or -not (Test-Path -LiteralPath (Join-Path $repoRoot 'scripts/hooks/pre-tool-use.js') -PathType Leaf)) { [Console]::Error.WriteLine('Copilot PreToolUse hook could not locate the repository root; requesting confirmation.'); [Console]::Out.Write('{\"permissionDecision\":\"ask\",\"permissionDecisionReason\":\"Copilot PreToolUse safety hook could not locate the repository root; confirm this tool call manually.\"}'); exit 0 }; Set-Location -LiteralPath $repoRoot; node (Join-Path $repoRoot 'scripts/hooks/pre-tool-use.js') copilot",
         "timeoutSec": 30
       }
@@ -12,7 +12,7 @@
     "postToolUse": [
       {
         "type": "command",
-        "bash": "bash \"$(git rev-parse --show-toplevel)/scripts/hooks/post-tool-use.sh\"",
+        "bash": "repoRoot=\"$COPILOT_WORKSPACE_PATH\"; if [ -z \"$repoRoot\" ] || [ ! -f \"$repoRoot/scripts/hooks/post-tool-use.sh\" ]; then repoRoot=\"$(git rev-parse --show-toplevel 2>/dev/null)\"; fi; if [ -z \"$repoRoot\" ] || [ ! -f \"$repoRoot/scripts/hooks/post-tool-use.sh\" ]; then echo 'Copilot PostToolUse hook could not locate the repository root; skipping formatting.' >&2; exit 0; fi; bash \"$repoRoot/scripts/hooks/post-tool-use.sh\"",
         "powershell": "$repoRoot = $env:COPILOT_WORKSPACE_PATH; if ([string]::IsNullOrWhiteSpace([string]$repoRoot) -or -not (Test-Path -LiteralPath (Join-Path $repoRoot 'scripts/hooks/post-tool-use.ps1') -PathType Leaf)) { $repoRoot = $null; $git = Get-Command git -ErrorAction SilentlyContinue; if ($null -ne $git) { $candidateRoot = [string](& $git.Source rev-parse --show-toplevel 2>$null); if ($? -and -not [string]::IsNullOrWhiteSpace($candidateRoot)) { $repoRoot = $candidateRoot.Trim() } } }; if ([string]::IsNullOrWhiteSpace([string]$repoRoot) -or -not (Test-Path -LiteralPath (Join-Path $repoRoot 'scripts/hooks/post-tool-use.ps1') -PathType Leaf)) { [Console]::Error.WriteLine('Copilot PostToolUse hook could not locate the repository root; skipping formatting.'); exit 0 }; Set-Location -LiteralPath $repoRoot; & (Join-Path $repoRoot 'scripts/hooks/post-tool-use.ps1')",
         "timeoutSec": 60
       }
@@ -20,7 +20,7 @@
     "agentStop": [
       {
         "type": "command",
-        "bash": "bash \"$(git rev-parse --show-toplevel)/scripts/hooks/stop-docs-sync.sh\" copilot",
+        "bash": "repoRoot=\"$COPILOT_WORKSPACE_PATH\"; if [ -z \"$repoRoot\" ] || [ ! -f \"$repoRoot/scripts/hooks/stop-docs-sync.sh\" ]; then repoRoot=\"$(git rev-parse --show-toplevel 2>/dev/null)\"; fi; if [ -z \"$repoRoot\" ] || [ ! -f \"$repoRoot/scripts/hooks/stop-docs-sync.sh\" ]; then echo 'Copilot AgentStop hook could not locate the repository root; skipping the docs reminder.' >&2; exit 0; fi; bash \"$repoRoot/scripts/hooks/stop-docs-sync.sh\" copilot",
         "powershell": "$repoRoot = $env:COPILOT_WORKSPACE_PATH; if ([string]::IsNullOrWhiteSpace([string]$repoRoot) -or -not (Test-Path -LiteralPath (Join-Path $repoRoot 'scripts/hooks/stop-docs-sync.ps1') -PathType Leaf)) { $repoRoot = $null; $git = Get-Command git -ErrorAction SilentlyContinue; if ($null -ne $git) { $candidateRoot = [string](& $git.Source rev-parse --show-toplevel 2>$null); if ($? -and -not [string]::IsNullOrWhiteSpace($candidateRoot)) { $repoRoot = $candidateRoot.Trim() } } }; if ([string]::IsNullOrWhiteSpace([string]$repoRoot) -or -not (Test-Path -LiteralPath (Join-Path $repoRoot 'scripts/hooks/stop-docs-sync.ps1') -PathType Leaf)) { [Console]::Error.WriteLine('Copilot AgentStop hook could not locate the repository root; skipping the docs reminder.'); exit 0 }; Set-Location -LiteralPath $repoRoot; & (Join-Path $repoRoot 'scripts/hooks/stop-docs-sync.ps1') copilot",
         "timeoutSec": 10
       }
