@@ -1,6 +1,6 @@
 ---
-name: main
-description: "User-invoked only. Switch to main and pull latest. If on a feature branch, checks for uncommitted changes and whether the branch was pushed before deleting it."
+name: wrap-up
+description: "User-invoked only. Switch to main and pull latest, then delete the finished feature branch. Does not merge anything — use `pr` for that. Checks for uncommitted changes and whether the branch was pushed before deleting."
 disable-model-invocation: true
 allowed-tools: Bash(echo:*), Bash(git status:*), Bash(git branch:*), Bash(git checkout:*), Bash(git switch:*), Bash(git pull:*), Bash(git log:*), Bash(git rev-parse:*)
 ---

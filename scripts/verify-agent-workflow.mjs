@@ -55,7 +55,6 @@ const manualSkills = [
   "dependabot-review",
   "fix-cicd",
   "log-time",
-  "main",
   "morning",
   "multi-repo",
   "nightly-check",
@@ -69,6 +68,7 @@ const manualSkills = [
   "qa-review-action",
   "refine",
   "sync",
+  "wrap-up",
 ];
 const automaticSkills = ["assign-epic", "run"];
 const roleSkills = ["advisor", "worker", "morlock"];

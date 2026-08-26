@@ -258,7 +258,7 @@ Jira transitions are never applied per-PR in this loop. If this PR merged, its t
 
 ### Step 12 — Return to main
 
-If this PR's branch was checked out during this iteration, read and follow `.agents/skills/main/SKILL.md` now. This switches back to main, pulls latest, and deletes the local branch — housekeeping before moving to the next PR. Do not explain what `main` does or narrate the steps; just follow it.
+If this PR's branch was checked out during this iteration, read and follow `.agents/skills/wrap-up/SKILL.md` now. This switches back to main, pulls latest, and deletes the local branch — housekeeping before moving to the next PR. Do not explain what `wrap-up` does or narrate the steps; just follow it.
 
 ---
 
