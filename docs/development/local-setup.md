@@ -32,7 +32,9 @@ Fix it by putting `C:\Program Files\Git\bin` **before** `C:\Windows\system32` in
 $parts = [Environment]::GetEnvironmentVariable('Path','Machine') -split ';' |
     Where-Object { $_ -ne '' -and $_.TrimEnd('\') -ne 'C:\Program Files\Git\bin' }
 $i = [Array]::FindIndex($parts, [Predicate[string]] { $args[0].TrimEnd('\') -imatch '^[A-Za-z]:\\WINDOWS\\system32$' })
-$new = @($parts[0..($i - 1)] | Where-Object { $i -gt 0 }) + 'C:\Program Files\Git\bin' + $parts[$i..($parts.Count - 1)]
+if ($i -lt 0) { throw "C:\Windows\System32 not found in the Machine PATH — aborting rather than writing a guessed PATH." }
+$prefix = if ($i -gt 0) { $parts[0..($i - 1)] } else { @() }
+$new = $prefix + 'C:\Program Files\Git\bin' + $parts[$i..($parts.Count - 1)]
 [Environment]::SetEnvironmentVariable('Path', ($new -join ';'), 'Machine')
 ```
 
@@ -136,7 +138,7 @@ For automation that already vets the hook source, `codex exec --dangerously-bypa
 
   Each handler then checks the resolved script is present and **fails open** if it is not: PreToolUse emits a diagnostic on stderr plus an `ask` decision, and PostToolUse and AgentStop skip their advisory work. Copilot's own behaviour is fail-closed — a non-zero hook denies the tool call — so without this guard an unresolvable root denies every call in the session, `ask_user` included, and the agent cannot report or repair the problem. `scripts/verify-agent-workflow.mjs` covers both paths: the hook must enforce policy when started outside the repository with `COPILOT_PROJECT_DIR` set, and must return `ask` rather than exit non-zero when the root cannot be resolved at all.
 
-  The `"repo settings"` copy is fetched from the remote default branch, so a fix to the hook command only takes effect there once it merges.
+  Why the `"repo settings"` copy runs an older, unguarded command isn't confirmed — triage only established that it's independent of local file edits, not why. One hypothesis is that it's fetched from the remote default branch, in which case a fix to the hook command only takes effect there once it merges; treat that as unconfirmed until someone traces it further.
 
 Confirm that the `playwright` MCP server is available before visual work. Claude Code and Copilot CLI use `.mcp.json`; Codex uses `.codex/config.toml`; GitHub Copilot coding agent provides Playwright in its hosted environment.
 

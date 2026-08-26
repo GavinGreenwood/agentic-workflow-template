@@ -609,6 +609,10 @@ assert.equal(
 const copilotPreToolUse = commandHandlers(copilotHooks).find((handler) =>
   handler.bash.includes("pre-tool-use.js"),
 );
+assert.ok(
+  copilotPreToolUse,
+  "no Copilot preToolUse handler found in .github/hooks/agentic-workflow.json",
+);
 const foreignCwd = fs.mkdtempSync(path.join(os.tmpdir(), "copilot-hook-cwd-"));
 try {
   const foreignHook = spawnSync(copilotPreToolUse.bash, {
