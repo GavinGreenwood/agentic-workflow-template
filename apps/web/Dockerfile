@@ -5,7 +5,7 @@ COPY package*.json package-lock.json turbo.json ./
 COPY apps/web/package*.json apps/web/
 COPY packages/ packages/
 
-RUN npm ci --workspace=apps/web --workspace=packages/shared --workspace=packages/ui --include-workspace-root
+RUN npm ci --ignore-scripts --workspace=apps/web --workspace=packages/shared --workspace=packages/ui --include-workspace-root
 
 COPY apps/web/ apps/web/
 COPY packages/ packages/
