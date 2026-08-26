@@ -4,21 +4,21 @@
     "preToolUse": [
       {
         "type": "command",
-        "bash": "node \"$(git rev-parse --show-toplevel)/scripts/hooks/pre-tool-use.js\" copilot",
+        "bash": "hook=\"${COPILOT_PROJECT_DIR:-$(git rev-parse --show-toplevel)}/scripts/hooks/pre-tool-use.js\"; if [ ! -f \"$hook\" ]; then echo 'Copilot hook could not locate pre-tool-use.js from the repository root.' >&2; printf '%s' '{\"permissionDecision\":\"ask\",\"permissionDecisionReason\":\"The Copilot PreToolUse safety hook could not locate the repository root, so it could not vet this call. Confirm it manually.\"}'; exit 0; fi; node \"$hook\" copilot",
         "timeoutSec": 30
       }
     ],
     "postToolUse": [
       {
         "type": "command",
-        "bash": "bash \"$(git rev-parse --show-toplevel)/scripts/hooks/post-tool-use.sh\"",
+        "bash": "hook=\"${COPILOT_PROJECT_DIR:-$(git rev-parse --show-toplevel)}/scripts/hooks/post-tool-use.sh\"; if [ ! -f \"$hook\" ]; then echo 'Copilot hook could not locate post-tool-use.sh from the repository root.' >&2; exit 0; fi; bash \"$hook\"",
         "timeoutSec": 60
       }
     ],
     "agentStop": [
       {
         "type": "command",
-        "bash": "bash \"$(git rev-parse --show-toplevel)/scripts/hooks/stop-docs-sync.sh\" copilot",
+        "bash": "hook=\"${COPILOT_PROJECT_DIR:-$(git rev-parse --show-toplevel)}/scripts/hooks/stop-docs-sync.sh\"; if [ ! -f \"$hook\" ]; then echo 'Copilot hook could not locate stop-docs-sync.sh from the repository root.' >&2; exit 0; fi; bash \"$hook\" copilot",
         "timeoutSec": 10
       }
     ]
