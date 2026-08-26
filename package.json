@@ -24,7 +24,7 @@
     "test:e2e": "playwright test --pass-with-no-tests",
     "verify:agents": "node scripts/verify-agent-workflow.mjs",
     "clean": "turbo clean",
-    "prepare": "husky",
+    "prepare": "husky && bash scripts/setup-links.sh",
     "verify:codex-hooks": "node scripts/check-codex-hook-trust.mjs"
   },
   "overrides": {

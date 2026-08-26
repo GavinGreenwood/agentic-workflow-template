@@ -17,9 +17,13 @@ Before picking up your first ticket, read these. They explain the engineering ph
 
 ### Windows: the `.claude/skills` link
 
-`.claude/skills` is committed as a symlink to the canonical `.agents/skills` tree. That is deliberate: every agent reads the same skill files, so there is one copy to edit and no way for the trees to drift. Windows needs a little setup to honour it. Git on Windows defaults to `core.symlinks=false`, and in that state checkout writes a **17-byte text file** containing the link target instead of a link. Claude Code then finds **zero skills**, and `npm run verify:agents` fails with `.claude/skills must be a link to .agents/skills`.
+`.claude/skills` is committed as a symlink to the canonical `.agents/skills` tree. That is deliberate: every agent reads the same skill files, so there is one copy to edit and no way for the trees to drift. Windows needs a little setup to honour it. Git on Windows defaults to `core.symlinks=false`, and in that state checkout writes a **17-byte text file** containing the link target instead of a link. The agent then finds **zero skills**, and `npm run verify:agents` fails with `.claude/skills must be a link to .agents/skills`.
 
-Enable symlinks before cloning, or re-materialise the path afterwards:
+**The easiest fix is `npm install`.** The root `prepare` script runs `scripts/setup-links.sh`, which repairs the link the same way it installs the git hooks. It is idempotent — when the link already resolves to the canonical tree it exits without touching anything — and it never fails the install: if it cannot repair the link it warns loudly and prints the manual fix instead.
+
+As a side effect of repairing, it sets `core.symlinks=true` **in this clone only** (local config, reversible with `git config --unset core.symlinks`). It is never reached when the link is already healthy.
+
+If you would rather do it by hand:
 
 ```bash
 # Requires Windows Developer Mode (Settings -> Privacy & security -> For developers)
@@ -31,8 +35,13 @@ Verify it took:
 
 ```bash
 git ls-files -s .claude/skills   # mode must be 120000
+readlink -f .claude/skills       # must land inside THIS clone
 npm run verify:agents
 ```
+
+The `readlink` check is the one that matters. A link that merely _resolves_ is not proof of health: if the committed target is ever an absolute path, it resolves perfectly in every other clone — straight into the original clone's skill tree. Nothing errors; agents silently read another checkout's skills. The committed target must stay the relative `../.agents/skills`.
+
+#### The junction fallback
 
 If Developer Mode is unavailable — some managed devices block it — create a directory junction instead, which needs no elevation:
 
@@ -44,6 +53,11 @@ mklink /J .claude\skills "%CD%\.agents\skills"
 Run that from the repository root. `mklink /J` resolves a relative target against the
 current directory rather than the link's parent, so a relative `..\.agents\skills`
 produces a link that exists but points nowhere — hence the absolute `%CD%` form.
+
+> [!WARNING]
+> **Never run `git checkout -- .claude/skills` while a junction is in place.** It deletes your skills. Git clears the path before writing the symlink, and it recurses **through** the junction to do it — so it empties the real `.agents/skills` directory. Reproduced from a clean repository: four files in the target before, zero after. `rm -f` on a junction is safe; it is specifically git's path-clearing that recurses.
+>
+> Remove the junction first (`rmdir .claude\skills`, or `cmd /c rmdir` from Git Bash — **not** `rm -rf`, which recurses the same way), then let git write the link. `scripts/setup-links.sh` does exactly this, and bails out early when a healthy junction is already in place.
 
 The parity check accepts a junction: it records an absolute target rather than the relative `../.agents/skills`, so the check verifies that the path resolves to the canonical tree rather than string-matching the target. Do not replace the link with a copied directory — the two trees would drift and nothing would catch it.
 
