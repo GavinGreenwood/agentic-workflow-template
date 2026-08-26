@@ -563,8 +563,10 @@ for (const handler of commandHandlers(codexHooks)) {
 for (const handler of commandHandlers(copilotHooks)) {
   assert(
     typeof handler.bash === "string" &&
-      handler.bash.includes("$(git rev-parse --show-toplevel)"),
-    "Copilot hooks must use the documented bash key and resolve from the Git root",
+      handler.bash.includes(
+        "${COPILOT_PROJECT_DIR:-$(git rev-parse --show-toplevel)}",
+      ),
+    "Copilot hooks must use the documented bash key and resolve from COPILOT_PROJECT_DIR, falling back to the Git root",
   );
 }
 
@@ -596,6 +598,79 @@ assert.equal(
   0,
   `Codex hook failed from ${nestedProbeDir}: ${nestedCodexHook.stderr}`,
 );
+
+// Copilot loads repo hooks from more than one source, and at least one of them
+// starts the hook process outside the repository. `git rev-parse` fails there,
+// leaving a bare "/scripts/hooks/pre-tool-use.js" that Node resolves to
+// C:\scripts\hooks\pre-tool-use.js and exits 1 — and Copilot hooks are
+// fail-closed, so every tool call is denied, including ask_user. Copilot exports
+// the workspace root as COPILOT_PROJECT_DIR (COPILOT_WORKSPACE_PATH is unset),
+// so prefer it and keep the Git root only as a fallback.
+const copilotPreToolUse = commandHandlers(copilotHooks).find((handler) =>
+  handler.bash.includes("pre-tool-use.js"),
+);
+assert.ok(
+  copilotPreToolUse,
+  "no Copilot preToolUse handler found in .github/hooks/agentic-workflow.json",
+);
+const foreignCwd = fs.mkdtempSync(path.join(os.tmpdir(), "copilot-hook-cwd-"));
+try {
+  const foreignHook = spawnSync(copilotPreToolUse.bash, {
+    cwd: foreignCwd,
+    shell: POSIX_SHELL,
+    env: { ...process.env, COPILOT_PROJECT_DIR: root },
+    input: JSON.stringify({
+      toolName: "bash",
+      toolArgs: JSON.stringify({ command: "DROP TABLE users" }),
+    }),
+    encoding: "utf8",
+  });
+  assert.equal(
+    foreignHook.status,
+    0,
+    `Copilot PreToolUse hook failed outside the repo: ${foreignHook.stderr}`,
+  );
+  assert.equal(
+    JSON.parse(foreignHook.stdout).permissionDecision,
+    "deny",
+    "Copilot PreToolUse hook must still enforce policy when Copilot starts it outside the repository",
+  );
+} finally {
+  fs.rmSync(foreignCwd, { recursive: true, force: true });
+}
+
+// Fail-closed is what made the original Windows breakage unrecoverable: the hook
+// exited non-zero, so Copilot denied *every* tool call — including ask_user — and
+// the agent could not even ask for help, let alone repair the hook. When the root
+// cannot be resolved at all, ask for confirmation instead of exiting non-zero.
+const rootlessCwd = fs.mkdtempSync(
+  path.join(os.tmpdir(), "copilot-hook-rootless-"),
+);
+try {
+  const { COPILOT_PROJECT_DIR: _discarded, ...rootlessEnv } = process.env;
+  const rootlessHook = spawnSync(copilotPreToolUse.bash, {
+    cwd: rootlessCwd,
+    shell: POSIX_SHELL,
+    env: rootlessEnv,
+    input: JSON.stringify({
+      toolName: "bash",
+      toolArgs: JSON.stringify({ command: "git status" }),
+    }),
+    encoding: "utf8",
+  });
+  assert.equal(
+    rootlessHook.status,
+    0,
+    "Copilot PreToolUse hook must fail open, not exit non-zero, when it cannot locate the repository root",
+  );
+  assert.equal(
+    JSON.parse(rootlessHook.stdout).permissionDecision,
+    "ask",
+    "an unlocatable repository root must surface a confirmation prompt, not a silent approval or a hard deny",
+  );
+} finally {
+  fs.rmSync(rootlessCwd, { recursive: true, force: true });
+}
 
 function runStopHook(runtime) {
   const fixture = fs.mkdtempSync(path.join(os.tmpdir(), "agent-stop-hook-"));

@@ -12,8 +12,35 @@ Before picking up your first ticket, read these. They explain the engineering ph
 ## Prerequisites
 
 - Node.js (see `.nvmrc` for version)
-- Bash — the hooks in `scripts/hooks/` and the parity check shell out to it. On Windows, Git Bash (bundled with Git for Windows) is sufficient.
+- Bash — the hooks in `scripts/hooks/` and the parity check shell out to it. On Windows, Git Bash (bundled with Git for Windows) supplies it, but **installing Git is not enough — see below.**
+- On Windows only: `bash` must resolve to Git Bash, not the WSL launcher. See below.
 - On Windows only: symlink support enabled, so `.claude/skills` materialises as a link. See below.
+
+### Windows: `bash` must resolve to Git Bash
+
+Git for Windows puts `C:\Program Files\Git\cmd` on `PATH`, and that directory contains **no `bash.exe`** — the binary lives in `C:\Program Files\Git\bin`, which the installer does not add. With `Git\bin` absent, a bare `bash` resolves to `C:\Windows\System32\bash.exe`: the **WSL launcher**. Unless you have a WSL distro with a `/bin/bash`, it exits 1 with:
+
+```
+<3>WSL (9 - Relay) ERROR: CreateProcessCommon:798: execvpe(/bin/bash) failed: No such file or directory
+```
+
+Copilot CLI runs each hook's `bash` command through whatever `bash` is on `PATH`, and **its hooks are fail-closed**. So this one missing `PATH` entry denies _every_ tool call in the session — including `ask_user`, which is what makes it unrecoverable from inside the agent: it cannot even ask you for help, let alone repair the hook. The symptom is `Denied by preToolUse hook … (hook errored)` on everything; the cause is invisible unless you read `~/.copilot/logs/process-*.log`.
+
+Fix it by putting `C:\Program Files\Git\bin` **before** `C:\Windows\system32` in the **Machine** `PATH`. It must be the Machine list, not the User list: Windows composes a process `PATH` as Machine-then-User, so a User entry still loses to `System32`. From an **elevated** PowerShell 7:
+
+```powershell
+$parts = [Environment]::GetEnvironmentVariable('Path','Machine') -split ';' |
+    Where-Object { $_ -ne '' -and $_.TrimEnd('\') -ne 'C:\Program Files\Git\bin' }
+$i = [Array]::FindIndex($parts, [Predicate[string]] { $args[0].TrimEnd('\') -imatch '^[A-Za-z]:\\WINDOWS\\system32$' })
+if ($i -lt 0) { throw "C:\Windows\System32 not found in the Machine PATH — aborting rather than writing a guessed PATH." }
+$prefix = if ($i -gt 0) { $parts[0..($i - 1)] } else { @() }
+$new = $prefix + 'C:\Program Files\Git\bin' + $parts[$i..($parts.Count - 1)]
+[Environment]::SetEnvironmentVariable('Path', ($new -join ';'), 'Machine')
+```
+
+Then **sign out and back in, or reboot.** Restarting the editor is not enough, and neither is killing `explorer.exe` — Explorer is relaunched with the logon session's cached environment block, so everything it starts inherits the stale `PATH`. Verify with `(Get-Command bash).Source`, which must print `C:\Program Files\Git\bin\bash.exe`.
+
+This is a workstation fix, not a repo fix: the hook command string cannot help, because Copilot has already resolved `bash` before the string runs.
 
 ### Windows: the `.claude/skills` link
 
@@ -104,6 +131,14 @@ That check is part of `scripts/verify.sh`. It fails and names each handler that 
 For automation that already vets the hook source, `codex exec --dangerously-bypass-hook-trust …` runs enabled hooks without persisted trust for that invocation. It is not a substitute for reviewing them on a workstation.
 
 - GitHub Copilot CLI: `.github/hooks/`, `.github/agents/`, and `.agents/skills/` are detected. Do not create a repo `.copilot` folder.
+
+  Each handler resolves its script as `${COPILOT_PROJECT_DIR:-$(git rev-parse --show-toplevel)}/scripts/hooks/…`. `COPILOT_PROJECT_DIR` is the workspace root Copilot exports into every hook process; the Git root is only a fallback. Prefer the variable, because Copilot loads repo hooks from **two** sources — the `.github/hooks/*.json` file and a second one it labels `"repo settings"` — and the second runs with no working directory. There, `git rev-parse` fails, `$(…)` expands to empty, and the command degrades to a bare `/scripts/hooks/pre-tool-use.js` that Node resolves against the filesystem root (`C:\scripts\hooks\pre-tool-use.js` on Windows).
+
+  Note `COPILOT_WORKSPACE_PATH` is **not** set — an earlier fix keyed on that name and silently fell through to the same failing `git rev-parse`. Confirm any replacement by dumping `env` from inside a hook rather than assuming a variable exists.
+
+  Each handler then checks the resolved script is present and **fails open** if it is not: PreToolUse emits a diagnostic on stderr plus an `ask` decision, and PostToolUse and AgentStop skip their advisory work. Copilot's own behaviour is fail-closed — a non-zero hook denies the tool call — so without this guard an unresolvable root denies every call in the session, `ask_user` included, and the agent cannot report or repair the problem. `scripts/verify-agent-workflow.mjs` covers both paths: the hook must enforce policy when started outside the repository with `COPILOT_PROJECT_DIR` set, and must return `ask` rather than exit non-zero when the root cannot be resolved at all.
+
+  Why the `"repo settings"` copy runs an older, unguarded command isn't confirmed — triage only established that it's independent of local file edits, not why. One hypothesis is that it's fetched from the remote default branch, in which case a fix to the hook command only takes effect there once it merges; treat that as unconfirmed until someone traces it further.
 
 Confirm that the `playwright` MCP server is available before visual work. Claude Code and Copilot CLI use `.mcp.json`; Codex uses `.codex/config.toml`; GitHub Copilot coding agent provides Playwright in its hosted environment.
 
