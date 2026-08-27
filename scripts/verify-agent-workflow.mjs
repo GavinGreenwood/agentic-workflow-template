@@ -71,14 +71,13 @@ const manualSkills = [
   "wrap-up",
 ];
 const automaticSkills = ["assign-epic", "run"];
-const roleSkills = ["advisor", "worker", "morlock"];
+const roleSkills = ["advisor", "morlock"];
+const retiredRoles = ["worker"];
 const roleDescriptions = {
   advisor:
     "On-demand strategic advisor running on a more capable model. Consult before committing to a consequential decision — a non-trivial design choice, a risky refactor, an ambiguous tradeoff, or when the executor is stuck. It advises; it does not edit. Invoke it deliberately, not every turn.",
   morlock:
     "Probe the repository for reproducible security weaknesses and preserve confirmed findings as tests.",
-  worker:
-    "Cheap, fast worker running on a lighter model for well-specified grunt work — bulk grepping, mechanical edits, log-trawling, gathering file contents, routine lookups. Delegate here when the task is clear and low-judgement so the main loop's context and cost stay reserved for the hard calls.",
 };
 
 function frontmatter(markdown, file) {
@@ -107,6 +106,16 @@ assert.equal(
 );
 assert(fs.existsSync(at("AGENTS.md")), "AGENTS.md is missing");
 const agentContract = read("AGENTS.md");
+for (const name of retiredRoles) {
+  for (const file of [
+    `.agents/skills/${name}`,
+    `.claude/agents/${name}.md`,
+    `.codex/agents/${name}.toml`,
+    `.github/agents/${name}.agent.md`,
+  ]) {
+    assert.equal(fs.existsSync(at(file)), false, `${file} must stay removed`);
+  }
+}
 assert.match(
   agentContract,
   /A skill whose description starts with `User-invoked only\.` may start only when the user names it/,
@@ -315,12 +324,6 @@ assert.doesNotMatch(
   /\b(edit|execute|write)\b/,
   ".github/agents/advisor.agent.md must not grant a write tool: the read-only promise is enforced by the tool list, not by the role body",
 );
-assert.match(
-  read(".github/agents/worker.agent.md"),
-  /^model: gpt-5\.6-luna$/m,
-  "Copilot worker must use the lighter model it promises",
-);
-
 for (const name of [...manualSkills, ...automaticSkills, ...roleSkills]) {
   const file = at(".agents", "skills", name, "SKILL.md");
   const markdown = fs.readFileSync(file, "utf8");
