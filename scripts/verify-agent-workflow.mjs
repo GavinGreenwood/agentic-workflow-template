@@ -480,6 +480,13 @@ assert.deepEqual(sharedMcp.mcpServers?.playwright, {
   args: ["-y", "@playwright/mcp@latest"],
 });
 const codexConfig = read(".codex/config.toml");
+for (const name of retiredRoles) {
+  assert.doesNotMatch(
+    codexConfig,
+    new RegExp(`^\\[agents\\.${name}\\]$`, "m"),
+    `.codex/config.toml must not register retired role ${name}`,
+  );
+}
 // A `.codex/agents/<role>.toml` file is inert unless config.toml declares the
 // role: without the declaration Codex cannot spawn it, so the model and sandbox
 // guarantees in the role description simply do not exist on that runtime.
