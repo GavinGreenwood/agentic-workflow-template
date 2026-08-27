@@ -11,8 +11,5 @@ required = false
 [agents.advisor]
 config_file = "agents/advisor.toml"
 
-[agents.worker]
-config_file = "agents/worker.toml"
-
 [agents.morlock]
 config_file = "agents/morlock.toml"
