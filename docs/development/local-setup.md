@@ -88,6 +88,24 @@ produces a link that exists but points nowhere — hence the absolute `%CD%` for
 
 The parity check accepts a junction: it records an absolute target rather than the relative `../.agents/skills`, so the check verifies that the path resolves to the canonical tree rather than string-matching the target. Do not replace the link with a copied directory — the two trees would drift and nothing would catch it.
 
+### Git worktrees and `.env`
+
+`.env` is gitignored, so a freshly created worktree does not have one. Thirteen skills run
+`source .env` to reach `JIRA_API_TOKEN` and `TEMPO_API_TOKEN`, and in a worktree without it
+they stop and ask you for credentials that are sitting in your main checkout.
+
+`.worktreeinclude` at the repo root fixes this for tools that honour the convention — Claude
+Code copies the listed files into each new worktree at creation time. **GitHub Copilot CLI
+does not honour `.worktreeinclude`** (verified against 1.0.80), so a Copilot-created worktree
+still starts without `.env`; copy it in by hand there.
+
+Note that `.claude/settings.json` hooks already resolve the repo root with
+`git rev-parse --show-toplevel`, which is worktree-correct, and `scripts/verify.sh` needs no
+credentials — so verification and the git hooks work in a worktree regardless.
+
+If you would rather not use worktrees at all, the `multi-repo` skill takes the opposite
+approach deliberately: independent clones per slot, with `.env` copied between them.
+
 ## Coding Agent Setup
 
 Use Claude Code, Codex, or GitHub Copilot CLI. All three read `AGENTS.md` and the canonical skills in `.agents/skills/` through their repository adapters.

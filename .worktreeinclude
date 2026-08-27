@@ -1,0 +1,11 @@
+# Gitignored local files that worktree-creating tools copy into a new worktree.
+# Patterns use .gitignore syntax; tracked files are never duplicated.
+#
+# Claude Code honours this convention. GitHub Copilot CLI does not, so a
+# Copilot-created worktree still starts without these files — see
+# docs/development/local-setup.md § Git worktrees and `.env`.
+#
+# Deliberately minimal: developer credentials only. Never add dependencies,
+# build output, or branch state — copying those defeats the point of a clean
+# worktree.
+.env
