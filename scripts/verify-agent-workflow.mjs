@@ -71,11 +71,11 @@ const manualSkills = [
   "wrap-up",
 ];
 const automaticSkills = ["assign-epic", "run"];
-const roleSkills = ["advisor", "morlock"];
+const roleSkills = ["consultant", "morlock"];
 const retiredRoles = ["worker"];
 const roleDescriptions = {
-  advisor:
-    "On-demand strategic advisor running on a more capable model. Consult before committing to a consequential decision — a non-trivial design choice, a risky refactor, an ambiguous tradeoff, or when the executor is stuck. It advises; it does not edit. Invoke it deliberately, not every turn.",
+  consultant:
+    "On-demand strategic consultant running on a more capable model. Consult before committing to a consequential decision — a non-trivial design choice, a risky refactor, an ambiguous tradeoff, or when the executor is stuck. It advises; it does not edit. Invoke it deliberately, not every turn.",
   morlock:
     "Probe the repository for reproducible security weaknesses and preserve confirmed findings as tests.",
 };
@@ -85,6 +85,61 @@ function frontmatter(markdown, file) {
   assert(match, `${file} must start with YAML frontmatter`);
   return match[1];
 }
+
+// A `tools:` value the read-only assertions below can actually trust. Matching
+// /^tools: .*$/ and defaulting to "" failed open three ways, all three verified
+// to pass before this parser landed: a role file with no `tools` field scored as
+// empty and passed, while both Claude Code and Copilot read a missing field as
+// "inherit every tool" -- the exact opposite of the guarantee; `tools:` with an
+// empty value did the same; and a YAML block list (`tools:\n  - Write`) also
+// scored as empty, because the regex needs the value on the same line.
+function parseToolList(metadata, file) {
+  const inline = metadata.match(/^tools:[ \t]*(.+)$/m);
+  const block = metadata.match(/^tools:[ \t]*\n((?:[ \t]+-[ \t]*.+\n?)+)/m);
+  const raw = inline
+    ? inline[1].trim().replace(/^\[/, "").replace(/\]$/, "")
+    : (block?.[1] ?? "").replace(/^[ \t]*-[ \t]*/gm, ",");
+  const tools = raw
+    .split(",")
+    .map((tool) => tool.trim().replace(/^["']/, "").replace(/["']$/, ""))
+    .filter(Boolean);
+  assert(
+    tools.length > 0,
+    `${file} must declare a non-empty tools field: both Claude Code and Copilot read a missing or empty one as "inherit every tool", so leaving it off silently removes the boundary the role description promises`,
+  );
+  return tools;
+}
+
+const toolList = (file) => parseToolList(frontmatter(read(file), file), file);
+
+// Regression cases for the parser. These are the exact shapes that silently
+// passed the old match; if any stops being rejected, the read-only assertions
+// have gone back to failing open.
+for (const [label, metadata] of [
+  ["a missing tools field", "name: x\nmodel: opus"],
+  ["an empty tools field", "name: x\ntools:\nmodel: opus"],
+]) {
+  assert.throws(
+    () => parseToolList(metadata, `<${label}>`),
+    /must declare a non-empty tools field/,
+    `parseToolList must reject ${label}: that is how a role ends up inheriting every tool`,
+  );
+}
+assert.deepEqual(
+  parseToolList("tools:\n  - Read\n  - Write", "<block list>"),
+  ["Read", "Write"],
+  "parseToolList must read a YAML block list: a multiline list containing Write used to score as empty and pass",
+);
+assert.deepEqual(
+  parseToolList('tools: [read, search, "playwright/*"]', "<flow list>"),
+  ["read", "search", "playwright/*"],
+  "parseToolList must read a YAML flow list, including a quoted wildcard MCP grant",
+);
+assert.deepEqual(
+  parseToolList("tools: Read, Grep, Glob", "<comma string>"),
+  ["Read", "Grep", "Glob"],
+  "parseToolList must read Claude Code's comma-separated string form",
+);
 
 function assertSkill(name) {
   const file = `.agents/skills/${name}/SKILL.md`;
@@ -303,27 +358,38 @@ for (const name of roleSkills) {
     /^model: \S+$/m,
     `.github/agents/${name}.agent.md must pin a model`,
   );
+  // Not just the read-only role: a missing tools field means "inherit
+  // everything" on both runtimes, which erases whatever capability boundary the
+  // role description claims. Codex has no per-role tool field.
+  toolList(`.claude/agents/${name}.md`);
+  toolList(`.github/agents/${name}.agent.md`);
 }
 
 assert.match(
-  read(".github/agents/advisor.agent.md"),
+  read(".github/agents/consultant.agent.md"),
   /^model: gpt-5\.6-sol$/m,
-  "Copilot advisor must use the more capable model it promises",
+  "Copilot consultant must use the more capable model it promises",
 );
 
-// The advisor "advises; it does not edit" promise is only hard where the adapter
-// withholds write tools. Codex cannot enforce it -- a role file's sandbox_mode
-// does not constrain the spawned agent -- so the two runtimes that can, must.
-assert.doesNotMatch(
-  read(".claude/agents/advisor.md").match(/^tools: .*$/m)?.[0] ?? "",
-  /\b(Write|Edit|Bash|NotebookEdit)\b/,
-  ".claude/agents/advisor.md must not grant a write tool: the read-only promise is enforced by the tool list, not by the role body",
-);
-assert.doesNotMatch(
-  read(".github/agents/advisor.agent.md").match(/^tools: .*$/m)?.[0] ?? "",
-  /\b(edit|execute|write)\b/,
-  ".github/agents/advisor.agent.md must not grant a write tool: the read-only promise is enforced by the tool list, not by the role body",
-);
+// The consultant "advises; it does not edit" promise is only hard where the
+// adapter withholds write tools. Codex cannot enforce it -- a role file's
+// sandbox_mode does not constrain the spawned agent -- so the two runtimes that
+// can, must. Assert the exact list rather than the absence of known write tools:
+// a denylist cannot see a capability it has no name for, and it did not see that
+// the Copilot adapter's `playwright/*` grant can click, type, and submit forms,
+// which is a state change whatever it is called. Adding a tool here is now a
+// deliberate edit to this list, not something a role file can do on its own.
+const readOnlyRoleTools = {
+  ".claude/agents/consultant.md": ["Read", "Grep", "Glob"],
+  ".github/agents/consultant.agent.md": ["read", "search"],
+};
+for (const [file, expected] of Object.entries(readOnlyRoleTools)) {
+  assert.deepEqual(
+    toolList(file),
+    expected,
+    `${file} must grant exactly [${expected.join(", ")}]: the consultant's read-only promise is enforced by this list, not by the role body, so any addition -- a write tool, a shell, or a wildcard MCP grant that can change state -- has to be justified here first`,
+  );
+}
 for (const name of [...manualSkills, ...automaticSkills, ...roleSkills]) {
   const file = at(".agents", "skills", name, "SKILL.md");
   const markdown = fs.readFileSync(file, "utf8");

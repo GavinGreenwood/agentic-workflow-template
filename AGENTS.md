@@ -44,6 +44,26 @@ The Jira board mirrors this loop, and keeping it in sync is **required, not opti
 
 A skill whose description starts with `Role adapter only.` is a **role body, not a workflow**. It exists to be loaded by its role adapter in `.claude/agents/`, `.codex/agents/`, or `.github/agents/` — never as a skill in the main loop, and never on a user's behalf. The model and tool guarantees stated in a role description are supplied by the adapter, not by the `SKILL.md` (a Codex role's `sandbox_mode` is the exception — see README); loading the body on its own gives you the instructions without the guarantees and makes the description false. To consult a role, delegate to its adapter through whatever mechanism the current runtime provides. If the runtime offers none, the role is simply unavailable there — do not read the body in its place, because that is the same false-guarantee failure.
 
+## Consulting the `consultant` Role
+
+`consultant` is the escalation path for consequential decisions. Delegate to it — through the runtime's role adapter, never by loading the body — before committing to a non-trivial design choice, before a risky refactor, when a tradeoff is genuinely ambiguous, or when the same failure has beaten you twice. It is read-only: it returns a verdict you act on, it does not edit. Do not consult it for routine work you can handle alone.
+
+**It is deliberately not named `advisor`.** Claude Code ships a built-in server-side tool literally named `advisor`, enabled by the `advisorModel` setting in `.claude/settings.json`. The two are different mechanisms, and on Claude Code both are live at once:
+
+|           | Built-in `advisor` tool                                                                                            | `consultant` role                                                                                         |
+| --------- | ------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------- |
+| Context   | The full conversation, every tool call and result                                                                  | Fresh — the role body and this contract, plus whatever the delegation prompt carries                      |
+| Grounding | Whatever is already in the transcript                                                                              | Can read this contract, the relevant `docs/`, and the implementation — under the ADR reading policy below |
+| Timing    | The model calls it when it wants; Claude Code prompts it to call before substantive work and before declaring done | You delegate explicitly, at a decision point you chose                                                    |
+| Guarantee | Server-side, guidance only                                                                                         | A pinned model on all three runtimes; a read-only tool list only where the adapter enforces one           |
+| Runtimes  | Claude Code only                                                                                                   | All three                                                                                                 |
+
+Treat the built-in tool as the ambient second opinion — it needs no instruction from you. Delegate to `consultant` when the decision turns on **this repo's contract**: a documented standard, an ADR, an architecture doc. The built-in tool sees those only if they already happen to be in the transcript; the role goes and reads them.
+
+**Do not read the "read-only" promise as stronger than it is.** It is a hard tool restriction only on Claude Code, and even there the declared `tools` list is not exhaustive — Claude Code injects the built-in `advisor` tool into subagents on top of it, so a `consultant` delegation can itself call the advisor and bill another uncached full-transcript read. On Codex it is instruction-level only: a role's `sandbox_mode` is overwritten by the parent's; see README. What `verify:agents` actually asserts is narrower than "read-only": that the Claude and Copilot adapters declare exactly the tool lists recorded in the verifier, so a capability cannot be added to either without an explicit edit there.
+
+Never write "consult the advisor" in a prompt, skill, or commit message and expect the role. On Claude Code that phrase resolves to the built-in tool, which silently bypasses every model and tool guarantee the role description promises — the same false-guarantee failure as loading a role body directly.
+
 ## MCP Servers
 
 `.mcp.json` configures the shared `playwright` MCP server (`@playwright/mcp`) for Claude Code and GitHub Copilot CLI. `.codex/config.toml` configures the same server for Codex. The `run` skill in `.agents/skills/run/SKILL.md` owns browser verification and uses Playwright to browse, click through, and screenshot the running app when it is available. Add further MCP servers to these shared runtime configurations as the project grows (e.g. a design-source server for Figma/Storybook, a CI-status server).
