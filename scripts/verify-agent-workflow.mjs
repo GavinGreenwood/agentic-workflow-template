@@ -71,11 +71,20 @@ const manualSkills = [
   "wrap-up",
 ];
 const automaticSkills = ["assign-epic", "run"];
-const roleSkills = ["advisor", "morlock"];
+const roleSkills = ["consultant", "morlock"];
 const retiredRoles = ["worker"];
+// Every role must say, in one machine-readable place, whether it may change
+// state. Without this, a future role whose body promises "it does not edit" can
+// be added with write tools and no exact tool list, and the verifier stays green
+// -- demonstrated with a proposed `auditor` role. `readOnlyRoleTools` below is
+// required to cover every role marked read-only here.
+const roleStatePolicy = {
+  consultant: "read-only",
+  morlock: "stateful",
+};
 const roleDescriptions = {
-  advisor:
-    "On-demand strategic advisor running on a more capable model. Consult before committing to a consequential decision — a non-trivial design choice, a risky refactor, an ambiguous tradeoff, or when the executor is stuck. It advises; it does not edit. Invoke it deliberately, not every turn.",
+  consultant:
+    "Strategic consultant running on a more capable model. Use proactively before committing to a consequential decision — a non-trivial design choice, a risky refactor, an ambiguous tradeoff, or when the same failure has beaten you twice. It advises; it does not edit. Skip it for routine work that needs no second opinion.",
   morlock:
     "Probe the repository for reproducible security weaknesses and preserve confirmed findings as tests.",
 };
@@ -85,6 +94,136 @@ function frontmatter(markdown, file) {
   assert(match, `${file} must start with YAML frontmatter`);
   return match[1];
 }
+
+// A `tools:` value the read-only assertions below can actually trust. The
+// runtimes parse real YAML; this is a deliberately small reader over the three
+// shapes the adapters actually use, and it **fails closed** on anything else.
+// That matters because a reader that silently returns a *narrower* list than the
+// runtime grants is worse than no check at all -- it reports a guarantee that
+// does not hold. Matching /^tools: .*$/ and defaulting to "" did exactly that,
+// four ways, each verified against the whole verifier:
+//   - no `tools` field at all, which both Claude Code and Copilot read as
+//     "inherit every tool" -- the exact opposite of the guarantee;
+//   - `tools:` with an empty value, for the same reason;
+//   - a YAML block list, because the regex needs the value on the same line;
+//   - a flow list continued on the next line (`tools: [read, search\n  , edit]`),
+//     which is valid YAML and hid a write tool past the check completely.
+// A YAML dependency would be the other way to fix this. It is deliberately not
+// used: `yaml` is only a transitive dependency here, so a check that is the
+// repo's load-bearing guarantee would start silently depending on another
+// package's dependency tree. Failing closed needs no dependency and is the safer
+// default -- an unreadable shape stops the build instead of passing quietly.
+function parseToolList(metadata, file) {
+  const lines = metadata.split(/\r?\n/);
+  const index = lines.findIndex((line) => /^tools:/.test(line));
+  assert(
+    index !== -1,
+    `${file} must declare a tools field: both Claude Code and Copilot read a missing one as "inherit every tool", so leaving it off silently removes the boundary the role description promises`,
+  );
+  const value = lines[index].replace(/^tools:[ \t]*/, "").trim();
+  let raw;
+  if (value === "") {
+    // YAML block sequence. Take contiguous `- item` lines, and refuse anything
+    // else indented under the key -- a comment or a wrapped scalar there would
+    // truncate the list, which is the dangerous direction.
+    const items = [];
+    let cursor = index + 1;
+    for (; cursor < lines.length; cursor += 1) {
+      const item = lines[cursor].match(/^[ \t]+-[ \t]*(.+?)[ \t]*$/);
+      if (item) {
+        items.push(item[1]);
+        continue;
+      }
+      assert(
+        !/^[ \t]*\S/.test(lines[cursor]) || !/^[ \t]/.test(lines[cursor]),
+        `${file} has content indented under tools that is not a list item (${lines[cursor].trim()}): this check will not guess what it grants`,
+      );
+      break;
+    }
+    // A blank line ends the loop above, so make sure no further list items are
+    // hiding after one. Role frontmatter has no other sequences.
+    assert(
+      !lines.slice(cursor).some((line) => /^[ \t]+-[ \t]*\S/.test(line)),
+      `${file} has tools list items separated by a blank line: fold them into one contiguous list so this check reads all of them`,
+    );
+    raw = items.join(",");
+  } else if (value.startsWith("[")) {
+    assert(
+      value.endsWith("]"),
+      `${file} declares a flow-style tools list that does not close on the same line: YAML allows that, but this check reads one line, so it would miss every tool after the break -- put the whole list on one line`,
+    );
+    raw = value.slice(1, -1);
+  } else {
+    assert(
+      !value.includes("[") && !value.includes("#"),
+      `${file} declares a tools value this check cannot read safely (${value})`,
+    );
+    raw = value;
+  }
+  const tools = raw
+    .split(",")
+    .map((tool) => tool.trim().replace(/^["']/, "").replace(/["']$/, ""))
+    .filter(Boolean);
+  assert(
+    tools.length > 0,
+    `${file} must declare a non-empty tools field: an empty list is read as "inherit every tool", so it removes the boundary the role description promises`,
+  );
+  return tools;
+}
+
+const toolList = (file) => parseToolList(frontmatter(read(file), file), file);
+
+// Regression cases for the parser. Each rejection below is a shape that once
+// passed the whole verifier while granting more than the role claimed; each
+// acceptance is a shape the adapters really use. If a rejection stops throwing,
+// the read-only assertions have gone back to failing open.
+for (const [label, metadata] of [
+  ["a missing tools field", "name: x\nmodel: opus"],
+  ["an empty tools field", "name: x\ntools:\nmodel: opus"],
+  ["an empty flow list", "name: x\ntools: []"],
+  [
+    "a flow list that does not close on its line",
+    "name: x\ntools: [read, search\n  , edit]",
+  ],
+  [
+    "a comment interrupting a block list",
+    "name: x\ntools:\n  - read\n  # why\n  - edit",
+  ],
+  [
+    "a blank line splitting a block list",
+    "name: x\ntools:\n  - read\n\n  - edit",
+  ],
+  [
+    "a trailing comment on an inline list",
+    "name: x\ntools: read, search # and edit",
+  ],
+]) {
+  assert.throws(
+    () => parseToolList(metadata, `<${label}>`),
+    /must declare|cannot read safely|not a list item|separated by a blank line|does not close on the same line/,
+    `parseToolList must reject ${label}: reading fewer tools than the runtime grants reports a guarantee that does not hold`,
+  );
+}
+assert.deepEqual(
+  parseToolList("tools:\n  - Read\n  - Write", "<block list>"),
+  ["Read", "Write"],
+  "parseToolList must read a YAML block list: a multiline list containing Write used to score as empty and pass",
+);
+assert.deepEqual(
+  parseToolList('tools: [read, search, "playwright/*"]', "<flow list>"),
+  ["read", "search", "playwright/*"],
+  "parseToolList must read a YAML flow list, including a quoted wildcard MCP grant",
+);
+assert.deepEqual(
+  parseToolList("tools: Read, Grep, Glob", "<comma string>"),
+  ["Read", "Grep", "Glob"],
+  "parseToolList must read Claude Code's comma-separated string form",
+);
+assert.deepEqual(
+  parseToolList("tools: Read, Grep, Glob\r\nmodel: opus", "<CRLF>"),
+  ["Read", "Grep", "Glob"],
+  "parseToolList must tolerate CRLF line endings",
+);
 
 function assertSkill(name) {
   const file = `.agents/skills/${name}/SKILL.md`;
@@ -115,6 +254,45 @@ for (const name of retiredRoles) {
   ]) {
     assert.equal(fs.existsSync(at(file)), false, `${file} must stay removed`);
   }
+}
+
+// Naming a retired role's canonical file is not the only way to bring it back.
+// A `.codex/agents/revived.toml` declaring `name = "worker"`, registered as
+// `[agents."worker"]`, revived the retired role with the whole verifier still
+// green -- the guard above only knows canonical filenames and the guard on
+// config.toml only knew the unquoted table header. Assert the exact inventory of
+// each adapter directory instead, so an adapter can only exist for a role that
+// is currently declared, whatever the file is called.
+const adapterInventory = [
+  [".claude/agents", (name) => `${name}.md`],
+  [".codex/agents", (name) => `${name}.toml`],
+  [".github/agents", (name) => `${name}.agent.md`],
+];
+for (const [dir, filename] of adapterInventory) {
+  assert.deepEqual(
+    fs.readdirSync(at(dir)).sort(),
+    roleSkills.map(filename).sort(),
+    `${dir} must contain exactly one adapter per declared role: an extra file there can revive a retired role under a different name`,
+  );
+}
+// ...and the name inside each adapter must match the file it lives in, so a
+// declared role's file cannot be repurposed to spawn something else.
+for (const name of roleSkills) {
+  assert.match(
+    read(`.claude/agents/${name}.md`),
+    new RegExp(`^name: ${name}$`, "m"),
+    `.claude/agents/${name}.md must declare name: ${name}`,
+  );
+  assert.match(
+    read(`.codex/agents/${name}.toml`),
+    new RegExp(`^name = "${name}"$`, "m"),
+    `.codex/agents/${name}.toml must declare name = "${name}"`,
+  );
+  assert.match(
+    read(`.github/agents/${name}.agent.md`),
+    new RegExp(`^name: ${name}$`, "m"),
+    `.github/agents/${name}.agent.md must declare name: ${name}`,
+  );
 }
 assert.match(
   agentContract,
@@ -303,27 +481,59 @@ for (const name of roleSkills) {
     /^model: \S+$/m,
     `.github/agents/${name}.agent.md must pin a model`,
   );
+  // Not just the read-only role: a missing tools field means "inherit
+  // everything" on both runtimes, which erases whatever capability boundary the
+  // role description claims. Codex has no per-role tool field.
+  toolList(`.claude/agents/${name}.md`);
+  toolList(`.github/agents/${name}.agent.md`);
 }
 
 assert.match(
-  read(".github/agents/advisor.agent.md"),
+  read(".github/agents/consultant.agent.md"),
   /^model: gpt-5\.6-sol$/m,
-  "Copilot advisor must use the more capable model it promises",
+  "Copilot consultant must use the more capable model it promises",
 );
 
-// The advisor "advises; it does not edit" promise is only hard where the adapter
-// withholds write tools. Codex cannot enforce it -- a role file's sandbox_mode
-// does not constrain the spawned agent -- so the two runtimes that can, must.
-assert.doesNotMatch(
-  read(".claude/agents/advisor.md").match(/^tools: .*$/m)?.[0] ?? "",
-  /\b(Write|Edit|Bash|NotebookEdit)\b/,
-  ".claude/agents/advisor.md must not grant a write tool: the read-only promise is enforced by the tool list, not by the role body",
+// The consultant "advises; it does not edit" promise is only hard where the
+// adapter withholds write tools. Codex cannot enforce it -- a role file's
+// sandbox_mode does not constrain the spawned agent -- so the two runtimes that
+// can, must. Assert the exact list rather than the absence of known write tools:
+// a denylist cannot see a capability it has no name for, and it did not see that
+// the Copilot adapter's `playwright/*` grant can click, type, and submit forms,
+// which is a state change whatever it is called. Adding a tool here is now a
+// deliberate edit to this list, not something a role file can do on its own.
+const readOnlyRoleTools = {
+  ".claude/agents/consultant.md": ["Read", "Grep", "Glob"],
+  ".github/agents/consultant.agent.md": ["read", "search"],
+};
+assert.deepEqual(
+  Object.keys(roleStatePolicy).sort(),
+  [...roleSkills].sort(),
+  "every declared role must have an entry in roleStatePolicy: an unclassified role gets no exact tool list, only the weak non-empty check",
 );
-assert.doesNotMatch(
-  read(".github/agents/advisor.agent.md").match(/^tools: .*$/m)?.[0] ?? "",
-  /\b(edit|execute|write)\b/,
-  ".github/agents/advisor.agent.md must not grant a write tool: the read-only promise is enforced by the tool list, not by the role body",
-);
+for (const [name, policy] of Object.entries(roleStatePolicy)) {
+  assert(
+    ["read-only", "stateful"].includes(policy),
+    `roleStatePolicy.${name} must be "read-only" or "stateful", not ${policy}`,
+  );
+  if (policy !== "read-only") continue;
+  for (const file of [
+    `.claude/agents/${name}.md`,
+    `.github/agents/${name}.agent.md`,
+  ]) {
+    assert(
+      Object.hasOwn(readOnlyRoleTools, file),
+      `${file} is a read-only role per roleStatePolicy, so it must have an exact tool list in readOnlyRoleTools -- otherwise its read-only promise is enforced by nothing`,
+    );
+  }
+}
+for (const [file, expected] of Object.entries(readOnlyRoleTools)) {
+  assert.deepEqual(
+    toolList(file),
+    expected,
+    `${file} must grant exactly [${expected.join(", ")}]: the consultant's read-only promise is enforced by this list, not by the role body, so any addition -- a write tool, a shell, or a wildcard MCP grant that can change state -- has to be justified here first`,
+  );
+}
 for (const name of [...manualSkills, ...automaticSkills, ...roleSkills]) {
   const file = at(".agents", "skills", name, "SKILL.md");
   const markdown = fs.readFileSync(file, "utf8");
@@ -479,14 +689,35 @@ assert.deepEqual(sharedMcp.mcpServers?.playwright, {
   command: "npx",
   args: ["-y", "@playwright/mcp@latest"],
 });
+// The built-in advisor is enabled by a committed setting and explained at length
+// in the README. Nothing tied the two together, so removing the setting and
+// leaving the documentation -- or vice versa -- kept the verifier green while the
+// README described a configuration the repo no longer had. Assert they agree,
+// without asserting which value is right: that is a policy choice, and either
+// state passes as long as both places say the same thing.
+const claudeSettings = JSON.parse(read(".claude/settings.json"));
+const documentedAdvisor = read("README.md").match(
+  /^\s*"advisorModel": "([^"]+)"$/m,
+)?.[1];
+assert.equal(
+  claudeSettings.advisorModel,
+  documentedAdvisor,
+  `.claude/settings.json advisorModel (${claudeSettings.advisorModel ?? "unset"}) must match the value documented in README.md (${documentedAdvisor ?? "none"}): whichever way this is decided, the setting and the documentation have to agree`,
+);
+
 const codexConfig = read(".codex/config.toml");
-for (const name of retiredRoles) {
-  assert.doesNotMatch(
-    codexConfig,
-    new RegExp(`^\\[agents\\.${name}\\]$`, "m"),
-    `.codex/config.toml must not register retired role ${name}`,
-  );
-}
+// Assert the exact set of registered Codex agents rather than the absence of
+// each retired name. `[agents."worker"]` is valid TOML and slipped straight past
+// the old `^\[agents\.worker\]$` denylist; a set comparison catches any
+// registration that is not a currently declared role, quoted or not.
+const registeredCodexAgents = [
+  ...codexConfig.matchAll(/^\[agents\.(?:"([^"]+)"|'([^']+)'|([^\]\s]+))\]/gm),
+].map((match) => match[1] ?? match[2] ?? match[3]);
+assert.deepEqual(
+  [...registeredCodexAgents].sort(),
+  [...roleSkills].sort(),
+  `.codex/config.toml must register exactly the declared roles (found ${registeredCodexAgents.join(", ") || "none"}): Codex can only spawn what is registered here, so an extra entry -- including a quoted one like [agents."worker"] -- revives a role the repo has retired`,
+);
 // A `.codex/agents/<role>.toml` file is inert unless config.toml declares the
 // role: without the declaration Codex cannot spawn it, so the model and sandbox
 // guarantees in the role description simply do not exist on that runtime.
