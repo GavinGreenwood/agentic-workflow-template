@@ -106,6 +106,9 @@ docs/
 
 ### The skills
 
+> Not sure whether to run `pr-action-review` or `pr-action-review-mine-loop`? See
+> [docs/development/pr-review-workflows.md](docs/development/pr-review-workflows.md) — diagrams and a cheat sheet.
+
 | Skill                          | What it does                                                                                              |
 | ------------------------------ | --------------------------------------------------------------------------------------------------------- |
 | `pickup <ticket-id>`           | Assign the ticket, read it fully, brief the work, create the branch, start PROGRESS.md                    |
