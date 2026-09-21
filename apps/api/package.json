@@ -19,7 +19,7 @@
     "@template/shared": "*",
     "reflect-metadata": "^0.2.0",
     "rxjs": "^7.8.2",
-    "zod": "^4.4.3"
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@nestjs/cli": "^11.0.24",
@@ -30,7 +30,7 @@
     "@template/tsconfig": "*",
     "@types/express": "^5.0.0",
     "@types/jest": "^30.0.0",
-    "@types/node": "^26.2.0",
+    "@types/node": "^26.6.1",
     "@types/supertest": "^7.2.1",
     "eslint": "^10.8.1",
     "jest": "^30.0.0",
