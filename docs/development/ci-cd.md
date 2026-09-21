@@ -103,7 +103,7 @@ Transitive dependencies that Dependabot cannot bump directly are pinned via the 
 | `tmp`             | `0.2.7`   | `@nestjs/cli` devDep (path traversal)                            |
 | `picomatch@2`     | `2.3.2`   | `@angular-devkit` via `@nestjs/cli` (ReDoS)                      |
 | `picomatch@4`     | `4.0.4`   | `@angular-devkit` via `@nestjs/cli` (ReDoS)                      |
-| `lodash`          | `4.18.1`  | `@nestjs/swagger` + `@nestjs/config` (prototype pollution)       |
+| `lodash`          | `4.18.1`  | `@nestjs/swagger` (prototype pollution)                          |
 | `brace-expansion` | `5.0.9`   | transitive (ReDoS — GHSA-rgw5-rvv9-x895)                         |
 | `fast-uri@3`      | `3.1.6`   | `ajv@8` (major-scoped; see engineering-standards staleness note) |
 | `js-yaml@4`       | `4.3.2`   | transitive (prototype pollution)                                 |
