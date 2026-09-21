@@ -11,6 +11,18 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const at = (...parts) => path.join(root, ...parts);
 const read = (...parts) => fs.readFileSync(at(...parts), "utf8");
 
+// Whether git tracks a path. Deliberately not `fs.existsSync`: some paths must
+// never be *committed* here while a developer's own untracked copy is their
+// business. A non-zero exit means we could not ask git (no git, no repo), which
+// is not evidence of a violation, so it reads as untracked.
+const isTracked = (file) => {
+  const result = spawnSync("git", ["ls-files", "--", file], {
+    cwd: root,
+    encoding: "utf8",
+  });
+  return result.status === 0 && result.stdout.trim() !== "";
+};
+
 // The hooks and hook commands in this repo are POSIX shell. Two things go wrong
 // on Windows if that is left implicit: `shell: true` runs them under cmd.exe,
 // which has no `unset` or `$(...)`, and a bare "bash" can resolve to
@@ -238,15 +250,21 @@ function assertSkill(name) {
   return metadata;
 }
 
-// Claude Code reads AGENTS.md directly. Any of these at or above the working
-// directory is read *instead* of it, replacing the whole agent contract rather
-// than adding to it — so none of them may exist here. Personal notes belong in
-// ~/.claude/CLAUDE.md, which loads alongside AGENTS.md.
+// Claude Code reads AGENTS.md directly. A CLAUDE.md, .claude/CLAUDE.md, or
+// CLAUDE.local.md at or above the working directory is read *instead* of it,
+// replacing the whole agent contract rather than adding to it — so none of the
+// three may be committed here.
+//
+// This is a tracking check, not an existence check. A developer's own untracked
+// CLAUDE.local.md is theirs to keep: it is not git-ignored, so it stays visible
+// in `git status` rather than hiding, and it must not fail a gate it has no
+// business failing. Starting it with an `@AGENTS.md` import keeps the contract
+// loading alongside it; `~/.claude/CLAUDE.md` needs no import and never counts.
 for (const file of ["CLAUDE.md", ".claude/CLAUDE.md", "CLAUDE.local.md"]) {
   assert.equal(
-    fs.existsSync(at(file)),
+    isTracked(file),
     false,
-    `${file} must stay removed — it would be read instead of AGENTS.md; keep personal notes in ~/.claude/CLAUDE.md`,
+    `${file} must not be committed — Claude Code reads it instead of AGENTS.md, which silently replaces the whole agent contract`,
   );
 }
 assert(fs.existsSync(at("AGENTS.md")), "AGENTS.md is missing");

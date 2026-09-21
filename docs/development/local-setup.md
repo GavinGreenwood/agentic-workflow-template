@@ -115,11 +115,26 @@ Install the runtime you intend to use from its current vendor documentation. The
 - Claude Code: `AGENTS.md` is read directly (requires Claude Code v2.1.277 or later), and `.claude/skills` resolves to `.agents/skills`.
 - Codex: `.codex/config.toml`, `.codex/hooks.json`, and `.codex/agents/` are detected.
 
-This repo ships **no `CLAUDE.md`**, and adding one back is a mistake the verifier catches.
+This repo ships **no `CLAUDE.md`**, and committing one back is a mistake `verify:agents` catches.
 A `CLAUDE.md`, `.claude/CLAUDE.md`, or `CLAUDE.local.md` at or above the working directory is
 read _instead_ of `AGENTS.md`, so it silently replaces the whole agent contract rather than
-adding to it. Keep personal notes in `~/.claude/CLAUDE.md` instead — that one loads alongside
-`AGENTS.md`.
+adding to it. That applies to an empty one — it is the file's existence that flips the switch,
+not its contents.
+
+Keeping your own `CLAUDE.local.md` is fine, and it is deliberately not git-ignored so an
+accidental one stays visible in `git status`. Two rules: don't commit it, and start it with an
+`@AGENTS.md` import so the contract still loads for you.
+
+```markdown
+@AGENTS.md
+
+<!-- your own notes below -->
+```
+
+`~/.claude/CLAUDE.md` is the simpler home for anything not specific to this repo — a user-level
+file never counts for the check above, so it loads alongside `AGENTS.md` with no import needed.
+To confirm what loaded, look for the `AGENTS.md loaded: …` line at session start; `/context` and
+`/memory` do not list an `AGENTS.md` that Claude Code read directly.
 
 ### Codex: trusting the repository hooks
 
