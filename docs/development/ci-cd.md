@@ -98,18 +98,16 @@ Transitive dependencies that Dependabot cannot bump directly are pinned via the 
 
 **Current overrides and why they exist:**
 
-| Package             | Pinned to | Root cause                                                    |
-| ------------------- | --------- | ------------------------------------------------------------- |
-| `tmp`               | `0.2.7`   | `@nestjs/cli` devDep (path traversal)                         |
-| `picomatch@2`       | `2.3.2`   | `@angular-devkit` via `@nestjs/cli` (ReDoS)                   |
-| `picomatch@4`       | `4.0.4`   | `@angular-devkit` via `@nestjs/cli` (ReDoS)                   |
-| `lodash`            | `4.18.1`  | `@nestjs/swagger` + `@nestjs/config` (prototype pollution)    |
-| `brace-expansion`   | `5.0.9`   | transitive (ReDoS — GHSA-rgw5-rvv9-x895)                      |
-| `fast-uri@3`        | `3.1.6`   | `ajv@8` (major-scoped; see engineering-standards staleness note) |
-| `js-yaml@4`         | `4.3.2`   | transitive (prototype pollution)                              |
-| `js-yaml@5`         | `5.2.2`   | transitive (prototype pollution)                              |
-| `postcss@8`         | `8.5.24`  | transitive via the web toolchain                              |
-| `sharp`             | `0.35.4`  | transitive via the Next.js image pipeline                     |
+| Package       | Pinned to | Root cause                                                                    |
+| ------------- | --------- | ----------------------------------------------------------------------------- |
+| `glob`        | `10.5.0`  | `@nestjs/cli` devDep (CLI injection)                                          |
+| `tmp`         | `0.2.7`   | `@nestjs/cli` devDep (path traversal)                                         |
+| `picomatch@2` | `2.3.2`   | `@angular-devkit` via `@nestjs/cli` (ReDoS)                                   |
+| `picomatch@4` | `4.0.4`   | `@angular-devkit` via `@nestjs/cli` (ReDoS)                                   |
+| `lodash`      | `4.18.1`  | `@nestjs/swagger` + `@nestjs/config` (prototype pollution)                    |
+| `multer`      | `2.2.0`   | `@nestjs/platform-express` (DoS — no file-upload endpoints, safe to override) |
+
+**Note on `multer`**: npm `overrides` does not propagate to workspace-nested packages when the depender uses an exact version pin. The `multer@2.2.0` entry is therefore applied directly in `package-lock.json` (lockfile patch). `npm ls multer` will report `invalid: "2.1.1"` — this is expected and intentional. When `@nestjs/platform-express` releases a version that depends on `multer@>=2.2.0`, both the lockfile patch and the `overrides` entry can be removed.
 
 **Maintenance rule:** when a HIGH-severity transitive finding appears:
 
