@@ -36,11 +36,11 @@ Prefer to drive it yourself? Read [ADOPT.md](ADOPT.md) directly — it doubles a
 
 Provider folders contain only the small adapters their runtimes require:
 
-| Runtime                             | Instructions                    | Skills                                     | Roles             | Hooks                   | Playwright                                        |
-| ----------------------------------- | ------------------------------- | ------------------------------------------ | ----------------- | ----------------------- | ------------------------------------------------- |
-| Claude Code                         | `CLAUDE.md` imports `AGENTS.md` | `.claude/skills` symlinks `.agents/skills` | `.claude/agents/` | `.claude/settings.json` | `.mcp.json`                                       |
-| Codex                               | `AGENTS.md`                     | `.agents/skills/`                          | `.codex/agents/`  | `.codex/hooks.json`     | `.codex/config.toml`                              |
-| GitHub Copilot CLI and coding agent | `AGENTS.md`                     | `.agents/skills/`                          | `.github/agents/` | `.github/hooks/`        | `.mcp.json` in CLI, built in for the coding agent |
+| Runtime                             | Instructions | Skills                                     | Roles             | Hooks                   | Playwright                                        |
+| ----------------------------------- | ------------ | ------------------------------------------ | ----------------- | ----------------------- | ------------------------------------------------- |
+| Claude Code                         | `AGENTS.md`  | `.claude/skills` symlinks `.agents/skills` | `.claude/agents/` | `.claude/settings.json` | `.mcp.json`                                       |
+| Codex                               | `AGENTS.md`  | `.agents/skills/`                          | `.codex/agents/`  | `.codex/hooks.json`     | `.codex/config.toml`                              |
+| GitHub Copilot CLI and coding agent | `AGENTS.md`  | `.agents/skills/`                          | `.github/agents/` | `.github/hooks/`        | `.mcp.json` in CLI, built in for the coding agent |
 
 GitHub Copilot repository files belong in `.github`, not `.copilot`. GitHub.com Copilot Chat is outside this template's target, so there is no `.github/copilot-instructions.md`.
 
@@ -77,7 +77,6 @@ And **end-to-end traceability**: every change starts from a ticket, the ticket I
 ```
 ADOPT.md                  Playbook an agent follows to import this into your repo
 AGENTS.md                 The agent contract — rules, workflow, golden rules
-CLAUDE.md                 Claude Code import stub for AGENTS.md
 CONTRIBUTING.md           Branch, commit, and PR conventions
 .agents/
   skills/                 Skills (Jira flavour — ticket lifecycle + PR workflow) and reusable agent roles
@@ -177,9 +176,9 @@ These skills use the **Jira REST API** directly (no MCP server required). Ticket
 
 ## Quickstart
 
-1. **Use this template** (GitHub → "Use this template") or copy `.agents/`, `.claude/`, `.codex/`, `.github/agents/`, `.github/hooks/`, `scripts/`, `.husky/`, `.mcp.json`, `AGENTS.md`, and `CLAUDE.md` into your existing repo.
+1. **Use this template** (GitHub → "Use this template") or copy `.agents/`, `.claude/`, `.codex/`, `.github/agents/`, `.github/hooks/`, `scripts/`, `.husky/`, `.mcp.json`, and `AGENTS.md` into your existing repo.
 2. **Authenticate the GitHub CLI** — run `gh auth login`. The skills use `gh` for PRs and CI; Jira tickets are handled via the REST API, not the CLI.
-3. Edit `AGENTS.md`: fill in your project overview, repo map, and stack-specific rules. Delete what doesn't apply — the contract only works if it's true. Leave `CLAUDE.md` as `@AGENTS.md`.
+3. Edit `AGENTS.md`: fill in your project overview, repo map, and stack-specific rules. Delete what doesn't apply — the contract only works if it's true. Do not add a `CLAUDE.md`: Claude Code reads `AGENTS.md` directly, and a `CLAUDE.md` anywhere at or above the working directory would be read _instead_ of it.
 4. Wire your package scripts: the gates expect `npm run lint`, `typecheck`, `test`, `build` (and optionally `format:check`, `test:integration`). Adjust `scripts/verify.sh` and `.husky/*` to match your stack.
 5. **Configure Jira** — copy `.env.example` to `.env` and set `JIRA_BASE_URL`, `JIRA_EMAIL`, `JIRA_API_TOKEN`, `JIRA_ACCOUNT_ID`, and `JIRA_PROJECT_KEY`. These are config, not secrets — `.env.example` documents them and your real `.env` stays uncommitted.
 6. Confirm the `playwright` MCP server is connected in your chosen runtime.

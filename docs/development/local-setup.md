@@ -112,8 +112,14 @@ Use Claude Code, Codex, or GitHub Copilot CLI. All three read `AGENTS.md` and th
 
 Install the runtime you intend to use from its current vendor documentation. Then confirm its repository configuration:
 
-- Claude Code: `CLAUDE.md` imports `AGENTS.md`, and `.claude/skills` resolves to `.agents/skills`.
+- Claude Code: `AGENTS.md` is read directly (requires Claude Code v2.1.277 or later), and `.claude/skills` resolves to `.agents/skills`.
 - Codex: `.codex/config.toml`, `.codex/hooks.json`, and `.codex/agents/` are detected.
+
+This repo ships **no `CLAUDE.md`**, and adding one back is a mistake the verifier catches.
+A `CLAUDE.md`, `.claude/CLAUDE.md`, or `CLAUDE.local.md` at or above the working directory is
+read _instead_ of `AGENTS.md`, so it silently replaces the whole agent contract rather than
+adding to it. Keep personal notes in `~/.claude/CLAUDE.md` instead — that one loads alongside
+`AGENTS.md`.
 
 ### Codex: trusting the repository hooks
 

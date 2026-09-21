@@ -238,11 +238,17 @@ function assertSkill(name) {
   return metadata;
 }
 
-assert.equal(
-  read("CLAUDE.md"),
-  "@AGENTS.md\n",
-  "CLAUDE.md must only import AGENTS.md",
-);
+// Claude Code reads AGENTS.md directly. Any of these at or above the working
+// directory is read *instead* of it, replacing the whole agent contract rather
+// than adding to it — so none of them may exist here. Personal notes belong in
+// ~/.claude/CLAUDE.md, which loads alongside AGENTS.md.
+for (const file of ["CLAUDE.md", ".claude/CLAUDE.md", "CLAUDE.local.md"]) {
+  assert.equal(
+    fs.existsSync(at(file)),
+    false,
+    `${file} must stay removed — it would be read instead of AGENTS.md; keep personal notes in ~/.claude/CLAUDE.md`,
+  );
+}
 assert(fs.existsSync(at("AGENTS.md")), "AGENTS.md is missing");
 const agentContract = read("AGENTS.md");
 for (const name of retiredRoles) {
