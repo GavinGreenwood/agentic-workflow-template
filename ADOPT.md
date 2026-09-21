@@ -23,7 +23,7 @@ finished Phase 2 and the human has approved the plan in Phase 3.**
 1. **Read this template.** Fetch and read these files from this repo (use the
    raw GitHub URLs, `https://raw.githubusercontent.com/GavinGreenwood/agentic-workflow-template/main/<path>`,
    or clone it to a temp dir):
-   - `AGENTS.md` and the `CLAUDE.md` import stub — the shared agent contract
+   - `AGENTS.md` — the shared agent contract, read directly by all three runtimes
    - `CONTRIBUTING.md` — branching, commits, PRs
    - `docs/philosophy.md` — the _why_; this is the part that must survive translation
    - `.claude/settings.json`, `.codex/hooks.json`, `.github/hooks/`, and `scripts/hooks/` — the shared hook behaviour and runtime adapters
@@ -43,7 +43,7 @@ finished Phase 2 and the human has approved the plan in Phase 3.**
    - **Issue tracker** (Jira? GitHub Issues? Linear? none?).
    - **Git host** (GitHub? GitLab? Azure DevOps?) and how PRs/reviews happen.
    - **Branching model** (trunk/`main`-only? GitHub flow? Gitflow with `develop`? release branches?).
-   - **Existing agent setup** — any `AGENTS.md`, `CLAUDE.md`, `.agents/`, `.claude/`, `.codex/`, `.github/agents/`, `.github/hooks/`, MCP config, or agent hooks already present to build on or reconcile with.
+   - **Existing agent setup** — any `AGENTS.md`, `CLAUDE.md`, `.agents/`, `.claude/`, `.codex/`, `.github/agents/`, `.github/hooks/`, MCP config, or agent hooks already present to build on or reconcile with. A `CLAUDE.md`, `.claude/CLAUDE.md`, or `CLAUDE.local.md` at or above the repo root is load-bearing: Claude Code reads it _instead_ of `AGENTS.md`, so its contents must be folded into `AGENTS.md` and the file removed.
 
 ---
 
@@ -152,7 +152,7 @@ approval before writing anything.** A good plan separates:
 
 - **Phase A — the stack-agnostic core**: `AGENTS.md`, `.agents/skills/`, the
   `verify` task, git hooks, PR template, and dependency automation.
-- **Phase B — runtime adapters**: the `CLAUDE.md` import stub, Claude skill
+- **Phase B — runtime adapters**: the Claude skill
   symlink, Claude/Codex/Copilot role files, hook configs, and Playwright MCP
   configs. Do not add `.copilot` or `.github/copilot-instructions.md` when
   GitHub.com Copilot Chat is not in scope.
