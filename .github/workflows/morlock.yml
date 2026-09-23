@@ -5,13 +5,13 @@ name: Morlock — Nightly Security Probe
 # Code SDK (init succeeds, then is_error:true ~300ms later, total_cost_usd:0,
 # num_turns:1). That signature points to the Anthropic API rejecting the
 # request outright (invalid/expired ANTHROPIC_API_KEY, exhausted credit
-# balance, or no account access to the claude-opus-4-8[1m] model) rather
+# balance, or no account access to the default Opus model) rather
 # than a bug in this workflow's config — the prior allowed_tools ->
 # claude_args fix is confirmed still correct.
 #
 # Before re-enabling the schedule:
 #   1. Check the ANTHROPIC_API_KEY secret in the Anthropic Console (key
-#      validity, credit balance, model access for claude-opus-4-8[1m]).
+#      validity, credit balance, model access for the default Opus model).
 #   2. Manually confirm with: gh workflow run morlock.yml
 #   3. If it succeeds, uncomment the `schedule:` block below.
 on:
