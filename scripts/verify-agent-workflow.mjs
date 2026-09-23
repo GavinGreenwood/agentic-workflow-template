@@ -514,7 +514,7 @@ for (const name of roleSkills) {
 
 assert.match(
   read(".github/agents/consultant.agent.md"),
-  /^model: gpt-6-sol$/m,
+  /^model: claude-opus-5\.5$/m,
   "Copilot consultant must use the more capable model it promises",
 );
 

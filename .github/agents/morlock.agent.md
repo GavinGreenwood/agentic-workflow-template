@@ -1,7 +1,7 @@
 ---
 name: morlock
 description: Probe the repository for reproducible security weaknesses and preserve confirmed findings as tests.
-model: gpt-6-sol
+model: claude-opus-5.5
 tools: [read, search, edit, execute, "playwright/*"]
 ---
 
