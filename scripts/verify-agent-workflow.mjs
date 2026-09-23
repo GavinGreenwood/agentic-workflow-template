@@ -190,8 +190,8 @@ const toolList = (file) => parseToolList(frontmatter(read(file), file), file);
 // acceptance is a shape the adapters really use. If a rejection stops throwing,
 // the read-only assertions have gone back to failing open.
 for (const [label, metadata] of [
-  ["a missing tools field", "name: x\nmodel: claude-opus-5-5"],
-  ["an empty tools field", "name: x\ntools:\nmodel: claude-opus-5-5"],
+  ["a missing tools field", "name: x\nmodel: opus"],
+  ["an empty tools field", "name: x\ntools:\nmodel: opus"],
   ["an empty flow list", "name: x\ntools: []"],
   [
     "a flow list that does not close on its line",
@@ -232,7 +232,7 @@ assert.deepEqual(
   "parseToolList must read Claude Code's comma-separated string form",
 );
 assert.deepEqual(
-  parseToolList("tools: Read, Grep, Glob\r\nmodel: claude-opus-5-5", "<CRLF>"),
+  parseToolList("tools: Read, Grep, Glob\r\nmodel: opus", "<CRLF>"),
   ["Read", "Grep", "Glob"],
   "parseToolList must tolerate CRLF line endings",
 );
