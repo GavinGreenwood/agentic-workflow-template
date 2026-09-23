@@ -1,7 +1,7 @@
 ---
 name: morlock
 description: Probe the repository for reproducible security weaknesses and preserve confirmed findings as tests.
-model: opus
+model: claude-opus-5-5
 tools: Bash, Read, Write, Edit, Glob, Grep
 ---
 

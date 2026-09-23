@@ -1,5 +1,5 @@
 {
-  "advisorModel": "opus",
+  "advisorModel": "claude-opus-5-5",
   "permissions": {
     "allow": ["mcp__playwright__*"]
   },
