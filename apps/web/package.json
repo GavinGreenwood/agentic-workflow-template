@@ -14,19 +14,19 @@
   "dependencies": {
     "@template/shared": "*",
     "@template/ui": "*",
-    "next": "^16.3.5",
+    "next": "^16.3.6",
     "react": "^19.3.0",
     "react-dom": "^19.3.0"
   },
   "optionalDependencies": {
-    "@next/swc-darwin-arm64": "16.3.5",
-    "@next/swc-darwin-x64": "16.3.5",
-    "@next/swc-linux-arm64-gnu": "16.3.5",
-    "@next/swc-linux-arm64-musl": "16.3.5",
-    "@next/swc-linux-x64-gnu": "16.3.5",
-    "@next/swc-linux-x64-musl": "16.3.5",
-    "@next/swc-win32-arm64-msvc": "16.3.5",
-    "@next/swc-win32-x64-msvc": "16.3.5",
+    "@next/swc-darwin-arm64": "16.3.6",
+    "@next/swc-darwin-x64": "16.3.6",
+    "@next/swc-linux-arm64-gnu": "16.3.6",
+    "@next/swc-linux-arm64-musl": "16.3.6",
+    "@next/swc-linux-x64-gnu": "16.3.6",
+    "@next/swc-linux-x64-musl": "16.3.6",
+    "@next/swc-win32-arm64-msvc": "16.3.6",
+    "@next/swc-win32-x64-msvc": "16.3.6",
     "@tailwindcss/oxide-linux-x64-gnu": "4.3.3",
     "@tailwindcss/oxide-linux-x64-musl": "4.3.3",
     "lightningcss-linux-x64-gnu": "1.33.0",
@@ -47,7 +47,7 @@
     "jest": "^30.0.0",
     "jest-environment-jsdom": "^30.0.0",
     "tailwindcss": "^4.3.1",
-    "ts-jest": "^29.2.0",
+    "ts-jest": "^29.4.13",
     "typescript": "^5.8.0"
   }
 }
