@@ -1,7 +1,6 @@
 ---
 name: capture
-description: "User-invoked only. Turn the current conversation into a tracked ticket + commit"
-disable-model-invocation: true
+description: 'Create a Jira ticket from the conversation, then commit related changes. Use when the user asks to capture the work, or to create, raise or log a ticket for something discussed (e.g. "go create that ticket for me").'
 ---
 
 # Capture conversation to Jira + commit
@@ -59,6 +58,8 @@ source .env && curl -s -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
 ```
 
 ## Step 5 — Move ticket to In Progress
+
+Only when the ticket is the work in hand; a follow-up or deferred ticket stays in To Do.
 
 First, get available transitions:
 

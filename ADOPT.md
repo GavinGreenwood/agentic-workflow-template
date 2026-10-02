@@ -132,7 +132,9 @@ different strictness).
    `disable-model-invocation: true` field for Claude Code and Copilot CLI,
    Codex's `policy.allow_implicit_invocation: false`, and the `User-invoked
 only.` description plus `AGENTS.md` routing rule for the Copilot coding
-   agent.
+   agent. Exempt the ones a user would naturally ask for in plain words
+   (`capture`, `qa-review-action`): make those automatic instead, with no
+   `agents/openai.yaml`.
 
 9. **Hook framework + secret scanning.**
    Pick the target ecosystem's standard hook manager (pre-commit for Python,

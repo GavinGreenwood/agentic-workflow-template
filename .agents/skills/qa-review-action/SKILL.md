@@ -1,7 +1,6 @@
 ---
 name: qa-review-action
-description: "User-invoked only. Classify QA feedback: genuine bug / intended behaviour / out of scope — fix or push back accordingly"
-disable-model-invocation: true
+description: "Action QA feedback on a named Jira ticket — classify each point as bug / intended / out of scope, then fix or push back. Use when pickup --qa hands off, or the user asks to work through QA comments on a ticket."
 ---
 
 Review QA feedback on a Jira ticket: classify each point as a genuine bug, intended behaviour, or out of scope — then propose fixes or push-back responses accordingly.

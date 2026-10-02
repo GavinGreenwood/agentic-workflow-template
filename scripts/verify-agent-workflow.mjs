@@ -63,7 +63,6 @@ const POSIX_SHELL = resolvePosixShell();
 const manualSkills = [
   "briefing",
   "bump-version",
-  "capture",
   "dependabot-review",
   "fix-cicd",
   "log-time",
@@ -77,12 +76,11 @@ const manualSkills = [
   "pr-review-loop",
   "pr",
   "push",
-  "qa-review-action",
   "refine",
   "sync",
   "wrap-up",
 ];
-const automaticSkills = ["assign-epic", "run"];
+const automaticSkills = ["assign-epic", "capture", "qa-review-action", "run"];
 const roleSkills = ["consultant", "morlock"];
 const retiredRoles = ["worker"];
 // Every role must say, in one machine-readable place, whether it may change
