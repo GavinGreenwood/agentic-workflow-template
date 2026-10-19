@@ -22,7 +22,7 @@
   },
   "devDependencies": {
     "@nestjs/cli": "^12.0.8",
-    "@nestjs/schematics": "^11.0.0",
+    "@nestjs/schematics": "^12.0.7",
     "@nestjs/testing": "^12.1.3",
     "@template/eslint-config": "*",
     "@template/jest-config": "*",
