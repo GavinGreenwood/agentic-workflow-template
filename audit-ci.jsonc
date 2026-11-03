@@ -24,15 +24,11 @@
   // Lesson: before allowlisting, verify the fixed version is genuinely
   // unreachable — `npm audit`'s `range` field is a UNION across advisories, so it
   // routinely looks like no fix exists when one does.
-  "allowlist": [
-    // GHSA-vfj7-8cjw-p6xm (high, 2026-09-18) — braces <=3.0.3 stack-exhaustion DoS
-    // on deeply nested brace patterns. No patched version exists: 3.0.3 is the
-    // latest release and the advisory lists no first_patched_version.
-    // Reached only via @next/eslint-plugin-next > fast-glob > micromatch, a
-    // dev-time lint dependency; patterns come from repo-controlled ESLint config,
-    // never from user input, and braces is not in any production bundle.
-    // Expected resolution: remove once braces ships a fix (audit-ci will print
-    // "Consider not allowlisting") or Next's eslint plugin drops fast-glob 3.
-    "GHSA-vfj7-8cjw-p6xm",
-  ],
+  //
+  // GHSA-vfj7-8cjw-p6xm (braces <=3.0.3 stack-exhaustion DoS, dev-only via
+  // @next/eslint-plugin-next > fast-glob > micromatch) was allowlisted here from
+  // 2026-09-18 with no patched version available. GitHub withdrew the advisory on
+  // 2026-10-23 and audit-ci began printing "Consider not allowlisting", so the
+  // entry was removed.
+  "allowlist": [],
 }
