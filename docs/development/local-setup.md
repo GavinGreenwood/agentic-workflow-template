@@ -121,15 +121,27 @@ read _instead_ of `AGENTS.md`, so it silently replaces the whole agent contract 
 adding to it. That applies to an empty one — it is the file's existence that flips the switch,
 not its contents.
 
-Keeping your own `CLAUDE.local.md` is fine, and it is deliberately not git-ignored so an
-accidental one stays visible in `git status`. Two rules: don't commit it, and start it with an
+Per-engineer context and overrides (for example, committing straight to `main`) go in
+`AGENTS.local.md` at the repo root. It is git-ignored, and `AGENTS.md` imports it with an
+`@AGENTS.local.md` line at the end, so it loads with the contract and needs no import of its own.
+The `@` import is resolved by Claude Code; other runtimes read `AGENTS.md` without it.
+
+A `CLAUDE.local.md` still works, but it is deliberately not git-ignored, so an accidental one
+stays visible in `git status`. If you keep one, don't commit it, and start it with an
 `@AGENTS.md` import so the contract still loads for you.
 
-```markdown
-@AGENTS.md
+### Working directly on main
 
-<!-- your own notes below -->
+The pre-commit hook blocks commits on `main`, `master`, `staging` and `production`. A solo
+engineer who wants to commit straight to `main` opts out in their own clone:
+
+```bash
+git config hooks.allowMainCommits true
 ```
+
+The setting lives in your local `.git/config`, so it never reaches anyone else. It covers `main`
+only, and every other pre-commit and pre-push check still runs. Pair it with a line in
+`AGENTS.local.md` telling agents to commit to `main` rather than branch.
 
 `~/.claude/CLAUDE.md` is the simpler home for anything not specific to this repo — a user-level
 file never counts for the check above, so it loads alongside `AGENTS.md` with no import needed.

@@ -6,10 +6,14 @@
 
 echo "=== Pre-commit checks ==="
 
-# 1. Branch protection — no direct commits to main/master/staging/production
+# 1. Branch protection — no direct commits to main/master/staging/production.
+#    Per-engineer opt-out for main only: `git config hooks.allowMainCommits true`
+#    (local .git/config, never committed). staging/production stay blocked.
 BRANCH=$(git rev-parse --abbrev-ref HEAD)
 PROTECTED_BRANCHES="^(main|master|staging|production)$"
-if [[ "$BRANCH" =~ $PROTECTED_BRANCHES ]]; then
+if [[ "$BRANCH" == "main" && "$(git config --bool hooks.allowMainCommits)" == "true" ]]; then
+  echo "Direct commit to main allowed by local hooks.allowMainCommits."
+elif [[ "$BRANCH" =~ $PROTECTED_BRANCHES ]]; then
   echo "BLOCKED: Direct commits to '$BRANCH' are not allowed. Use a feature branch."
   exit 1
 fi

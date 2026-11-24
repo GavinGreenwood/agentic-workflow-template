@@ -5,7 +5,7 @@
 - Branch from `main`, always.
 - Feature/fix branches: `<ticket-id-lowercase>-<short-description>` — e.g. `proj-42-fix-header-contrast`.
 - Chore branches (no ticket required): `chore/<short-description>` — e.g. `chore/bump-eslint`.
-- Never commit directly to `main`, `staging`, or `production` (the pre-commit hook blocks this).
+- Never commit directly to `main`, `staging`, or `production` (the pre-commit hook blocks this). A solo engineer may opt their own clone out for `main` only — see [local-setup.md](docs/development/local-setup.md#working-directly-on-main).
 
 ## Commits
 

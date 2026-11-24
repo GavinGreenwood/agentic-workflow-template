@@ -30,3 +30,6 @@ test-results/
 /*.png
 /*.jpg
 /*.jpeg
+
+# Per-engineer agent context (see AGENTS.md > Project Overview)
+AGENTS.local.md

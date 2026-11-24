@@ -7,7 +7,7 @@
 
 ## Project Overview
 
-This is a Turborepo monorepo template with a **Next.js** frontend (`apps/web`, port 3000) and a **NestJS** backend (`apps/api`, port 3001). Shared configuration is centralised in `packages/` — TypeScript compiler options, ESLint rules, Jest presets, and a stub shared library. The entire stack is TypeScript strict-mode. When adopting this template, rename the `@template` namespace to your own project scope throughout all `package.json` files. Architecture decisions live in `docs/adr/`.
+This is a Turborepo monorepo template with a **Next.js** frontend (`apps/web`, port 3000) and a **NestJS** backend (`apps/api`, port 3001). Shared configuration is centralised in `packages/` — TypeScript compiler options, ESLint rules, Jest presets, and a stub shared library. The entire stack is TypeScript strict-mode. When adopting this template, rename the `@template` namespace to your own project scope throughout all `package.json` files. Architecture decisions live in `docs/adr/`. Per-engineer context goes in a git-ignored `AGENTS.local.md`, imported at the end of this file.
 
 ## Repo Map
 
@@ -322,3 +322,5 @@ npm run build         # Production build
 - trace_id and correlation_id propagated through all API boundaries.
 - Error tracking for both frontend and backend.
 - Runbooks in `docs/runbooks/` for top incident types.
+
+@AGENTS.local.md
