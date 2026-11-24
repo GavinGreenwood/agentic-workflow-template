@@ -64,6 +64,7 @@ const manualSkills = [
   "briefing",
   "bump-version",
   "dependabot-review",
+  "draw-me-a-picture",
   "fix-cicd",
   "log-time",
   "morning",

@@ -1,0 +1,6 @@
+interface:
+  display_name: "Draw Me A Picture"
+  short_description: "Explain where we've got to as a picture, not more text"
+  default_prompt: "Use $draw-me-a-picture to turn where we've got to into one visual page."
+policy:
+  allow_implicit_invocation: false
